@@ -2,16 +2,12 @@
 
 namespace App\Providers;
 
-// use Illuminate\Support\Facades\Gate;
+use App\Models\User; // <-- TAMBAHKAN INI
+use Illuminate\Support\Facades\Gate; // <-- TAMBAHKAN INI
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The model to policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
     protected $policies = [
         //
     ];
@@ -21,7 +17,15 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // --- TAMBAHKAN BLOK KODE INI ---
+
+        // Kita membuat "Gerbang" (Gate) bernama 'is-master-admin'
+        // Gerbang ini hanya akan terbuka jika...
+        Gate::define('is-master-admin', function (User $user) {
+            // ...user yang sedang login memiliki 'role' == 'master'
+            return $user->role === 'master';
+        });
+
+        // --- AKHIR BLOK KODE ---
     }
 }
-

@@ -3,87 +3,78 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Exception;
-use Google\Client as GoogleClient;
-use Google\Service\Sheets as GoogleSheets;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
+
+// --- MODEL BARU KITA ---
+use App\Models\Driver;
+use App\Models\Vehicle;
+use App\Models\Attendance;
+use App\Models\EmergencyReport;
+
+// --- FUNGSI BAWAAN LARAVEL ---
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
+
+// --- UNTUK PROSES GAMBAR ---
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\ImageManager;
 
 class AttendanceController extends Controller
 {
-    private $spreadsheetId = '1JaQaEjtOUOJTO1I0jsGItnqMrrnso-v2S_vzQ4nqqcs';
+    // Cache timeout
     private $cacheTimeout = 300;
-
-    const CACHE_DRIVER_DETAILS = 'driver_details_';
     const CACHE_DRIVER_STATUS = 'driver_status_';
     const CACHE_ATTENDANCE_HISTORY = 'attendance_history_';
 
-    public function getDriverDetails($driverId)
+    /**
+     * Mengambil detail driver yang sedang login
+     */
+    public function getDriverDetails()
     {
-        $cacheKey = self::CACHE_DRIVER_DETAILS . $driverId;
-
-        return Cache::remember($cacheKey, $this->cacheTimeout, function () use ($driverId) {
-            try {
-                $driverName = $this->getDriverName($driverId);
-
-                if ($driverName === 'Unknown') {
-                    return response()->json(['message' => 'Driver not found'], 404);
-                }
-
-                return response()->json([
-                    'id' => $driverId,
-                    'name' => $driverName
-                ]);
-
-            } catch (Exception $e) {
-                Log::error("GetDriverDetails Error: " . $e->getMessage());
-                return response()->json(['message' => 'Service unavailable'], 503);
-            }
-        });
+        try {
+            $driver = Auth::user();
+            return response()->json([
+                'id' => $driver->driver_id_nik,
+                'name' => $driver->full_name
+            ]);
+        } catch (\Exception $e) {
+            Log::error("GetDriverDetails Error: " . $e->getMessage());
+            return response()->json(['message' => 'Service unavailable'], 503);
+        }
     }
 
-    public function checkDriverStatus($driverId)
+    /**
+     * Cek status driver yang sedang login
+     */
+    public function checkDriverStatus()
     {
+        $driverId = Auth::id();
         $cacheKey = self::CACHE_DRIVER_STATUS . $driverId;
 
         return Cache::remember($cacheKey, 60, function () use ($driverId) {
             try {
-                $client = $this->getOptimizedGoogleClient();
-                $sheetsService = new GoogleSheets($client);
+                $activeAttendance = Attendance::with('vehicle')
+                    ->where('driver_id', $driverId)
+                    ->whereNull('time_out')
+                    ->first();
 
-                $rangeRead = 'Absensi!B:E';
-                $response = $sheetsService->spreadsheets_values->get($this->spreadsheetId, $rangeRead);
-                $rows = $response->getValues() ?? [];
-
-                $status = ['is_on_duty' => false];
-
-                if (count($rows) > 1) {
-                    for ($i = count($rows) - 1; $i >= 1; $i--) {
-                        $row = $rows[$i];
-                        if (
-                            isset($row[1]) && $row[1] == $driverId &&
-                            (!isset($row[0]) || trim($row[0]) === '')
-                        ) {
-                            $status = [
-                                'is_on_duty' => true,
-                                'plate_number' => $row[3] ?? 'N/A'
-                            ];
-                            break;
-                        }
-                    }
+                if ($activeAttendance) {
+                    return response()->json([
+                        'status' => 'success',
+                        'is_on_duty' => true,
+                        'plate_number' => $activeAttendance->vehicle->plate_number ?? 'N/A'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'success',
+                        'is_on_duty' => false,
+                        'plate_number' => null
+                    ]);
                 }
-
-                return response()->json([
-                    'status' => 'success',
-                    'is_on_duty' => $status['is_on_duty'],
-                    'plate_number' => $status['plate_number'] ?? null
-                ]);
-
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 Log::error("CheckDriverStatus Error: " . $e->getMessage());
                 return response()->json([
                     'status' => 'error',
@@ -94,129 +85,68 @@ class AttendanceController extends Controller
         });
     }
 
+    /**
+     * Menyimpan absensi masuk ke database SQL
+     */
     public function submitAttendance(Request $request)
     {
-        // Validasi dasar
         $validated = $request->validate([
-            'driver_id' => 'required|string',
             'plate_number' => 'required|string',
             'gps_location' => 'required|string',
             'timestamp' => 'required|date_format:Y-m-d H:i:s',
             'speedometer_manual' => 'required|integer',
+            'selfie_photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+            'speedometer_photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+            'car_condition_photo_1' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'car_condition_photo_2' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ]);
 
-        // Debug logging
-        Log::info("SubmitAttendance Request Data: ", $request->all());
-        Log::info("SubmitAttendance Files: ", array_keys($request->allFiles()));
-
-        // Validasi file dengan error yang lebih spesifik
-        if (!$request->hasFile('selfie_photo')) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Foto selfie wajib diambil.'
-            ], 422);
-        }
-
-        if (!$request->hasFile('speedometer_photo')) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Foto speedometer wajib diambil.'
-            ], 422);
-        }
-
-        // Validasi file type dan size
-        $selfieFile = $request->file('selfie_photo');
-        $speedoFile = $request->file('speedometer_photo');
-
-        $validImageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-
-        if (!in_array($selfieFile->getMimeType(), $validImageTypes)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Format foto selfie tidak valid. Gunakan JPEG atau PNG.'
-            ], 422);
-        }
-
-        if (!in_array($speedoFile->getMimeType(), $validImageTypes)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Format foto speedometer tidak valid. Gunakan JPEG atau PNG.'
-            ], 422);
-        }
-
-        // Validasi file size (max 5MB)
-        if ($selfieFile->getSize() > 5242880) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Ukuran foto selfie terlalu besar. Maksimal 5MB.'
-            ], 422);
-        }
-
-        if ($speedoFile->getSize() > 5242880) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Ukuran foto speedometer terlalu besar. Maksimal 5MB.'
-            ], 422);
-        }
-
         try {
-            $driverName = Cache::remember('driver_' . $validated['driver_id'], 300, function () use ($validated) {
-                $name = $this->getDriverName($validated['driver_id']);
-                if ($name === 'Unknown') {
-                    throw new Exception("ID Driver tidak terdaftar.");
-                }
-                return $name;
-            });
+            $driver = Auth::user();
 
-            // Process images
-            $selfieUrl = $this->optimizedImageProcessing($selfieFile);
-            $speedoUrl = $this->optimizedImageProcessing($speedoFile);
+            $isOnDuty = Attendance::where('driver_id', $driver->id)
+                ->whereNull('time_out')
+                ->exists();
+            if ($isOnDuty) {
+                throw new \Exception("Driver sudah dalam status bertugas.");
+            }
 
+            $vehicle = Vehicle::firstOrCreate(
+                ['plate_number' => $validated['plate_number']],
+                ['type' => 'Otomatis Ditambah']
+            );
+
+            $selfieUrl = $this->optimizedImageProcessing($request->file('selfie_photo'));
+            $speedoUrl = $this->optimizedImageProcessing($request->file('speedometer_photo'));
             $condition1Url = $request->hasFile('car_condition_photo_1')
                 ? $this->optimizedImageProcessing($request->file('car_condition_photo_1'))
-                : '';
-
+                : null;
             $condition2Url = $request->hasFile('car_condition_photo_2')
                 ? $this->optimizedImageProcessing($request->file('car_condition_photo_2'))
-                : '';
+                : null;
 
-            // Prepare data for Google Sheets
-            $newRow = [
-                $validated['timestamp'],
-                '',
-                $validated['driver_id'],
-                $driverName,
-                $validated['plate_number'],
-                'https://maps.google.com/?q=' . $validated['gps_location'],
-                '',
-                $this->formatAsHyperlink($selfieUrl),
-                $this->formatAsHyperlink($speedoUrl),
-                '',
-                $this->formatAsHyperlink($condition1Url),
-                $this->formatAsHyperlink($condition2Url),
-                '',
-                '',
-                '',
-                '',
-                $validated['speedometer_manual'],
-                '',
-                ''
-            ];
+            Attendance::create([
+                'driver_id' => $driver->id,
+                'vehicle_id' => $vehicle->id,
+                'time_in' => $validated['timestamp'],
+                'gps_location_in' => $validated['gps_location'],
+                'speedo_awal' => $validated['speedometer_manual'],
+                'selfie_photo_path' => $selfieUrl,
+                'speedo_photo_awal_path' => $speedoUrl,
+                'condition_photo_1_path' => $condition1Url,
+                'condition_photo_2_path' => $condition2Url,
+            ]);
 
-            $this->appendToGoogleSheet($newRow);
-            $this->clearDriverCache($validated['driver_id']);
+            $this->clearDriverCache($driver->id);
 
-            Log::info("Attendance submitted successfully for driver: " . $validated['driver_id']);
-
+            Log::info("Attendance submitted successfully for driver: " . $driver->driver_id_nik);
             return response()->json([
                 'status' => 'success',
                 'message' => 'Absensi berhasil disimpan'
             ]);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error("SubmitAttendance Error: " . $e->getMessage());
-            Log::error("SubmitAttendance Stack Trace: " . $e->getTraceAsString());
-
             return response()->json([
                 'status' => 'error',
                 'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
@@ -224,90 +154,97 @@ class AttendanceController extends Controller
         }
     }
 
+    /**
+     * [UPDATE] Menyimpan laporan akhir tugas ke database SQL
+     * Dan mengembalikan data ringkasan untuk ditampilkan di HP
+     */
     public function submitEndOfDutyReport(Request $request)
     {
+        $validated = $request->validate([
+            'speedometer_manual_akhir' => 'required|integer',
+            'check_ban' => 'required|string',
+            'check_lampu' => 'required|string',
+            'check_rem' => 'required|string',
+            'catatan' => 'nullable|string',
+            'timestamp' => 'required|date_format:Y-m-d H:i:s',
+            'speedometer_photo_akhir' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+        ]);
+
         try {
-            $validated = $request->validate([
-                'driver_id' => 'required|string',
-                'speedometer_manual_akhir' => 'required|integer',
-                'check_ban' => 'required|string',
-                'check_lampu' => 'required|string',
-                'check_rem' => 'required|string',
-                'catatan' => 'nullable|string',
-                'timestamp' => 'required|date_format:Y-m-d H:i:s',
-            ]);
+            $driver = Auth::user();
 
-            if (!$request->hasFile('speedometer_photo_akhir')) {
-                throw new Exception("Foto speedometer akhir wajib diisi.");
+            // 1. Cari data absensi yang sedang aktif
+            $activeAttendance = Attendance::with('vehicle') // Load relasi vehicle
+                ->where('driver_id', $driver->id)
+                ->whereNull('time_out')
+                ->first();
+
+            if (!$activeAttendance) {
+                throw new \Exception("Tidak ditemukan data absensi masuk yang aktif.");
             }
 
-            $client = $this->getOptimizedGoogleClient();
-            $sheetsService = new GoogleSheets($client);
-
-            $rangeRead = 'Absensi!A:C';
-            $response = $sheetsService->spreadsheets_values->get($this->spreadsheetId, $rangeRead);
-            $rows = $response->getValues() ?? [];
-
-            $rowIndexToUpdate = -1;
-            if (count($rows) > 1) {
-                for ($i = count($rows) - 1; $i >= 1; $i--) {
-                    $row = $rows[$i];
-                    if (
-                        isset($row[2]) && $row[2] == $validated['driver_id'] &&
-                        (!isset($row[1]) || trim($row[1]) === '')
-                    ) {
-                        $rowIndexToUpdate = $i + 1;
-                        break;
-                    }
-                }
-            }
-
-            if ($rowIndexToUpdate === -1) {
-                throw new Exception("Tidak ditemukan data absensi masuk yang aktif.");
-            }
-
+            // 2. Proses foto speedometer akhir
             $speedoAkhirUrl = $this->optimizedImageProcessing($request->file('speedometer_photo_akhir'));
 
-            $data = [
-                new \Google_Service_Sheets_ValueRange([
-                    'range' => 'Absensi!B' . $rowIndexToUpdate,
-                    'values' => [[$validated['timestamp']]]
-                ]),
-                new \Google_Service_Sheets_ValueRange([
-                    'range' => 'Absensi!J' . $rowIndexToUpdate,
-                    'values' => [[$this->formatAsHyperlink($speedoAkhirUrl)]]
-                ]),
-                new \Google_Service_Sheets_ValueRange([
-                    'range' => 'Absensi!M' . $rowIndexToUpdate,
-                    'values' => [
-                        [
-                            $validated['catatan'] ?? '',
-                            $validated['check_ban'],
-                            $validated['check_lampu'],
-                            $validated['check_rem']
-                        ]
-                    ]
-                ]),
-                new \Google_Service_Sheets_ValueRange([
-                    'range' => 'Absensi!R' . $rowIndexToUpdate,
-                    'values' => [[$validated['speedometer_manual_akhir']]]
-                ]),
-            ];
-
-            $batchUpdateRequest = new \Google_Service_Sheets_BatchUpdateValuesRequest([
-                'valueInputOption' => 'USER_ENTERED',
-                'data' => $data
+            // 3. Update data absensi
+            $activeAttendance->update([
+                'time_out' => $validated['timestamp'],
+                'speedo_photo_akhir_path' => $speedoAkhirUrl,
+                'catatan' => $validated['catatan'] ?? '',
+                'check_ban' => $validated['check_ban'],
+                'check_lampu' => $validated['check_lampu'],
+                'check_rem' => $validated['check_rem'],
+                'speedo_akhir' => $validated['speedometer_manual_akhir'],
             ]);
 
-            $sheetsService->spreadsheets_values->batchUpdate($this->spreadsheetId, $batchUpdateRequest);
-            $this->clearDriverCache($validated['driver_id']);
+            // 4. Hapus cache status driver
+            $this->clearDriverCache($driver->id);
+
+            // ==================================================
+            // 5. [BARU] HITUNG DATA RINGKASAN UNTUK HP
+            // ==================================================
+
+            // Hitung Durasi
+            $waktuMasuk = Carbon::parse($activeAttendance->time_in);
+            $waktuKeluar = Carbon::parse($validated['timestamp']);
+
+            // Hitung selisih total menit dulu agar akurat
+            $totalMenit = $waktuMasuk->diffInMinutes($waktuKeluar);
+            $jam = floor($totalMenit / 60);
+            $menit = $totalMenit % 60;
+            $durasiKerja = "{$jam} Jam {$menit} Menit";
+
+            // Hitung Jarak
+            $jarak = $validated['speedometer_manual_akhir'] - $activeAttendance->speedo_awal;
+
+            // Cek Kesehatan Mobil
+            $masalah = [];
+            if ($validated['check_ban'] == 'Bermasalah')
+                $masalah[] = 'Ban';
+            if ($validated['check_lampu'] == 'Bermasalah')
+                $masalah[] = 'Lampu';
+            if ($validated['check_rem'] == 'Bermasalah')
+                $masalah[] = 'Rem';
+
+            $statusKesehatan = empty($masalah) ? 'Prima' : 'Perlu Perbaikan';
+            $detailMasalah = empty($masalah) ? 'Siap digunakan kembali' : implode(', ', $masalah);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Laporan akhir tugas berhasil dikirim.'
+                'message' => 'Laporan akhir tugas berhasil dikirim.',
+                'data' => [
+                    'driver_name' => $driver->full_name,
+                    'plate_number' => $activeAttendance->vehicle->plate_number ?? 'N/A',
+                    'waktu_keluar' => $waktuKeluar->format('H:i d-m-Y'),
+                    'durasi_kerja' => $durasiKerja,
+                    'total_km' => number_format($jarak) . " Km",
+                    'vehicle_status' => $statusKesehatan,
+                    'vehicle_issues' => $detailMasalah,
+                ]
             ]);
+            // ==================================================
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error("SubmitEndOfDuty Error: " . $e->getMessage());
             return response()->json([
                 'status' => 'error',
@@ -316,49 +253,46 @@ class AttendanceController extends Controller
         }
     }
 
+    /**
+     * Menyimpan laporan darurat ke database SQL
+     */
     public function submitEmergencyReport(Request $request)
     {
+        $validated = $request->validate([
+            'plate_number' => 'required|string',
+            'gps_location' => 'required|string',
+            'description' => 'required|string',
+            'timestamp' => 'required|date_format:Y-m-d H:i:s',
+            'proof_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+        ]);
+
         try {
-            $validated = $request->validate([
-                'driver_id' => 'required|string',
-                'plate_number' => 'required|string',
-                'gps_location' => 'required|string',
-                'description' => 'required|string',
-                'timestamp' => 'required|date_format:Y-m-d H:i:s',
-            ]);
+            $driver = Auth::user();
+
+            $vehicle = Vehicle::where('plate_number', $validated['plate_number'])->first();
+            if (!$vehicle) {
+                throw new \Exception("Plat nomor tidak terdaftar.");
+            }
 
             $proofPhotoUrl = $request->hasFile('proof_photo')
                 ? $this->optimizedImageProcessing($request->file('proof_photo'))
-                : '';
+                : null;
 
-            $client = $this->getOptimizedGoogleClient();
-            $sheetsService = new GoogleSheets($client);
-
-            $newRow = [
-                $validated['timestamp'],
-                $validated['driver_id'],
-                $validated['plate_number'],
-                'https://maps.google.com/?q=' . $validated['gps_location'],
-                $validated['description'],
-                $this->formatAsHyperlink($proofPhotoUrl),
-            ];
-
-            $body = new \Google_Service_Sheets_ValueRange(['values' => [$newRow]]);
-            $params = ['valueInputOption' => 'USER_ENTERED'];
-
-            $sheetsService->spreadsheets_values->append(
-                $this->spreadsheetId,
-                'Laporan Masalah',
-                $body,
-                $params
-            );
+            EmergencyReport::create([
+                'driver_id' => $driver->id,
+                'vehicle_id' => $vehicle->id,
+                'timestamp' => $validated['timestamp'],
+                'gps_location' => $validated['gps_location'],
+                'description' => $validated['description'],
+                'proof_photo_path' => $proofPhotoUrl,
+            ]);
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Laporan darurat berhasil dikirim.'
             ]);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error("SubmitEmergencyReport Error: " . $e->getMessage());
             return response()->json([
                 'status' => 'error',
@@ -367,43 +301,35 @@ class AttendanceController extends Controller
         }
     }
 
-    public function getAttendanceHistory($driverId)
+    /**
+     * Mengambil riwayat absensi dari database SQL
+     */
+    public function getAttendanceHistory()
     {
+        $driverId = Auth::id();
         $cacheKey = self::CACHE_ATTENDANCE_HISTORY . $driverId;
 
         return Cache::remember($cacheKey, 300, function () use ($driverId) {
             try {
-                $client = $this->getOptimizedGoogleClient();
-                $sheetsService = new GoogleSheets($client);
-
-                $rangeRead = 'Absensi!A:E';
-                $response = $sheetsService->spreadsheets_values->get($this->spreadsheetId, $rangeRead);
-                $rows = $response->getValues() ?? [];
-
-                $history = [];
-                if (count($rows) > 1) {
-                    array_shift($rows);
-                    $recentRows = array_slice(array_reverse($rows), 0, 50);
-
-                    foreach ($recentRows as $row) {
-                        if (isset($row[2]) && $row[2] == $driverId) {
-                            $history[] = [
-                                'jam_masuk' => $row[0] ?? '-',
-                                'jam_keluar' => $row[1] ?? '-',
-                                'plat_nomor' => $row[4] ?? '-'
-                            ];
-                            if (count($history) >= 30)
-                                break;
-                        }
-                    }
-                }
+                $history = Attendance::with('vehicle')
+                    ->where('driver_id', $driverId)
+                    ->orderBy('time_in', 'desc')
+                    ->take(30)
+                    ->get()
+                    ->map(function ($item) {
+                        return [
+                            'jam_masuk' => $item->time_in ? Carbon::parse($item->time_in)->toDateTimeString() : '-',
+                            'jam_keluar' => $item->time_out ? Carbon::parse($item->time_out)->toDateTimeString() : '-',
+                            'plat_nomor' => $item->vehicle->plate_number ?? '-'
+                        ];
+                    });
 
                 return response()->json([
                     'status' => 'success',
                     'data' => $history
                 ]);
 
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 Log::error("GetAttendanceHistory Error: " . $e->getMessage());
                 return response()->json([
                     'status' => 'error',
@@ -414,73 +340,34 @@ class AttendanceController extends Controller
         });
     }
 
-    public function clearCache($driverId = null)
+    /**
+     * Menghapus cache
+     */
+    public function clearCache()
     {
         try {
+            $driverId = Auth::id();
             if ($driverId) {
-                Cache::forget(self::CACHE_DRIVER_DETAILS . $driverId);
                 Cache::forget(self::CACHE_DRIVER_STATUS . $driverId);
                 Cache::forget(self::CACHE_ATTENDANCE_HISTORY . $driverId);
-            } else {
-                Cache::flush();
             }
-
             return response()->json(['status' => 'success', 'message' => 'Cache cleared']);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
 
-    private function getOptimizedGoogleClient()
-    {
-        $client = new GoogleClient();
-        $client->setAuthConfig(config('services.google.credentials_path'));
-        $client->addScope(GoogleSheets::SPREADSHEETS);
-        $client->setHttpClient(new \GuzzleHttp\Client([
-            'timeout' => 10,
-            'connect_timeout' => 5,
-            'read_timeout' => 10,
-        ]));
-        return $client;
-    }
+
+    // --- FUNGSI HELPER ---
 
     private function optimizedImageProcessing($file)
     {
-        $manager = new ImageManager(new Driver());
+        $manager = new ImageManager(new GdDriver());
         $image = $manager->read($file);
         $image->scaleDown(width: 1200);
-
-        $fileName = 'photos/' . uniqid('opt_') . '.jpg';
+        $fileName = 'photos/' . uniqid('img_') . '.jpg';
         Storage::disk('public')->put($fileName, $image->encodeByMediaType('image/jpeg', 70));
-
-        return Storage::url($fileName);
-    }
-
-    private function appendToGoogleSheet($rowData, $retryCount = 0)
-    {
-        try {
-            $client = $this->getOptimizedGoogleClient();
-            $sheetsService = new GoogleSheets($client);
-
-            $body = new \Google_Service_Sheets_ValueRange(['values' => [$rowData]]);
-            $params = ['valueInputOption' => 'USER_ENTERED'];
-
-            $sheetsService->spreadsheets_values->append(
-                $this->spreadsheetId,
-                'Absensi!A1',
-                $body,
-                $params
-            );
-
-        } catch (Exception $e) {
-            if ($retryCount < 2) {
-                Log::warning("Google Sheets retry attempt: " . ($retryCount + 1));
-                sleep(1);
-                $this->appendToGoogleSheet($rowData, $retryCount + 1);
-            } else {
-                throw $e;
-            }
-        }
+        return $fileName;
     }
 
     private function clearDriverCache($driverId)
@@ -488,36 +375,4 @@ class AttendanceController extends Controller
         Cache::forget(self::CACHE_DRIVER_STATUS . $driverId);
         Cache::forget(self::CACHE_ATTENDANCE_HISTORY . $driverId);
     }
-
-    private function getDriverName($driverId)
-    {
-        try {
-            $client = $this->getOptimizedGoogleClient();
-            $sheetsService = new GoogleSheets($client);
-
-            $range = 'Daftar Driver!A:B';
-            $response = $sheetsService->spreadsheets_values->get($this->spreadsheetId, $range);
-            $rows = $response->getValues();
-
-            if (!empty($rows)) {
-                array_shift($rows);
-                foreach ($rows as $row) {
-                    if (isset($row[0]) && $row[0] == $driverId) {
-                        return $row[1] ?? 'Unknown';
-                    }
-                }
-            }
-            return 'Unknown';
-        } catch (Exception $e) {
-            Log::error("GetDriverName Error: " . $e->getMessage());
-            return 'Unknown';
-        }
-    }
-
-    private function formatAsHyperlink($url, $text = 'Lihat Foto')
-    {
-        if (empty($url))
-            return '';
-        return sprintf('=HYPERLINK("%s"; "%s")', url($url), $text);
-    }
-} 
+}
