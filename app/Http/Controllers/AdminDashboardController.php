@@ -7,46 +7,61 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
-// --- MODEL KITA ---
+// --- MODEL ---
 use App\Models\Attendance;
 use App\Models\Driver;
 use App\Models\Vehicle;
 use App\Models\EmergencyReport;
 
-// --- DIPERLUKAN UNTUK KPI CARD & GRAFIK ---
+// --- UTILITIES ---
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use App\Exports\RekapAbsensiChecklistExport;
+use Maatwebsite\Excel\Facades\Excel;
 
+/**
+ * Class AdminDashboardController
+ * * Controller Utama untuk Panel Admin Web.
+ * * Mengelola tampilan Dashboard, Statistik (KPI), Grafik, Laporan,
+ * serta fitur Manajemen Aset Kendaraan (Servis & Pajak).
+ * * @package App\Http\Controllers
+ */
 class AdminDashboardController extends Controller
 {
-    private $perPage = 25;
+    private $perPage = 25; // Jumlah item per halaman (Pagination)
 
     /**
-     * Menampilkan dashboard utama (KPI dan Driver Aktif)
+     * Menampilkan Halaman Dashboard Utama (Home).
+     * * Statistik KPI dan Grafik Aktivitas Driver.
      */
     public function dashboard(Request $request)
     {
         try {
             // === DATA STATISTIK (KPI) ===
             $now = Carbon::now();
+
+            // Hitung laporan darurat hari ini
             $totalLaporan = EmergencyReport::whereDate('timestamp', $now)->count();
 
+            // Hitung total jarak (KM) bulan ini
             $totalJarakBulanIni = Attendance::whereNotNull('time_out')
                 ->whereMonth('time_out', $now->month)
                 ->whereYear('time_out', $now->year)
                 ->sum(DB::raw('speedo_akhir - speedo_awal'));
 
+            // Ambil driver yang sedang bertugas
             $onDutyDriversRaw = Attendance::with(['driver', 'vehicle'])
                 ->whereNull('time_out')
                 ->orderBy('time_in', 'desc')
                 ->get();
 
+            // Hitung ketersediaan aset
             $totalAset = Vehicle::count();
             $totalAsetUnikDipakai = $onDutyDriversRaw->pluck('vehicle_id')->unique()->count();
             $totalAsetTersedia = $totalAset - $totalAsetUnikDipakai;
 
-            // === DATA GRAFIK 7 HARI ===
+            // === DATA GRAFIK 7 HARI TERAKHIR ===
             $chartDataRaw = Attendance::whereNotNull('time_out')
                 ->where('time_out', '>=', Carbon::now()->subDays(6)->startOfDay())
                 ->groupBy(DB::raw('DATE(time_out)'))
@@ -64,13 +79,9 @@ class AdminDashboardController extends Controller
                 $chartLabels[] = $date->isoFormat('ddd');
                 $chartData[] = $chartDataRaw->get($dateString)->total_km ?? 0;
             }
-            // === AKHIR DATA GRAFIK ===
 
-
-            // Proses mapping data driver aktif
             $onDutyDrivers = $onDutyDriversRaw->map(fn($item) => $this->formatAttendanceData($item));
 
-            // Kirim semua data (termasuk data KPI baru) ke view
             return view('admin.dashboard', compact(
                 'onDutyDrivers',
                 'totalAset',
@@ -82,11 +93,9 @@ class AdminDashboardController extends Controller
             ));
 
         } catch (\Exception $e) {
-            Log::error("Gagal memuat dashboard SQL: " . $e->getMessage());
-            $error = 'Gagal memuat data dari Database. Coba lagi nanti. Error: ' . $e->getMessage();
-
+            Log::error("Dashboard Error: " . $e->getMessage());
             return view('admin.dashboard', [
-                'error' => $error,
+                'error' => 'Gagal memuat data dashboard.',
                 'onDutyDrivers' => [],
                 'totalAset' => 0,
                 'totalLaporan' => 0,
@@ -99,165 +108,134 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Menampilkan halaman riwayat driver (terpisah)
+     * [FITUR BARU] Dashboard Khusus Maintenance (Bengkel).
+     * Fokus: Menampilkan sisa jarak servis dan status kesehatan per mobil.
      */
-    public function riwayatDriver(Request $request)
+    public function maintenanceDashboard(Request $request)
     {
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        $startDate = $request->input('start_date', Carbon::now()->subDays(30)->format('Y-m-d'));
-        $selectedDriverId = $request->input('driver_id');
+        $searchKeyword = $request->input('search');
 
-        try {
-            $filterEnd = Carbon::parse($endDate)->endOfDay();
-            $filterStart = Carbon::parse($startDate)->startOfDay();
-        } catch (\Exception $e) {
-            $filterEnd = Carbon::now()->endOfDay();
-            $filterStart = Carbon::now()->subDays(30)->startOfDay();
+        $query = Vehicle::query();
+        if ($searchKeyword) {
+            $query->where('plate_number', 'like', '%' . $searchKeyword . '%');
         }
+        $vehicles = $query->get();
 
-        try {
-            $allDrivers = Driver::orderBy('full_name')->get();
+        // Ambil data absensi terakhir (untuk cek KM terakhir)
+        $latestAttendances = Attendance::with('driver')
+            ->whereIn('id', function ($q) {
+                $q->selectRaw('MAX(id)')->from('attendances')->groupBy('vehicle_id');
+            })->get()->keyBy('vehicle_id');
 
-            $query = Attendance::with(['driver', 'vehicle'])
-                ->whereNotNull('time_out')
-                ->whereBetween('time_in', [$filterStart, $filterEnd])
-                ->orderBy('time_in', 'desc');
+        // Mapping Data Fokus Maintenance
+        $maintenanceData = $vehicles->map(function ($mobil) use ($latestAttendances) {
+            $latest = $latestAttendances->get($mobil->id);
+            // Jika sedang jalan, ambil speedo_awal. Jika parkir, ambil speedo_akhir.
+            $kmTerakhir = $latest ? ($latest->speedo_akhir ?? $latest->speedo_awal) : 0;
 
-            if (!empty($selectedDriverId)) {
-                $query->where('driver_id', $selectedDriverId);
+            // Hitung Sisa KM Servis
+            $interval = $mobil->service_interval_km;
+            $lastService = $mobil->last_service_km;
+            $nextService = $lastService + $interval;
+
+            // Sisa KM = Target Servis - KM Saat Ini
+            $sisaKm = $nextService - $kmTerakhir;
+
+            // Status Kesehatan (Prioritas)
+            $healthStatus = 'Prima';
+            $healthColor = 'success';
+
+            if ($interval > 0) {
+                if ($sisaKm <= 0) {
+                    $healthStatus = 'SERVIS SEKARANG';
+                    $healthColor = 'danger';
+                } elseif ($sisaKm <= 1000) {
+                    $healthStatus = 'Warning Servis';
+                    $healthColor = 'warning';
+                }
             }
 
-            $historyPaginatorRaw = $query->paginate($this->perPage);
-
-            $historyPaginator = $historyPaginatorRaw->through(fn($item) => $this->formatAttendanceData($item));
-
-            return view('admin.riwayat_driver', compact(
-                'historyPaginator',
-                'startDate',
-                'endDate',
-                'allDrivers',
-                'selectedDriverId'
-            ));
-
-        } catch (\Exception $e) {
-            Log::error("Gagal memuat riwayat driver SQL: " . $e->getMessage());
-            $error = 'Gagal memuat data riwayat. Error: ' . $e->getMessage();
-
-            return view('admin.riwayat_driver', [
-                'error' => $error,
-                'historyPaginator' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, $this->perPage),
-                'startDate' => $startDate,
-                'endDate' => $endDate,
-                'allDrivers' => [],
-                'selectedDriverId' => null,
-            ]);
-        }
-    }
-
-    /**
-     * Menampilkan laporan darurat
-     */
-    public function laporanDarurat()
-    {
-        $laporanMasalah = []; // Inisialisasi
-        try {
-            $laporanMasalahRaw = EmergencyReport::with(['driver', 'vehicle'])
-                ->orderBy('timestamp', 'desc')
-                ->get();
-
-            $laporanMasalah = $laporanMasalahRaw->map(function ($laporan) {
-                // --- PERBAIKAN LINK GOOGLE MAPS ---
-                // Menggunakan format ?q=lat,long
-                $mapsUrl = 'https://www.google.com/maps?q=' . $laporan->gps_location;
-
-                return [
-                    'timestamp' => Carbon::parse($laporan->timestamp)->format('Y-m-d H:i:s'),
-                    'driver_name' => $laporan->driver->full_name ?? 'N/A',
-                    'plate_number' => $laporan->vehicle->plate_number ?? 'N/A',
-                    'deskripsi' => $laporan->description,
-                    'lokasi_gps' => $mapsUrl, // <-- SUDAH DIPERBAIKI
-                    'link_foto' => $laporan->proof_photo_path ? Storage::url($laporan->proof_photo_path) : '#',
-                ];
-            });
-
-            return view('admin.laporan_darurat', compact('laporanMasalah'));
-
-        } catch (\Exception $e) {
-            Log::error("Gagal memuat laporan darurat SQL: " . $e->getMessage());
-            $error = 'Gagal memuat data laporan darurat. Error: ' . $e->getMessage();
-            return view('admin.laporan_darurat', compact('error', 'laporanMasalah'));
-        }
-    }
-
-    /**
-     * Menampilkan riwayat unit
-     */
-    public function riwayatUnit(Request $request)
-    {
-        $filterPlat = $request->input('plate_number', '');
-
-        try {
-            $query = Attendance::with(['driver', 'vehicle'])
-                ->whereNotNull('time_out')
-                ->orderBy('time_out', 'desc');
-
-            if (!empty($filterPlat)) {
-                $query->whereHas('vehicle', function ($q) use ($filterPlat) {
-                    $q->where('plate_number', 'like', '%' . $filterPlat . '%');
-                });
+            // Cek Laporan Kerusakan Terakhir (Ban/Rem/Lampu) dari Absensi
+            if ($latest && ($latest->check_ban == 'Bermasalah' || $latest->check_rem == 'Bermasalah' || $latest->check_lampu == 'Bermasalah')) {
+                $healthStatus = 'Perlu Perbaikan Fisik';
+                $healthColor = 'danger';
             }
 
-            $checklistPaginatorRaw = $query->paginate($this->perPage);
+            return [
+                'id' => $mobil->id,
+                'plat' => $mobil->plate_number,
+                'jenis' => $mobil->type,
+                'km_saat_ini' => $kmTerakhir,
+                'km_servis_terakhir' => $lastService,
+                'km_servis_berikutnya' => $interval > 0 ? $nextService : '-',
+                'sisa_km' => $interval > 0 ? $sisaKm : '-',
+                'status_kesehatan' => $healthStatus,
+                'warna_status' => $healthColor,
+                'update_terakhir' => $latest ? \Carbon\Carbon::parse($latest->updated_at)->diffForHumans() : '-'
+            ];
+        })->sortBy('sisa_km'); // Urutkan dari yang paling butuh servis (Sisa KM terkecil)
 
-            $checklistPaginator = $checklistPaginatorRaw->through(function ($item) {
-                return [
-                    'timestamp_keluar' => Carbon::parse($item->time_out)->format('Y-m-d H:i:s'),
-                    'driver_name' => $item->driver->full_name ?? 'N/A',
-                    'plate_number' => $item->vehicle->plate_number ?? 'N/A',
-                    'speedo_akhir' => $item->speedo_akhir ?? 0,
-                    'link_speedo_akhir' => $item->speedo_photo_akhir_path ? Storage::url($item->speedo_photo_akhir_path) : '#',
-                    'cek_ban' => $item->check_ban ?? '-',
-                    'cek_lampu' => $item->check_lampu ?? '-',
-                    'cek_rem' => $item->check_rem ?? '-',
-                    'catatan' => $item->catatan ?? '-',
-                ];
-            });
-
-            return view('admin.riwayat_unit', compact('checklistPaginator', 'filterPlat'));
-
-        } catch (\Exception $e) {
-            Log::error("Gagal memuat riwayat unit SQL: " . $e->getMessage());
-            $error = 'Gagal memuat data riwayat unit. Error: ' . $e->getMessage();
-            $checklistPaginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, $this->perPage);
-            return view('admin.riwayat_unit', compact('error', 'checklistPaginator', 'filterPlat'));
-        }
+        return view('admin.maintenance.index', compact('maintenanceData', 'searchKeyword'));
     }
 
     /**
-     * Menampilkan daftar aset + HITUNG SERVIS & PAJAK (Termasuk LOGIKA PENCARIAN)
+     * Menampilkan Visual Health Check (Digital Twin - 3D Schematic).
+     */
+    public function visualCheck(Vehicle $vehicle)
+    {
+        $lastLog = Attendance::where('vehicle_id', $vehicle->id)
+            ->whereNotNull('time_out')
+            ->orderBy('time_out', 'desc')
+            ->first();
+
+        $status = [
+            'ban' => 'success',
+            'lampu' => 'success',
+            'rem' => 'success',
+            'mesin' => 'success'
+        ];
+
+        if ($lastLog) {
+            if ($lastLog->check_ban == 'Bermasalah')
+                $status['ban'] = 'danger';
+            if ($lastLog->check_lampu == 'Bermasalah')
+                $status['lampu'] = 'danger';
+            if ($lastLog->check_rem == 'Bermasalah')
+                $status['rem'] = 'danger';
+        }
+
+        if ($vehicle->service_interval_km > 0) {
+            $kmTerakhir = $lastLog->speedo_akhir ?? 0;
+            $kmBerjalan = $kmTerakhir - $vehicle->last_service_km;
+            if ($kmBerjalan >= $vehicle->service_interval_km) {
+                $status['mesin'] = 'danger';
+            }
+        }
+
+        return view('admin.aset.visual', compact('vehicle', 'status', 'lastLog'));
+    }
+
+    /**
+     * Menampilkan Daftar Aset (Administrasi).
+     * * Digunakan untuk data legalitas (STNK/KIR) dan tipe mobil.
      */
     public function daftarAset(Request $request)
     {
-        $daftarMobil = []; // Inisialisasi
         $searchKeyword = $request->input('search');
 
         try {
             $query = Vehicle::query();
-
             if ($searchKeyword) {
                 $query->where(function ($q) use ($searchKeyword) {
                     $q->where('plate_number', 'like', '%' . $searchKeyword . '%')
                         ->orWhere('type', 'like', '%' . $searchKeyword . '%');
                 });
             }
-
             $semuaMobil = $query->get();
 
             $latestAttendances = Attendance::with(['driver'])
                 ->whereIn('id', function ($query) {
-                    $query->selectRaw('MAX(id)')
-                        ->from('attendances')
-                        ->groupBy('vehicle_id');
+                    $query->selectRaw('MAX(id)')->from('attendances')->groupBy('vehicle_id');
                 })->get()->keyBy('vehicle_id');
 
             $onDutyAttendances = Attendance::with(['driver'])
@@ -267,7 +245,6 @@ class AdminDashboardController extends Controller
             $today = Carbon::now()->startOfDay();
 
             $daftarMobil = $semuaMobil->map(function ($mobil) use ($latestAttendances, $onDutyAttendances, $today) {
-
                 $onDuty = $onDutyAttendances->get($mobil->id);
                 $latest = $latestAttendances->get($mobil->id);
 
@@ -289,34 +266,14 @@ class AdminDashboardController extends Controller
                         'tgl_terakhir' => 'Check-out: ' . ($latest->time_out ? Carbon::parse($latest->time_out)->format('Y-m-d H:i') : '-')
                     ];
                 } else {
-                    $dataAset = [
-                        'status' => 'Parkir (Baru)',
-                        'driver_terakhir' => '-',
-                        'tgl_terakhir' => '-'
-                    ];
+                    $dataAset = ['status' => 'Parkir (Baru)', 'driver_terakhir' => '-', 'tgl_terakhir' => '-'];
                 }
 
-                $interval = $mobil->service_interval_km;
-                $km_servis_terakhir = $mobil->last_service_km;
-                $status_servis = ['badge' => 'secondary', 'text' => 'N/A'];
-                $km_servis_berikutnya = 0;
-                $sisa_km = 0;
-
-                if ($interval > 0) {
-                    $km_servis_berikutnya = $km_servis_terakhir + $interval;
-                    $sisa_km = $km_servis_berikutnya - $km_terakhir;
-
-                    if ($sisa_km <= 0) {
-                        $status_servis = ['badge' => 'danger', 'text' => 'SERVIS SEKARANG'];
-                    } elseif ($sisa_km <= 1000) {
-                        $status_servis = ['badge' => 'warning', 'text' => 'Segera Servis'];
-                    } else {
-                        $status_servis = ['badge' => 'success', 'text' => 'Aman'];
-                    }
-                }
-
+                // Hitung Status Dokumen
                 $status_stnk = $this->hitungStatusTanggal($mobil->pajak_stnk_berlaku_sampai, $today);
                 $status_kir = $this->hitungStatusTanggal($mobil->kir_berlaku_sampai, $today);
+
+                // Note: Data servis di sini disederhanakan, detailnya pindah ke Maintenance Dashboard
 
                 return array_merge([
                     'id' => $mobil->id,
@@ -324,9 +281,6 @@ class AdminDashboardController extends Controller
                     'jenis_mobil' => $mobil->type,
                 ], $dataAset, [
                     'km_terakhir' => $km_terakhir,
-                    'km_servis_berikutnya' => $km_servis_berikutnya > 0 ? $km_servis_berikutnya : '-',
-                    'sisa_km' => $interval > 0 ? $sisa_km : '-',
-                    'status_servis' => $status_servis,
                     'status_stnk' => $status_stnk,
                     'status_kir' => $status_kir,
                 ]);
@@ -336,52 +290,37 @@ class AdminDashboardController extends Controller
             return view('admin.daftar_aset', compact('daftarMobil', 'searchKeyword'));
 
         } catch (\Exception $e) {
-            Log::error("Gagal memuat daftar aset SQL: " . $e->getMessage());
-            $error = 'Gagal memuat data daftar aset. Error: ' . $e->getMessage();
-            return view('admin.daftar_aset', compact('error', 'daftarMobil', 'searchKeyword'));
+            Log::error("Daftar Aset Error: " . $e->getMessage());
+            return view('admin.daftar_aset', ['error' => 'Gagal memuat aset.', 'daftarMobil' => [], 'searchKeyword' => $searchKeyword]);
         }
     }
 
-    /**
-     * Menangani "Catat Servis"
-     */
+    // --- Helper Functions untuk Maintenance ---
+
     public function catatServis(Request $request, Vehicle $vehicle)
     {
         $this->authorize('is-master-admin');
         $validated = $request->validate([
             'km_servis_saat_ini' => 'required|integer|min:0'
-        ], [
-            'km_servis_saat_ini.required' => 'Kolom KM servis wajib diisi.',
-            'km_servis_saat_ini.integer' => 'KM harus berupa angka.'
         ]);
 
         try {
             $vehicle->last_service_km = $validated['km_servis_saat_ini'];
             $vehicle->save();
 
-            return redirect()
-                ->route('admin.daftar_aset')
-                ->with('success', 'Servis untuk ' . $vehicle->plate_number . ' berhasil dicatat di KM ' . $validated['km_servis_saat_ini']);
-
+            // Redirect kembali ke halaman sebelumnya (bisa maintenance atau daftar aset)
+            return back()->with('success', "Servis {$vehicle->plate_number} tercatat di KM {$validated['km_servis_saat_ini']}");
         } catch (\Exception $e) {
-            return redirect()
-                ->route('admin.daftar_aset')
-                ->with('error', 'Gagal mencatat servis: ' . $e->getMessage());
+            return back()->with('error', 'Gagal mencatat servis: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Menampilkan form Edit Aset
-     */
     public function editAset(Vehicle $vehicle)
     {
         $this->authorize('is-master-admin');
         return view('admin.aset.edit', compact('vehicle'));
     }
 
-    /**
-     * Menyimpan data dari form Edit Aset
-     */
     public function updateAset(Request $request, Vehicle $vehicle)
     {
         $this->authorize('is-master-admin');
@@ -394,223 +333,256 @@ class AdminDashboardController extends Controller
         ]);
 
         try {
-            $vehicle->type = $validated['type'];
-            $vehicle->service_interval_km = $validated['service_interval_km'];
-            $vehicle->last_service_km = $validated['last_service_km'];
-            $vehicle->pajak_stnk_berlaku_sampai = $validated['pajak_stnk_berlaku_sampai'];
-            $vehicle->kir_berlaku_sampai = $validated['kir_berlaku_sampai'];
-
-            $vehicle->save();
-
-            return redirect()
-                ->route('admin.daftar_aset')
-                ->with('success', 'Data mobil ' . $vehicle->plate_number . ' berhasil diperbarui.');
-
+            $vehicle->update($validated);
+            return redirect()->route('admin.daftar_aset')->with('success', 'Data aset diperbarui.');
         } catch (\Exception $e) {
-            return redirect()
-                ->route('admin.aset.edit', $vehicle->id)
-                ->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+            return redirect()->route('admin.aset.edit', $vehicle->id)->with('error', 'Update gagal.');
         }
     }
 
-    /**
-     * Menampilkan Rekap Harian
-     */
+    // --- Monitoring & Laporan Lainnya ---
+
+    public function riwayatDriver(Request $request)
+    {
+        // (Logic sama seperti sebelumnya, diringkas di sini agar tidak terlalu panjang)
+        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        $startDate = $request->input('start_date', Carbon::now()->subDays(30)->format('Y-m-d'));
+        $selectedDriverId = $request->input('driver_id');
+
+        $filterEnd = Carbon::parse($endDate)->endOfDay();
+        $filterStart = Carbon::parse($startDate)->startOfDay();
+        $allDrivers = Driver::orderBy('full_name')->get();
+
+        $query = Attendance::with(['driver', 'vehicle'])
+            ->whereNotNull('time_out')
+            ->whereBetween('time_in', [$filterStart, $filterEnd])
+            ->orderBy('time_in', 'desc');
+
+        if (!empty($selectedDriverId))
+            $query->where('driver_id', $selectedDriverId);
+
+        $historyPaginatorRaw = $query->paginate($this->perPage);
+        $historyPaginator = $historyPaginatorRaw->through(fn($item) => $this->formatAttendanceData($item));
+
+        return view('admin.riwayat_driver', compact('historyPaginator', 'startDate', 'endDate', 'allDrivers', 'selectedDriverId'));
+    }
+
+    public function riwayatUnit(Request $request)
+    {
+        $filterPlat = $request->input('plate_number', '');
+        $query = Attendance::with(['driver', 'vehicle'])->whereNotNull('time_out')->orderBy('time_out', 'desc');
+        if (!empty($filterPlat)) {
+            $query->whereHas('vehicle', function ($q) use ($filterPlat) {
+                $q->where('plate_number', 'like', '%' . $filterPlat . '%');
+            });
+        }
+        $checklistPaginatorRaw = $query->paginate($this->perPage);
+
+        $checklistPaginator = $checklistPaginatorRaw->through(function ($item) {
+            return [
+                'timestamp_keluar' => Carbon::parse($item->time_out)->format('Y-m-d H:i:s'),
+                'driver_name' => $item->driver->full_name ?? 'N/A',
+                'plate_number' => $item->vehicle->plate_number ?? 'N/A',
+                'speedo_akhir' => $item->speedo_akhir ?? 0,
+                'link_speedo_akhir' => $item->speedo_photo_akhir_path ? Storage::url($item->speedo_photo_akhir_path) : '#',
+                'cek_ban' => $item->check_ban ?? '-',
+                'cek_lampu' => $item->check_lampu ?? '-',
+                'cek_rem' => $item->check_rem ?? '-',
+                'catatan' => $item->catatan ?? '-',
+            ];
+        });
+
+        return view('admin.riwayat_unit', compact('checklistPaginator', 'filterPlat'));
+    }
+
+    public function laporanDarurat()
+    {
+        $laporanMasalahRaw = EmergencyReport::with(['driver', 'vehicle'])->orderBy('timestamp', 'desc')->get();
+        $laporanMasalah = $laporanMasalahRaw->map(function ($laporan) {
+            return [
+                'timestamp' => Carbon::parse($laporan->timestamp)->format('Y-m-d H:i:s'),
+                'driver_name' => $laporan->driver->full_name ?? 'N/A',
+                'plate_number' => $laporan->vehicle->plate_number ?? 'N/A',
+                'deskripsi' => $laporan->description,
+                'lokasi_gps' => 'https://www.google.com/maps?q=' . $laporan->gps_location,
+                'link_foto' => $laporan->proof_photo_path ? Storage::url($laporan->proof_photo_path) : '#',
+            ];
+        });
+        return view('admin.laporan_darurat', compact('laporanMasalah'));
+    }
+
+    // --- Rekap & Kalender ---
+
     public function rekapHarian(Request $request)
     {
         $selectedDate = $request->input('tanggal', Carbon::now()->format('Y-m-d'));
-        $rekapData = []; // Inisialisasi
-
-        try {
-            $filterDate = Carbon::parse($selectedDate);
-
-            $rekapDataRaw = Attendance::with(['driver', 'vehicle'])
-                ->whereNotNull('time_out')
-                ->whereDate('time_out', $filterDate)
-                ->orderBy('time_in', 'asc')
-                ->get();
-
-            $rekapData = $rekapDataRaw->map(fn($item) => $this->formatAttendanceData($item));
-
-            return view('admin.rekap_harian', compact('rekapData', 'selectedDate'));
-
-        } catch (\Exception $e) {
-            Log::error("Gagal memuat rekap harian SQL: " . $e->getMessage());
-            $error = 'Gagal memuat data rekap harian. Error: ' . $e->getMessage();
-            return view('admin.rekap_harian', compact('error', 'rekapData', 'selectedDate'));
-        }
+        $rekapDataRaw = Attendance::with(['driver', 'vehicle'])
+            ->whereNotNull('time_out')
+            ->whereDate('time_out', Carbon::parse($selectedDate))
+            ->orderBy('time_in', 'asc')
+            ->get();
+        $rekapData = $rekapDataRaw->map(fn($item) => $this->formatAttendanceData($item));
+        return view('admin.rekap_harian', compact('rekapData', 'selectedDate'));
     }
 
-    /**
-     * Menampilkan Rekap Bulanan
-     */
     public function rekapBulanan(Request $request)
     {
         $selectedMonth = $request->input('bulan', Carbon::now()->format('Y-m'));
-        $rekapDriver = [];
-        $rekapUnit = [];
+        $start = Carbon::parse($selectedMonth)->startOfMonth();
+        $end = Carbon::parse($selectedMonth)->endOfMonth();
+        $data = Attendance::with(['driver', 'vehicle'])
+            ->whereNotNull('time_out')
+            ->whereBetween('time_out', [$start, $end])
+            ->get();
 
-        try {
-            $filterMonthStart = Carbon::parse($selectedMonth)->startOfMonth();
-            $filterMonthEnd = Carbon::parse($selectedMonth)->endOfMonth();
+        $rekapDriver = $data->groupBy('driver.full_name')->map(fn($group) => [
+            'jumlah_tugas' => $group->count(),
+            'total_km' => $group->sum(fn($a) => ($a->speedo_akhir ?? 0) - ($a->speedo_awal ?? 0))
+        ])->sortKeys();
 
-            $rekapDataRaw = Attendance::with(['driver', 'vehicle'])
-                ->whereNotNull('time_out')
-                ->whereBetween('time_out', [$filterMonthStart, $filterMonthEnd])
-                ->get();
+        $rekapUnit = $data->groupBy('vehicle.plate_number')->map(fn($group) => [
+            'jumlah_tugas' => $group->count(),
+            'total_km' => $group->sum(fn($a) => ($a->speedo_akhir ?? 0) - ($a->speedo_awal ?? 0))
+        ])->sortKeys();
 
-            $rekapDriver = $rekapDataRaw->groupBy('driver.full_name')
-                ->map(function ($attendances, $driverName) {
-                    return [
-                        'jumlah_tugas' => $attendances->count(),
-                        'total_km' => $attendances->sum(fn($a) => ($a->speedo_akhir ?? 0) - ($a->speedo_awal ?? 0))
-                    ];
-                })->sortKeys();
-
-            $rekapUnit = $rekapDataRaw->groupBy('vehicle.plate_number')
-                ->map(function ($attendances, $platNomor) {
-                    return [
-                        'jumlah_tugas' => $attendances->count(),
-                        'total_km' => $attendances->sum(fn($a) => ($a->speedo_akhir ?? 0) - ($a->speedo_awal ?? 0))
-                    ];
-                })->sortKeys();
-
-            return view('admin.rekap_bulanan', compact('rekapDriver', 'rekapUnit', 'selectedMonth'));
-
-        } catch (\Exception $e) {
-            Log::error("Gagal memuat rekap bulanan SQL: " . $e->getMessage());
-            $error = 'Gagal memuat data rekap bulanan. Error: ' . $e->getMessage();
-            return view('admin.rekap_bulanan', compact('error', 'rekapDriver', 'rekapUnit', 'selectedMonth'));
-        }
+        return view('admin.rekap_bulanan', compact('rekapDriver', 'rekapUnit', 'selectedMonth'));
     }
 
+    public function maintenanceCalendar()
+    {
+        return view('admin.maintenance_calendar');
+    }
 
-    /**
-     * Mengambil data status dashboard untuk auto-refresh (AJAX)
-     */
+    public function getMaintenanceEvents()
+    {
+        $vehicles = Vehicle::all();
+        $events = [];
+        foreach ($vehicles as $vehicle) {
+            if ($vehicle->pajak_stnk_berlaku_sampai) {
+                $events[] = $this->formatCalendarEvent("STNK: " . $vehicle->plate_number, $vehicle->pajak_stnk_berlaku_sampai, $vehicle->id);
+            }
+            if ($vehicle->kir_berlaku_sampai) {
+                $events[] = $this->formatCalendarEvent("KIR: " . $vehicle->plate_number, $vehicle->kir_berlaku_sampai, $vehicle->id);
+            }
+        }
+        return response()->json(array_filter($events));
+    }
+
+    public function exportBulananChecklist(Request $request)
+    {
+        $month = $request->input('bulan', Carbon::now()->format('Y-m'));
+        return Excel::download(
+            new RekapAbsensiChecklistExport(Carbon::parse($month)->month, Carbon::parse($month)->year),
+            'rekap-checklist-' . $month . '.xlsx'
+        );
+    }
+
     public function getDashboardStatus(Request $request): JsonResponse
     {
-        try {
-            // Logika ini MENG-COPY logika dari method dashboard()
-            $now = Carbon::now();
-            $totalLaporan = EmergencyReport::whereDate('timestamp', $now)->count();
+        // Live Update (AJAX)
+        $now = Carbon::now();
+        $onDutyDriversRaw = Attendance::with(['driver', 'vehicle'])->whereNull('time_out')->orderBy('time_in', 'desc')->get();
+        $latestReport = EmergencyReport::with('driver')->orderBy('timestamp', 'desc')->first();
 
-            $totalJarakBulanIni = Attendance::whereNotNull('time_out')
-                ->whereMonth('time_out', $now->month)
-                ->whereYear('time_out', $now->year)
-                ->sum(DB::raw('speedo_akhir - speedo_awal'));
-
-            $onDutyDriversRaw = Attendance::with(['driver', 'vehicle'])
-                ->whereNull('time_out')
-                ->orderBy('time_in', 'desc')
-                ->get();
-
-            $totalAset = Vehicle::count();
-            $totalAsetUnikDipakai = $onDutyDriversRaw->pluck('vehicle_id')->unique()->count();
-            $totalAsetTersedia = $totalAset - $totalAsetUnikDipakai;
-
-            // Format data driver untuk dikirim
-            $onDutyDrivers = $onDutyDriversRaw->map(fn($item) => $this->formatAttendanceData($item));
-
-            // === Ambil Laporan Terakhir ===
-            $latestReport = EmergencyReport::with('driver')->orderBy('timestamp', 'desc')->first();
-            $formattedReport = null;
-            if ($latestReport) {
-                $formattedReport = [
-                    'id' => $latestReport->id,
-                    'driver_name' => $latestReport->driver->full_name ?? 'N/A',
-                    'description' => Str::limit($latestReport->description, 50),
-                ];
-            }
-            // === Akhir Laporan ===
-
-            // Kembalikan sebagai JSON
-            return response()->json([
-                'kpi' => [
-                    'driverBertugas' => count($onDutyDrivers),
-                    'asetTersedia' => $totalAsetTersedia,
-                    'totalAset' => $totalAset,
-                    'totalJarakBulanIni' => number_format($totalJarakBulanIni),
-                    'totalLaporan' => $totalLaporan,
-                ],
-                'onDutyDrivers' => $onDutyDrivers,
-                'latestEmergencyReport' => $formattedReport,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error("Gagal mengambil data status dashboard (AJAX): " . $e->getMessage());
-            // Kirim error sebagai JSON
-            return response()->json(['error' => 'Gagal mengambil data server'], 500);
-        }
+        return response()->json([
+            'kpi' => [
+                'driverBertugas' => $onDutyDriversRaw->count(),
+                'asetTersedia' => Vehicle::count() - $onDutyDriversRaw->pluck('vehicle_id')->unique()->count(),
+                'totalAset' => Vehicle::count(),
+                'totalJarakBulanIni' => number_format(Attendance::whereNotNull('time_out')->whereMonth('time_out', $now->month)->sum(DB::raw('speedo_akhir - speedo_awal'))),
+                'totalLaporan' => EmergencyReport::whereDate('timestamp', $now)->count(),
+            ],
+            'onDutyDrivers' => $onDutyDriversRaw->map(fn($item) => $this->formatAttendanceData($item)),
+            'latestEmergencyReport' => $latestReport ? [
+                'id' => $latestReport->id,
+                'driver_name' => $latestReport->driver->full_name ?? 'N/A',
+                'description' => Str::limit($latestReport->description, 50)
+            ] : null,
+        ]);
     }
 
+    // --- PRIVATE HELPERS ---
 
-    // --- HELPER FUNCTIONS ---
-
-    /**
-     * Helper untuk menghitung status tanggal
-     */
-    private function hitungStatusTanggal($tanggalKadaluwarsa, $today)
+    private function formatCalendarEvent($title, $dateStr, $vehicleId)
     {
-        if (empty($tanggalKadaluwarsa)) {
-            return ['badge' => 'secondary', 'text' => 'N/A'];
-        }
-
-        try {
-            $tanggal = Carbon::parse($tanggalKadaluwarsa)->startOfDay();
-            $sisaHari = $today->diffInDays($tanggal, false);
-
-            if ($sisaHari < 0) {
-                return ['badge' => 'danger', 'text' => 'MATI (Lewat ' . abs($sisaHari) . ' hari)'];
-            } elseif ($sisaHari <= 30) {
-                return ['badge' => 'warning', 'text' => 'Aktif (Sisa ' . $sisaHari . ' hari)'];
-            } else {
-                return ['badge' => 'success', 'text' => 'Aktif (' . $tanggal->format('d-m-Y') . ')'];
-            }
-        } catch (\Exception $e) {
-            return ['badge' => 'secondary', 'text' => 'Error Tanggal'];
-        }
-    }
-
-    /**
-     * Helper untuk memformat data absensi
-     */
-    private function formatAttendanceData(Attendance $item)
-    {
-        $jarak = ($item->speedo_akhir ?? 0) - ($item->speedo_awal ?? 0);
-
-        $totalJamKerja = '-';
-        if ($item->time_out) {
-            $timeIn = Carbon::parse($item->time_in);
-            $timeOut = Carbon::parse($item->time_out);
-
-            // === PERBAIKAN LOGIKA JAM KERJA ===
-            // Pastikan kita menghitung selisih absolut (selalu positif)
-            $totalMenit = $timeIn->diffInMinutes($timeOut, true);
-            // === AKHIR PERBAIKAN ===
-
-            $jam = floor($totalMenit / 60);
-            $menit = $totalMenit % 60;
-
-            $totalJamKerja = "{$jam} jam {$menit} menit";
-        }
-
-        // --- PERBAIKAN LINK GOOGLE MAPS ---
-        // Format ?q=lat,long
-        $mapsUrl = 'https://www.google.com/maps?q=' . $item->gps_location_in;
+        $date = Carbon::parse($dateStr);
+        $daysLeft = now()->diffInDays($date, false);
+        $color = '#0d6efd';
+        if ($daysLeft < 0)
+            $color = '#dc3545';
+        elseif ($daysLeft <= 30)
+            $color = '#ffc107';
 
         return [
-            'timestamp_masuk' => Carbon::parse($item->time_in)->format('Y-m-d H:i:s'),
+            'title' => $title,
+            'start' => $date->format('Y-m-d'),
+            'backgroundColor' => $color,
+            'borderColor' => $color,
+            'url' => route('admin.aset.edit', $vehicleId)
+        ];
+    }
+
+    private function hitungStatusTanggal($tanggal, $today)
+    {
+        if (!$tanggal)
+            return ['badge' => 'secondary', 'text' => 'N/A'];
+        $target = Carbon::parse($tanggal)->startOfDay();
+        $sisa = $today->diffInDays($target, false);
+        if ($sisa < 0)
+            return ['badge' => 'danger', 'text' => 'MATI (Lewat ' . abs($sisa) . ' hari)'];
+        if ($sisa <= 30)
+            return ['badge' => 'warning', 'text' => 'Aktif (Sisa ' . $sisa . ' hari)'];
+        return ['badge' => 'success', 'text' => 'Aktif (' . $target->format('d-m-Y') . ')'];
+    }
+    /**
+     * Memperbaiki status fisik kendaraan secara manual oleh Admin.
+     * Digunakan setelah mekanik selesai memperbaiki kerusakan (Ban/Rem/Lampu).
+     * Mengubah status laporan terakhir dari 'Bermasalah' menjadi 'Aman'.
+     */
+    public function resolveIssue(Request $request, Vehicle $vehicle)
+    {
+        $this->authorize('is-master-admin');
+
+        // 1. Cari laporan terakhir driver untuk mobil ini (yang menyebabkan status merah)
+        $lastLog = Attendance::where('vehicle_id', $vehicle->id)
+            ->whereNotNull('time_out')
+            ->orderBy('time_out', 'desc')
+            ->first();
+
+        if ($lastLog) {
+            // 2. Update status checklist menjadi 'Aman'
+            // Ini akan membuat Dashboard & Visual 3D kembali Hijau
+            $lastLog->update([
+                'check_ban' => 'Aman',
+                'check_lampu' => 'Aman',
+                'check_rem' => 'Aman',
+                // Tambahkan jejak audit di catatan
+                'catatan' => $lastLog->catatan . ' [DIPERBAIKI ADMIN PADA ' . Carbon::now()->format('d-m-Y H:i') . ']'
+            ]);
+
+            return back()->with('success', "Status kerusakan mobil {$vehicle->plate_number} berhasil direset (Sudah Diperbaiki).");
+        }
+
+        return back()->with('error', 'Tidak ada data laporan untuk diperbaiki.');
+    }
+    private function formatAttendanceData(Attendance $item)
+    {
+        $timeIn = Carbon::parse($item->time_in);
+        $totalJamKerja = '-';
+        if ($item->time_out) {
+            $totalMenit = $timeIn->diffInMinutes(Carbon::parse($item->time_out), true);
+            $totalJamKerja = floor($totalMenit / 60) . " jam " . ($totalMenit % 60) . " menit";
+        }
+        return [
+            'timestamp_masuk' => $timeIn->format('Y-m-d H:i:s'),
             'timestamp_keluar' => $item->time_out ? Carbon::parse($item->time_out)->format('Y-m-d H:i:s') : '-',
-            'gps_masuk' => $mapsUrl, // <-- SUDAH DIPERBAIKI
+            'gps_masuk' => 'https://www.google.com/maps?q=' . $item->gps_location_in,
             'driver_name' => $item->driver->full_name ?? 'N/A',
             'plate_number' => $item->vehicle->plate_number ?? 'N/A',
             'speedo_awal' => $item->speedo_awal ?? 0,
             'speedo_akhir' => $item->speedo_akhir ?? 0,
-
-            'jarak_tempuh' => $jarak,
+            'jarak_tempuh' => ($item->speedo_akhir ?? 0) - ($item->speedo_awal ?? 0),
             'total_jam_kerja' => $totalJamKerja,
-
             'link_selfie' => $item->selfie_photo_path ? Storage::url($item->selfie_photo_path) : '#',
             'link_speedo_awal' => $item->speedo_photo_awal_path ? Storage::url($item->speedo_photo_awal_path) : '#',
             'link_speedo_akhir' => $item->speedo_photo_akhir_path ? Storage::url($item->speedo_photo_akhir_path) : '#',

@@ -4,12 +4,16 @@
 
 @section('content')
     <div class="container-fluid p-0">
-
         @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: "{{ session('success') }}",
+                    showConfirmButton: false,
+                    timer: 2000 // Otomatis hilang dalam 2 detik
+                });
+            </script>
         @endif
         @if (session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -72,8 +76,7 @@
                                                 </a>
 
                                                 <form action="{{ route('admin.pengguna.destroy', $user->id) }}" method="POST"
-                                                    class="d-inline"
-                                                    onsubmit="return confirm('Anda yakin ingin menghapus pengguna ini?');">
+                                                    class="d-inline form-delete">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-danger btn-sm" {{ $user->id === Auth::id() ? 'disabled' : '' }}
@@ -97,4 +100,32 @@
             </div>
         </div>
     </div>
+    <script>
+        // Pilih semua form dengan class 'form-delete'
+        const deleteForms = document.querySelectorAll('.form-delete');
+
+        deleteForms.forEach(form => {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); // Mencegah form dikirim langsung
+
+                const currentForm = this; // Simpan referensi ke form yang sedang diklik
+
+                Swal.fire({
+                    title: 'Hapus Pengguna?',
+                    text: "Data pengguna ini akan dihapus permanen!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33', // Merah (tanda bahaya)
+                    cancelButtonColor: '#3085d6', // Biru (batal)
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Jika user klik 'Ya', submit form secara manual
+                        currentForm.submit();
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

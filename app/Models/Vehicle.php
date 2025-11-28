@@ -9,19 +9,16 @@ class Vehicle extends Model
 {
     use HasFactory;
 
-    /**
-     * Atribut yang boleh diisi secara massal (Mass Assignable).
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'plate_number',
         'type',
+        // Pastikan kolom-kolom ini ada di $fillable
+        'service_interval_km',
+        'last_service_km',
+        'pajak_stnk_berlaku_sampai',
+        'kir_berlaku_sampai',
     ];
 
-    /**
-     * Relasi: Satu mobil bisa dimiliki oleh banyak absensi.
-     */
     public function attendances()
     {
         return $this->hasMany(Attendance::class);

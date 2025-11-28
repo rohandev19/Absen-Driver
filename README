@@ -1,0 +1,135 @@
+Sistem Absensi Driver & Manajemen Aset (Hamada Logistik)
+Sistem manajemen logistik terintegrasi yang terdiri dari Web Admin Dashboard untuk pemantauan operasional dan Aplikasi Mobile untuk absensi driver dengan fitur Offline-First.
+
+Tech Stack (Teknologi yang Digunakan)
+
+1. Backend & Web Admin (Server-Side)
+   Framework: Laravel 10 (PHP)
+
+Database: MySQL / MariaDB
+
+Templating Engine: Laravel Blade
+
+Frontend UI: Bootstrap 5
+
+Scripting: JavaScript (Vanilla + ES6)
+
+2. Mobile App (Client-Side)
+   Framework: Flutter
+
+Language: Dart
+
+Architecture: MVC (Model-View-Controller) dengan State Management native (setState).
+
+Database Lokal: Sembast (NoSQL) untuk fitur Offline Mode.
+
+Dependencies & Instalasi
+Berikut adalah daftar paket dan library yang harus diinstall agar aplikasi berjalan dengan baik.
+
+A. Backend (Laravel)
+Pastikan server memiliki PHP >= 8.1 dan Composer.
+
+Library Utama (via Composer):
+
+Laravel Sanctum (laravel/sanctum)
+
+Fungsi: Otentikasi API berbasis Token untuk aplikasi mobile.
+
+Maatwebsite Excel (maatwebsite/excel)
+
+Fungsi: Export laporan rekap absensi ke file .xlsx (Excel).
+
+Intervention Image (intervention/image)
+
+Fungsi: Kompresi dan resize foto bukti (selfie/speedometer) sebelum disimpan agar hemat storage.
+
+Simple QR Code (simplesoftwareio/simple-qrcode)
+
+Fungsi: Generate QR Code untuk ID Card Driver dan Stiker Mobil.
+
+Library Frontend (CDN / Public Assets):
+
+Bootstrap 5: Styling layout responsif.
+
+Bootstrap Icons: Ikon antarmuka.
+
+SweetAlert2: Popup notifikasi yang modern & interaktif.
+
+Chart.js: Menampilkan grafik aktivitas driver di dashboard.
+
+FullCalendar: Menampilkan kalender jadwal servis & pajak kendaraan.
+
+B. Mobile App (Flutter)
+Pastikan komputer memiliki Flutter SDK terbaru. Berikut adalah daftar package yang digunakan di pubspec.yaml:
+
+1. Koneksi & Data:
+
+http: Untuk mengirim request ke API Laravel.
+
+connectivity_plus: Mendeteksi status internet (Online/Offline).
+
+shared_preferences: Menyimpan sesi login (Token) dan data ringan.
+
+sembast & path_provider: Database lokal NoSQL untuk menyimpan data absensi saat sinyal hilang (Offline Mode).
+
+2. Fitur Hardware:
+
+geolocator: Mengambil titik koordinat GPS (Latitude/Longitude).
+
+image_picker: Mengakses kamera untuk foto selfie dan bukti laporan.
+
+mobile_scanner: Memindai QR Code pada ID Card dan Mobil.
+
+3. Utilitas Lain:
+
+intl: Format tanggal dan waktu (Indonesia).
+
+url_launcher: Membuka aplikasi WhatsApp untuk fitur "Lupa Password" atau "Hubungi Admin".
+
+flutter_launcher_icons: (Dev Dependency) Untuk mengubah logo aplikasi di menu HP.
+
+🚀 Cara Instalasi (Singkat)
+Setup Backend (Laravel)
+Clone repositori.
+
+Jalankan composer install.
+
+Copy file .env.example menjadi .env dan sesuaikan konfigurasi database.
+
+Jalankan php artisan key:generate.
+
+Jalankan php artisan migrate --seed (untuk database & akun admin default).
+
+Jalankan php artisan storage:link (Wajib, agar foto bisa muncul).
+
+Jalankan server: php artisan serve.
+
+Setup Mobile (Flutter)
+Masuk ke folder mobile.
+
+Jalankan flutter pub get.
+
+Sesuaikan URL API di lib/core/config/app_config.dart.
+
+Jalankan aplikasi: flutter run.
+
+1. Laravel Sanctum (Otentikasi API)
+   composer require laravel/sanctum
+
+2. Maatwebsite Excel (Export Laporan)
+   composer require maatwebsite/excel
+
+php artisan vendor:publish --provider="Maatwebsite\Excel\ExcelServiceProvider" --tag=config
+
+3. Intervention Image (Kompresi Foto)
+   composer require intervention/image
+
+4. Simple QR Code (Generate QR)
+   composer require simplesoftwareio/simple-qrcode
+
+Langkah Wajib Setelah Install (Setup)
+composer dump-autoload
+php artisan storage:link
+php artisan migrate
+
+#rohan

@@ -5,32 +5,41 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-// --- MODEL BARU KITA ---
+// Models
 use App\Models\Driver;
 use App\Models\Vehicle;
 use App\Models\Attendance;
 use App\Models\EmergencyReport;
 
-// --- FUNGSI BAWAAN LARAVEL ---
+// Facades & Libraries
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
-// --- UNTUK PROSES GAMBAR ---
+// Image Processing
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\ImageManager;
 
+/**
+ * Class AttendanceController
+ * * Mengontrol seluruh alur kerja operasional driver.
+ * Mencakup: Check-in, Check-out, Cek Status (On-Duty), dan Laporan Darurat.
+ * * Controller ini menggunakan CACHE untuk mengurangi beban database saat
+ * aplikasi melakukan polling status driver setiap beberapa detik.
+ * * @package App\Http\Controllers\Api
+ */
 class AttendanceController extends Controller
 {
-    // Cache timeout
-    private $cacheTimeout = 300;
+    // Konstanta untuk Key Cache agar konsisten
     const CACHE_DRIVER_STATUS = 'driver_status_';
     const CACHE_ATTENDANCE_HISTORY = 'attendance_history_';
 
     /**
-     * Mengambil detail driver yang sedang login
+     * Mengambil informasi dasar driver yang sedang login.
+     * Digunakan oleh Mobile App untuk menampilkan nama di Header Home.
+     * * @return \Illuminate\Http\JsonResponse
      */
     public function getDriverDetails()
     {
@@ -47,15 +56,21 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Cek status driver yang sedang login
+     * Mengecek status terkini driver (Apakah sedang bertugas?).
+     * * PENTING: Menggunakan CACHE selama 60 detik.
+     * Alasannya: Aplikasi mobile memanggil endpoint ini berulang-ulang (polling).
+     * Tanpa cache, database akan terbebani oleh ribuan query "SELECT" yang sama.
+     * * @return \Illuminate\Http\JsonResponse JSON berisi boolean 'is_on_duty' dan plat nomor aktif.
      */
     public function checkDriverStatus()
     {
         $driverId = Auth::id();
         $cacheKey = self::CACHE_DRIVER_STATUS . $driverId;
 
+        // Cek Cache dulu, jika tidak ada baru query DB
         return Cache::remember($cacheKey, 60, function () use ($driverId) {
             try {
+                // Cari data absensi yang time_out-nya masih NULL (belum pulang)
                 $activeAttendance = Attendance::with('vehicle')
                     ->where('driver_id', $driverId)
                     ->whereNull('time_out')
@@ -76,6 +91,7 @@ class AttendanceController extends Controller
                 }
             } catch (\Exception $e) {
                 Log::error("CheckDriverStatus Error: " . $e->getMessage());
+                // Return 503 agar aplikasi mobile tahu server sedang sibuk/error
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Service temporarily unavailable',
@@ -86,17 +102,27 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Menyimpan absensi masuk ke database SQL
+     * Proses Absen Masuk (Check-In).
+     * * Alur Logika:
+     * 1. Validasi input (termasuk foto wajib).
+     * 2. Cek apakah driver masih punya sesi aktif (mencegah double login).
+     * 3. Cari atau Buat data Kendaraan (Vehicle) based on Plat Nomor.
+     * 4. Kompresi gambar (Selfie & Speedometer) agar hemat storage.
+     * 5. Simpan record baru ke tabel 'attendances'.
+     * 6. Hapus Cache status driver agar status di HP langsung update.
+     * * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function submitAttendance(Request $request)
     {
         $validated = $request->validate([
             'plate_number' => 'required|string',
             'gps_location' => 'required|string',
-            'timestamp' => 'required|date_format:Y-m-d H:i:s',
+            'timestamp' => 'required|date_format:Y-m-d H:i:s', // Waktu dari Client
             'speedometer_manual' => 'required|integer',
             'selfie_photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
             'speedometer_photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+            // Foto kondisi mobil opsional (nullable)
             'car_condition_photo_1' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
             'car_condition_photo_2' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ]);
@@ -104,20 +130,27 @@ class AttendanceController extends Controller
         try {
             $driver = Auth::user();
 
+            // Guard Clause: Mencegah driver check-in 2x tanpa check-out
             $isOnDuty = Attendance::where('driver_id', $driver->id)
                 ->whereNull('time_out')
                 ->exists();
+            
             if ($isOnDuty) {
-                throw new \Exception("Driver sudah dalam status bertugas.");
+                // Gunakan Log::warning untuk mencatat aktivitas mencurigakan
+                Log::warning("Double Check-in Attempt: Driver {$driver->driver_id_nik}");
+                throw new \Exception("Anda masih dalam status bertugas. Harap check-out terlebih dahulu.");
             }
 
+            // Fitur: Auto-Register Vehicle jika plat nomor belum ada di DB
             $vehicle = Vehicle::firstOrCreate(
                 ['plate_number' => $validated['plate_number']],
                 ['type' => 'Otomatis Ditambah']
             );
 
+            // Proses Optimasi Gambar (Resize & Compress)
             $selfieUrl = $this->optimizedImageProcessing($request->file('selfie_photo'));
             $speedoUrl = $this->optimizedImageProcessing($request->file('speedometer_photo'));
+            
             $condition1Url = $request->hasFile('car_condition_photo_1')
                 ? $this->optimizedImageProcessing($request->file('car_condition_photo_1'))
                 : null;
@@ -125,10 +158,11 @@ class AttendanceController extends Controller
                 ? $this->optimizedImageProcessing($request->file('car_condition_photo_2'))
                 : null;
 
+            // Simpan Data
             Attendance::create([
                 'driver_id' => $driver->id,
                 'vehicle_id' => $vehicle->id,
-                'time_in' => $validated['timestamp'],
+                'time_in' => $validated['timestamp'], // Sebaiknya gunakan Carbon::now() untuk keamanan waktu server
                 'gps_location_in' => $validated['gps_location'],
                 'speedo_awal' => $validated['speedometer_manual'],
                 'selfie_photo_path' => $selfieUrl,
@@ -137,26 +171,34 @@ class AttendanceController extends Controller
                 'condition_photo_2_path' => $condition2Url,
             ]);
 
+            // INVALIDASI CACHE: Penting agar method checkDriverStatus mengambil data terbaru
             $this->clearDriverCache($driver->id);
 
-            Log::info("Attendance submitted successfully for driver: " . $driver->driver_id_nik);
+            Log::info("Attendance IN Success: " . $driver->driver_id_nik);
+            
             return response()->json([
                 'status' => 'success',
                 'message' => 'Absensi berhasil disimpan'
             ]);
 
         } catch (\Exception $e) {
+            // Error handling aman (Log error asli, return pesan umum ke user)
             Log::error("SubmitAttendance Error: " . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                'message' => 'Gagal menyimpan absensi: ' . $e->getMessage() 
             ], 422);
         }
     }
 
     /**
-     * [UPDATE] Menyimpan laporan akhir tugas ke database SQL
-     * Dan mengembalikan data ringkasan untuk ditampilkan di HP
+     * Proses Absen Keluar (Check-Out) & Laporan Akhir Tugas.
+     * * Method ini melakukan UPDATE pada baris absensi yang aktif (where time_out IS NULL).
+     * * Fitur Tambahan:
+     * Menghitung durasi kerja dan jarak tempuh secara real-time untuk ditampilkan
+     * pada ringkasan di aplikasi HP setelah driver menekan tombol selesai.
+     * * @param Request $request
+     * @return \Illuminate\Http\JsonResponse Data ringkasan (Summary).
      */
     public function submitEndOfDutyReport(Request $request)
     {
@@ -173,20 +215,20 @@ class AttendanceController extends Controller
         try {
             $driver = Auth::user();
 
-            // 1. Cari data absensi yang sedang aktif
-            $activeAttendance = Attendance::with('vehicle') // Load relasi vehicle
+            // 1. Cari sesi aktif
+            $activeAttendance = Attendance::with('vehicle')
                 ->where('driver_id', $driver->id)
                 ->whereNull('time_out')
                 ->first();
 
             if (!$activeAttendance) {
-                throw new \Exception("Tidak ditemukan data absensi masuk yang aktif.");
+                throw new \Exception("Tidak ditemukan sesi tugas aktif. Mungkin Anda sudah check-out?");
             }
 
-            // 2. Proses foto speedometer akhir
+            // 2. Proses Foto
             $speedoAkhirUrl = $this->optimizedImageProcessing($request->file('speedometer_photo_akhir'));
 
-            // 3. Update data absensi
+            // 3. Update DB (Finalisasi data)
             $activeAttendance->update([
                 'time_out' => $validated['timestamp'],
                 'speedo_photo_akhir_path' => $speedoAkhirUrl,
@@ -197,37 +239,26 @@ class AttendanceController extends Controller
                 'speedo_akhir' => $validated['speedometer_manual_akhir'],
             ]);
 
-            // 4. Hapus cache status driver
+            // 4. Hapus cache status
             $this->clearDriverCache($driver->id);
 
-            // ==================================================
-            // 5. [BARU] HITUNG DATA RINGKASAN UNTUK HP
-            // ==================================================
-
+            // 5. Kalkulasi Ringkasan (Untuk UX di Mobile App)
             // Hitung Durasi
             $waktuMasuk = Carbon::parse($activeAttendance->time_in);
             $waktuKeluar = Carbon::parse($validated['timestamp']);
-
-            // Hitung selisih total menit dulu agar akurat
             $totalMenit = $waktuMasuk->diffInMinutes($waktuKeluar);
-            $jam = floor($totalMenit / 60);
-            $menit = $totalMenit % 60;
-            $durasiKerja = "{$jam} Jam {$menit} Menit";
+            $durasiKerja = floor($totalMenit / 60) . " Jam " . ($totalMenit % 60) . " Menit";
 
-            // Hitung Jarak
+            // Hitung Jarak Tempuh
             $jarak = $validated['speedometer_manual_akhir'] - $activeAttendance->speedo_awal;
+            // Validasi jarak negatif (jika driver salah input)
+            if ($jarak < 0) $jarak = 0; 
 
-            // Cek Kesehatan Mobil
+            // Cek Kesehatan Mobil untuk Summary
             $masalah = [];
-            if ($validated['check_ban'] == 'Bermasalah')
-                $masalah[] = 'Ban';
-            if ($validated['check_lampu'] == 'Bermasalah')
-                $masalah[] = 'Lampu';
-            if ($validated['check_rem'] == 'Bermasalah')
-                $masalah[] = 'Rem';
-
-            $statusKesehatan = empty($masalah) ? 'Prima' : 'Perlu Perbaikan';
-            $detailMasalah = empty($masalah) ? 'Siap digunakan kembali' : implode(', ', $masalah);
+            if ($validated['check_ban'] == 'Bermasalah') $masalah[] = 'Ban';
+            if ($validated['check_lampu'] == 'Bermasalah') $masalah[] = 'Lampu';
+            if ($validated['check_rem'] == 'Bermasalah') $masalah[] = 'Rem';
 
             return response()->json([
                 'status' => 'success',
@@ -238,23 +269,23 @@ class AttendanceController extends Controller
                     'waktu_keluar' => $waktuKeluar->format('H:i d-m-Y'),
                     'durasi_kerja' => $durasiKerja,
                     'total_km' => number_format($jarak) . " Km",
-                    'vehicle_status' => $statusKesehatan,
-                    'vehicle_issues' => $detailMasalah,
+                    'vehicle_status' => empty($masalah) ? 'Prima' : 'Perlu Perbaikan',
+                    'vehicle_issues' => empty($masalah) ? 'Siap digunakan kembali' : implode(', ', $masalah),
                 ]
             ]);
-            // ==================================================
 
         } catch (\Exception $e) {
             Log::error("SubmitEndOfDuty Error: " . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => 'Gagal check-out: ' . $e->getMessage()
             ], 422);
         }
     }
 
     /**
-     * Menyimpan laporan darurat ke database SQL
+     * Menerima laporan masalah darurat di jalan.
+     * Memastikan plat nomor valid sebelum menyimpan laporan.
      */
     public function submitEmergencyReport(Request $request)
     {
@@ -269,9 +300,10 @@ class AttendanceController extends Controller
         try {
             $driver = Auth::user();
 
+            // Validasi: Plat nomor harus terdaftar di sistem
             $vehicle = Vehicle::where('plate_number', $validated['plate_number'])->first();
             if (!$vehicle) {
-                throw new \Exception("Plat nomor tidak terdaftar.");
+                throw new \Exception("Plat nomor tidak ditemukan di database.");
             }
 
             $proofPhotoUrl = $request->hasFile('proof_photo')
@@ -289,20 +321,18 @@ class AttendanceController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Laporan darurat berhasil dikirim.'
+                'message' => 'Laporan darurat berhasil dikirim. Admin telah dinotifikasi.'
             ]);
 
         } catch (\Exception $e) {
             Log::error("SubmitEmergencyReport Error: " . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 422);
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
         }
     }
 
     /**
-     * Mengambil riwayat absensi dari database SQL
+     * Mengambil 30 riwayat absensi terakhir driver.
+     * Data di-cache selama 5 menit (300 detik) untuk efisiensi.
      */
     public function getAttendanceHistory()
     {
@@ -333,7 +363,7 @@ class AttendanceController extends Controller
                 Log::error("GetAttendanceHistory Error: " . $e->getMessage());
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Failed to load history',
+                    'message' => 'Gagal memuat riwayat',
                     'data' => []
                 ], 500);
             }
@@ -341,38 +371,37 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Menghapus cache
+     * Helper: Menghapus cache spesifik driver.
+     * Dipanggil setiap kali ada perubahan status (Check-in/Check-out).
      */
-    public function clearCache()
-    {
-        try {
-            $driverId = Auth::id();
-            if ($driverId) {
-                Cache::forget(self::CACHE_DRIVER_STATUS . $driverId);
-                Cache::forget(self::CACHE_ATTENDANCE_HISTORY . $driverId);
-            }
-            return response()->json(['status' => 'success', 'message' => 'Cache cleared']);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-
-    // --- FUNGSI HELPER ---
-
-    private function optimizedImageProcessing($file)
-    {
-        $manager = new ImageManager(new GdDriver());
-        $image = $manager->read($file);
-        $image->scaleDown(width: 1200);
-        $fileName = 'photos/' . uniqid('img_') . '.jpg';
-        Storage::disk('public')->put($fileName, $image->encodeByMediaType('image/jpeg', 70));
-        return $fileName;
-    }
-
     private function clearDriverCache($driverId)
     {
         Cache::forget(self::CACHE_DRIVER_STATUS . $driverId);
         Cache::forget(self::CACHE_ATTENDANCE_HISTORY . $driverId);
+    }
+
+    /**
+     * Helper: Optimasi Gambar menggunakan Intervention Image.
+     * - Resize lebar max 1200px (agar tidak terlalu besar).
+     * - Encode ke JPG kualitas 70% (hemat storage & bandwidth).
+     * - Generate nama file unik.
+     * * @param \Illuminate\Http\UploadedFile $file
+     * @return string Path file relatif (storage/...)
+     */
+    private function optimizedImageProcessing($file)
+    {
+        $manager = new ImageManager(new GdDriver());
+        $image = $manager->read($file);
+        
+        // Resize hanya jika lebar > 1200px, aspect ratio tetap
+        $image->scaleDown(width: 1200);
+        
+        // Nama file unik (menggunakan uniqid time-based)
+        $fileName = 'photos/' . uniqid('img_') . '.jpg';
+        
+        // Simpan ke storage public
+        Storage::disk('public')->put($fileName, $image->encodeByMediaType('image/jpeg', 70));
+        
+        return $fileName;
     }
 }

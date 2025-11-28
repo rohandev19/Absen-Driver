@@ -5,13 +5,6 @@
 @section('content')
     <div class="container-fluid p-0">
 
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="card shadow-sm">
@@ -24,7 +17,7 @@
 
                     <form action="{{ route('admin.aset.update', $vehicle->id) }}" method="POST">
                         @csrf
-                        @method('PUT') {{-- Tambahan penting untuk form update --}}
+                        @method('PUT')
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">

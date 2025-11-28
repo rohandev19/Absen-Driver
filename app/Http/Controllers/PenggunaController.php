@@ -8,19 +8,32 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules;
 
+/**
+ * Class PenggunaController
+ * * Mengelola data Administrator (Pengguna Web).
+ * * Controller ini dilindungi oleh Middleware Authorization.
+ * Hanya 'Master Admin' yang memiliki akses penuh (Create, Edit, Delete).
+ * Admin biasa hanya bisa melihat daftar (Index).
+ * * @package App\Http\Controllers
+ */
 class PenggunaController extends Controller
 {
+    /**
+     * Constructor untuk menerapkan Middleware.
+     * * Memastikan hanya Master Admin yang bisa mengubah data.
+     */
     public function __construct()
     {
-        // Hanya 'master-admin' yang boleh mengakses fungsi-fungsi ini
-        // 'index' (melihat daftar) boleh diakses semua admin
+        // Hanya 'master-admin' yang boleh mengakses fungsi Create, Store, Edit, Update, Destroy.
+        // Fungsi 'index' (melihat daftar) dikecualikan, sehingga semua admin bisa melihatnya.
         $this->middleware('can:is-master-admin')->except(['index']);
     }
 
     /**
-     * Tampilkan daftar semua pengguna admin.
+     * Menampilkan daftar semua pengguna admin.
+     * * Mengambil seluruh data User dari database untuk ditampilkan di tabel manajemen.
+     * * @return \Illuminate\View\View
      */
-
     public function index()
     {
         $users = User::all();
@@ -28,7 +41,8 @@ class PenggunaController extends Controller
     }
 
     /**
-     * Tampilkan form untuk membuat pengguna baru.
+     * Menampilkan formulir pembuatan pengguna admin baru.
+     * * @return \Illuminate\View\View
      */
     public function create()
     {
@@ -36,7 +50,10 @@ class PenggunaController extends Controller
     }
 
     /**
-     * Simpan pengguna baru ke database.
+     * Menyimpan pengguna admin baru ke database.
+     * * Melakukan validasi input ketat (Nama, Email Unik, Password Kuat).
+     * * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -49,22 +66,31 @@ class PenggunaController extends Controller
         User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($request->password), // Hashing password wajib dilakukan sebelum simpan
         ]);
 
         return redirect()->route('admin.pengguna.index')->with('success', 'Pengguna baru berhasil ditambahkan.');
     }
 
     /**
-     * Tampilkan form untuk mengedit pengguna.
+     * Menampilkan formulir edit untuk pengguna tertentu.
+     * * Menggunakan Route Model Binding untuk mengambil data user secara otomatis.
+     * * @param User $pengguna
+     * @return \Illuminate\View\View
      */
-    public function edit(User $pengguna) // Route model binding
+    public function edit(User $pengguna)
     {
         return view('admin.pengguna.edit', compact('pengguna'));
     }
 
     /**
-     * Perbarui pengguna di database.
+     * Memperbarui data pengguna di database.
+     * * Logika khusus:
+     * 1. Email harus unik, KECUALI untuk pengguna yang sedang diedit (ignore current ID).
+     * 2. Password hanya di-update jika field password diisi (Nullable).
+     * * @param Request $request
+     * @param User $pengguna
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, User $pengguna)
     {
@@ -78,7 +104,7 @@ class PenggunaController extends Controller
         $pengguna->name = $request->name;
         $pengguna->email = $request->email;
 
-        // Update password HANYA JIKA diisi
+        // Update password HANYA JIKA diisi (biarkan password lama jika kosong)
         if ($request->filled('password')) {
             $pengguna->password = Hash::make($request->password);
         }
@@ -89,7 +115,11 @@ class PenggunaController extends Controller
     }
 
     /**
-     * Hapus pengguna dari database.
+     * Menghapus pengguna dari database.
+     * * Fitur Keamanan (Self-Delete Prevention):
+     * Mencegah admin menghapus akunnya sendiri saat sedang login untuk menghindari lockout.
+     * * @param User $pengguna
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(User $pengguna)
     {
