@@ -22,8 +22,8 @@ class EmergencyReport extends Model
         'timestamp',
         'gps_location',
         'description',
-        'proof_photo_path',
-    
+        'proof_photo_path'
+
     ];
 
     protected $casts = [

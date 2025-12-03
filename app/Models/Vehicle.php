@@ -23,4 +23,9 @@ class Vehicle extends Model
     {
         return $this->hasMany(Attendance::class);
     }
+    public function maintenanceLogs()
+    {
+        // Mengurutkan dari servis terbaru ke terlama
+        return $this->hasMany(MaintenanceLog::class)->orderBy('service_date', 'desc');
+    }
 }
