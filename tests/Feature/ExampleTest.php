@@ -14,6 +14,7 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        // KOREKSI: Karena kita redirect ke login, statusnya adalah 302 (Found/Redirect)
+        $response->assertStatus(302);
     }
 }
