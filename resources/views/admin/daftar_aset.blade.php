@@ -1,52 +1,63 @@
-@extends('admin.layouts.app')
+    @extends('admin.layouts.app')
 
-@section('title', 'Dashboard - Daftar Aset Mobil')
+    @section('title', 'Dashboard - Daftar Aset Mobil')
 
-@section('content')
-    <div class="container-fluid p-0">
+    @section('content')
+        <div class="container-fluid p-0">
 
-        {{-- Alert Section --}}
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+            {{-- Alert Section --}}
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
 
-        <div class="row">
-            <div class="col-12">
+            <div class="row">
+                <div class="col-12">
 
-                {{-- Kartu Utama --}}
-                <div class="card shadow-sm border-0">
+                    {{-- Kartu Utama --}}
+                    <div class="card shadow-sm border-0">
 
-                    {{-- Header Kartu--}}
+                        {{-- Header Kartu--}}
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                             <div>
-                                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-truck text-primary me-2"></i> Daftar Aset Mobil</h5>
+                                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-truck text-primary me-2"></i> Daftar Aset
+                                    Mobil</h5>
                                 <small class="text-muted">Data administrasi dan legalitas armada</small>
                             </div>
                             <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
-                                <i class="bi bi-database me-1"></i> {{ count($daftarMobil) }} Unit Total
+                                <i class="bi bi-database me-1"></i> {{ $vehicles->total() }} Unit Total
                             </span>
                         </div>
 
                         <div class="card-body">
 
-                            {{-- Baris Pencarian --}}
-                            <div class="row mb-4">
-                                <div class="col-md-6 col-lg-4 ms-auto">
+                            {{-- Baris Pencarian & Tombol Tambah --}}
+                            <div class="row mb-4 justify-content-between align-items-center">
+                                {{-- Tombol Tambah Aset (Kiri) --}}
+                                <div class="col-md-4 mb-2 mb-md-0">
+                                    @can('is-master-admin')
+                                        <a href="{{ route('admin.aset.create') }}" class="btn btn-primary">
+                                            <i class="bi bi-plus-lg me-2"></i>Tambah Aset Baru
+                                        </a>
+                                    @endcan
+                                </div>
+
+                                {{-- Form Search (Kanan) --}}
+                                <div class="col-md-6 col-lg-4">
                                     <form action="{{ route('admin.daftar_aset') }}" method="GET">
                                         <div class="input-group">
-                                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                                            <input type="search" class="form-control bg-light border-start-0 ps-0" name="search" 
-                                                   placeholder="Cari plat, jenis, atau driver..." 
-                                                   value="{{ $searchKeyword ?? '' }}">
+                                            <span class="input-group-text bg-light border-end-0"><i
+                                                    class="bi bi-search text-muted"></i></span>
+                                            <input type="search" class="form-control bg-light border-start-0 ps-0" name="search"
+                                                placeholder="Cari plat atau jenis..." value="{{ request('search') }}">
                                             <button class="btn btn-primary" type="submit">Cari</button>
                                         </div>
                                     </form>
@@ -65,39 +76,44 @@
                                             <th class="py-3">Driver</th>
                                             <th class="py-3 text-end pe-3">KM Terakhir</th>
                                             <th class="py-3">Update Terakhir</th>
-                                            <th class="py-3 text-center" width="15%">Aksi</th>
+                                            <th class="py-3 text-center" width="18%">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($daftarMobil as $mobil)
+                                        @forelse ($vehicles as $vehicle)
                                             <tr class="aset-row">
-                                                <td data-label="No." class="fw-bold text-muted">{{ $loop->iteration }}</td>
-
-                                                <td data-label="Plat Nomor">
-                                                    <span class="badge bg-dark fs-6 font-monospace">{{ $mobil['plat_nomor'] }}</span>
+                                                <td data-label="No." class="fw-bold text-muted">
+                                                    {{ $loop->iteration + ($vehicles->currentPage() - 1) * $vehicles->perPage() }}
                                                 </td>
 
-                                                <td data-label="Jenis Mobil" class="fw-medium">{{ $mobil['jenis_mobil'] }}</td>
+                                                <td data-label="Plat Nomor">
+                                                    <span
+                                                        class="badge bg-dark fs-6 font-monospace">{{ $vehicle->plate_number }}</span>
+                                                </td>
+
+                                                <td data-label="Jenis Mobil" class="fw-medium">{{ $vehicle->type ?? '-' }}</td>
 
                                                 <td data-label="Status">
-                                                    @if ($mobil['status'] == 'Sedang Dipakai')
+                                                    @if ($vehicle->status == 'maintenance')
                                                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">
-                                                            <i class="bi bi-broadcast me-1"></i> {{ $mobil['status'] }}
+                                                            <i class="bi bi-tools me-1"></i> Perbaikan
                                                         </span>
                                                     @else
                                                         <span class="badge bg-success bg-opacity-10 text-success border border-success">
-                                                            <i class="bi bi-p-circle me-1"></i> {{ $mobil['status'] }}
+                                                            <i class="bi bi-check-circle me-1"></i> Ready
                                                         </span>
                                                     @endif
                                                 </td>
 
                                                 <td data-label="Driver">
-                                                    @if($mobil['driver_terakhir'] != '-' && $mobil['driver_terakhir'] != 'N/A')
+                                                    @if($vehicle->latestAttendance && $vehicle->latestAttendance->driver)
                                                         <div class="d-flex align-items-center">
-                                                            <div class="avatar-sm bg-secondary bg-opacity-10 rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
-                                                                <i class="bi bi-person-fill text-secondary" style="font-size: 12px;"></i>
+                                                            <div class="avatar-sm bg-secondary bg-opacity-10 rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                                                style="width: 24px; height: 24px;">
+                                                                <i class="bi bi-person-fill text-secondary"
+                                                                    style="font-size: 12px;"></i>
                                                             </div>
-                                                            <span>{{ $mobil['driver_terakhir'] }}</span>
+                                                            <span>{{ $vehicle->latestAttendance->driver->full_name }}</span>
                                                         </div>
                                                     @else
                                                         <span class="text-muted">-</span>
@@ -105,75 +121,139 @@
                                                 </td>
 
                                                 <td data-label="KM Terakhir" class="text-end pe-3 font-monospace fw-bold text-dark">
-                                                    {{ number_format($mobil['km_terakhir']) }} <span class="text-muted fw-normal" style="font-size: 0.8em">Km</span>
+                                                    {{ number_format($vehicle->current_km) }} <span class="text-muted fw-normal"
+                                                        style="font-size: 0.8em">Km</span>
                                                 </td>
 
                                                 <td data-label="Update Terakhir" class="text-muted small">
-                                                    {{ $mobil['tgl_terakhir'] }}
+                                                    {{ $vehicle->updated_at->format('d M Y') }}
                                                 </td>
 
                                                 <td data-label="Aksi" class="text-center">
                                                     <div class="d-inline-flex flex-nowrap gap-1">
 
-                                                        {{-- Tombol Detail (Collapse) --}}
+                                                        {{-- Detail --}}
                                                         <button class="btn btn-outline-info btn-sm" data-bs-toggle="collapse"
-                                                            data-bs-target="#detail-{{ $mobil['id'] }}" 
-                                                            aria-expanded="false" 
+                                                            data-bs-target="#detail-{{ $vehicle->id }}" aria-expanded="false"
                                                             data-bs-toggle="tooltip" title="Lihat Status Pajak">
                                                             <i class="bi bi-info-lg"></i>
                                                         </button>
 
-                                                        {{-- Tombol Riwayat --}}
-                                                        {{-- Opsional: Bisa dihapus jika sudah ada di menu Maintenance --}}
-                                                        <a href="{{ route('admin.riwayat_unit', ['plate_number' => $mobil['plat_nomor']]) }}"
-                                                           class="btn btn-outline-secondary btn-sm" 
-                                                           data-bs-toggle="tooltip" title="Riwayat Perjalanan">
+                                                        {{-- Riwayat --}}
+                                                        <a href="{{ route('admin.aset.riwayat', $vehicle->id) }}"
+                                                            class="btn btn-outline-secondary btn-sm" data-bs-toggle="tooltip"
+                                                            title="Riwayat Servis">
                                                             <i class="bi bi-clock-history"></i>
                                                         </a>
 
                                                         @can('is-master-admin')
-                                                            {{-- Tombol Edit Data --}}
-                                                            <a href="{{ route('admin.aset.edit', $mobil['id']) }}"
-                                                                class="btn btn-outline-warning btn-sm" 
-                                                                data-bs-toggle="tooltip" title="Edit Data Aset">
+                                                            {{-- Edit --}}
+                                                            <a href="{{ route('admin.aset.edit', $vehicle->id) }}"
+                                                                class="btn btn-outline-warning btn-sm" data-bs-toggle="tooltip"
+                                                                title="Edit Data Aset">
                                                                 <i class="bi bi-pencil-fill"></i>
                                                             </a>
+
+                                                            {{-- Hapus (BARU) --}}
+                                                            <form action="{{ route('admin.aset.destroy', $vehicle->id) }}" method="POST"
+                                                                class="d-inline form-delete-global"
+                                                                data-message="Apakah Anda yakin ingin menghapus aset <b class='text-danger'>{{ $vehicle->plate_number }}</b>? Data yang dihapus tidak bisa dikembalikan.">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                                    data-bs-toggle="tooltip" title="Hapus Aset">
+                                                                    <i class="bi bi-trash-fill"></i>
+                                                                </button>
+                                                            </form>
                                                         @endcan
                                                     </div>
                                                 </td>
                                             </tr>
 
-                                            {{-- Baris Detail (Perbaikan: Menghapus Data Servis yang Error) --}}
-                                            <tr class="aset-detail-row collapse" id="detail-{{ $mobil['id'] }}">
+                                            {{-- Baris Detail (Legalitas) --}}
+                                            <tr class="aset-detail-row collapse" id="detail-{{ $vehicle->id }}">
                                                 <td colspan="8" class="border-0 bg-light p-4">
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body">
                                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                                 <h6 class="card-title fw-bold text-primary mb-0">
-                                                                    <i class="bi bi-file-earmark-text me-2"></i>Status Legalitas: {{ $mobil['plat_nomor'] }}
+                                                                    <i class="bi bi-file-earmark-text me-2"></i>Status Legalitas:
+                                                                    {{ $vehicle->plate_number }}
                                                                 </h6>
-                                                                {{-- Link pintas ke Maintenance untuk info lebih lanjut --}}
-                                                                <a href="{{ route('admin.maintenance.dashboard', ['search' => $mobil['plat_nomor']]) }}" class="btn btn-sm btn-link text-decoration-none">
+                                                                <a href="{{ route('admin.maintenance.dashboard', ['search' => $vehicle->plate_number]) }}"
+                                                                    class="btn btn-sm btn-link text-decoration-none">
                                                                     Cek Kondisi Mesin <i class="bi bi-arrow-right"></i>
                                                                 </a>
                                                             </div>
 
                                                             <div class="row g-4">
-                                                                {{-- HANYA TAMPILKAN STATUS STNK & KIR (Data Administrasi) --}}
+                                                                {{-- Status STNK --}}
+                                                                @php
+                                                                    $stnkText = 'Aman';
+                                                                    $stnkBadge = 'success';
+                                                                    $stnkDisplay = '-';
+                                                                    if ($vehicle->pajak_stnk_berlaku_sampai) {
+                                                                        $date = \Carbon\Carbon::parse($vehicle->pajak_stnk_berlaku_sampai);
+                                                                        if ($date->isPast()) {
+                                                                            $stnkText = 'Expired';
+                                                                            $stnkBadge = 'danger';
+                                                                        } elseif ($date->diffInDays(now()) < 30) {
+                                                                            $stnkText = 'Segera Habis';
+                                                                            $stnkBadge = 'warning';
+                                                                        }
+                                                                        $stnkDisplay = $date->format('d M Y');
+                                                                    } else {
+                                                                        $stnkText = 'Belum Set';
+                                                                        $stnkBadge = 'secondary';
+                                                                    }
+                                                                @endphp
+
                                                                 <div class="col-md-6">
                                                                     <div class="p-3 rounded border bg-white h-100">
-                                                                        <label class="small text-muted text-uppercase fw-bold d-block mb-2">Pajak STNK</label>
-                                                                        <span class="badge bg-{{ $mobil['status_stnk']['badge'] }} fs-6">
-                                                                            {{ $mobil['status_stnk']['text'] }}
-                                                                        </span>
+                                                                        <label
+                                                                            class="small text-muted text-uppercase fw-bold d-block mb-2">Pajak
+                                                                            STNK</label>
+                                                                        <div
+                                                                            class="d-flex justify-content-between align-items-center">
+                                                                            <span class="fw-bold">{{ $stnkDisplay }}</span>
+                                                                            <span
+                                                                                class="badge bg-{{ $stnkBadge }}">{{ $stnkText }}</span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
+
+                                                                {{-- Status KIR --}}
+                                                                @php
+                                                                    $kirText = 'Aman';
+                                                                    $kirBadge = 'success';
+                                                                    $kirDisplay = '-';
+                                                                    if ($vehicle->kir_berlaku_sampai) {
+                                                                        $date = \Carbon\Carbon::parse($vehicle->kir_berlaku_sampai);
+                                                                        if ($date->isPast()) {
+                                                                            $kirText = 'Expired';
+                                                                            $kirBadge = 'danger';
+                                                                        } elseif ($date->diffInDays(now()) < 30) {
+                                                                            $kirText = 'Segera Habis';
+                                                                            $kirBadge = 'warning';
+                                                                        }
+                                                                        $kirDisplay = $date->format('d M Y');
+                                                                    } else {
+                                                                        $kirText = 'Belum Set';
+                                                                        $kirBadge = 'secondary';
+                                                                    }
+                                                                @endphp
+
                                                                 <div class="col-md-6">
                                                                     <div class="p-3 rounded border bg-white h-100">
-                                                                        <label class="small text-muted text-uppercase fw-bold d-block mb-2">Uji KIR</label>
-                                                                        <span class="badge bg-{{ $mobil['status_kir']['badge'] }} fs-6">
-                                                                            {{ $mobil['status_kir']['text'] }}
-                                                                        </span>
+                                                                        <label
+                                                                            class="small text-muted text-uppercase fw-bold d-block mb-2">Uji
+                                                                            KIR</label>
+                                                                        <div
+                                                                            class="d-flex justify-content-between align-items-center">
+                                                                            <span class="fw-bold">{{ $kirDisplay }}</span>
+                                                                            <span
+                                                                                class="badge bg-{{ $kirBadge }}">{{ $kirText }}</span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -196,21 +276,27 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{-- Pagination Links --}}
+                            <div class="mt-3">
+                                {{ $vehicles->withQueryString()->links() }}
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-@endsection
+    @endsection
 
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inisialisasi Tooltip Bootstrap
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            })
-        });
-    </script>
-@endpush
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Inisialisasi Tooltip
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                })
+            });
+        </script>
+    @endpush

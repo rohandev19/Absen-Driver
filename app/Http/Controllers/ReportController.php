@@ -146,7 +146,10 @@ class ReportController extends Controller
                 'driver_name' => $laporan->driver->full_name ?? 'N/A',
                 'plate_number' => $laporan->vehicle->plate_number ?? 'N/A',
                 'deskripsi' => $laporan->description,
-                'lokasi_gps' => 'http://googleusercontent.com/maps.google.com/?q=' . $laporan->gps_location, // Format Link Google Maps
+                
+                // PERBAIKAN DI SINI: Menggunakan URL resmi Google Maps
+                'lokasi_gps' => 'https://maps.google.com/?q=' . $laporan->gps_location, 
+                
                 'link_foto' => $laporan->proof_photo_path ? Storage::url($laporan->proof_photo_path) : '#',
             ];
         });

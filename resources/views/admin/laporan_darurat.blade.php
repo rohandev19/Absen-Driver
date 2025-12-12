@@ -5,52 +5,62 @@
 @section('content')
     <div class="container-fluid p-0">
 
-        @if (isset($error))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Error:</strong> {{ $error }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+        @if (session('error'))
+            <div class="alert alert-danger shadow-sm border-0">{{ session('error') }}</div>
         @endif
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-warning">
-                <h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Daftar Laporan Masalah Darurat</h2>
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-danger text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Laporan Insiden Darurat</h5>
+                <span class="badge bg-white text-danger fw-bold px-3 py-2 rounded-pill">{{ count($laporanMasalah) }}
+                    Kasus</span>
             </div>
-            <div class="card-body">
 
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped table-sm align-middle">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-uppercase small text-muted">
                             <tr>
-                                <th>Timestamp</th>
-                                <th>Driver</th>
-                                <th>Plat Mobil</th>
-                                <th>Deskripsi Masalah</th>
-                                <th class="text-center">Lokasi</th>
-                                <th class="text-center">Foto Bukti</th>
+                                <th class="ps-4 py-3">Waktu Kejadian</th>
+                                <th class="py-3">Pelapor</th>
+                                <th class="py-3">Kendaraan</th>
+                                <th class="py-3 w-50">Deskripsi Masalah</th>
+                                <th class="text-center py-3 pe-4">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($laporanMasalah as $laporan)
                                 <tr>
-                                    <td>{{ $laporan['timestamp'] }}</td>
-                                    <td>{{ $laporan['driver_name'] }}</td>
-                                    <td><span class="badge bg-secondary">{{ $laporan['plate_number'] }}</span></td>
-                                    <td style="white-space: normal;">{{ $laporan['deskripsi'] }}</td>
-                                    <td class="text-center">
-                                        <a href="{{ $laporan['lokasi_gps'] }}" target="_blank"
-                                            class="btn btn-outline-success btn-sm"><i class="bi bi-geo-alt-fill"></i>
-                                            Peta</a>
+                                    <td class="ps-4 fw-medium text-nowrap">{{ $laporan['timestamp'] }}</td>
+                                    <td>
+                                        <div class="fw-bold">{{ $laporan['driver_name'] }}</div>
                                     </td>
-                                    <td class="text-center">
-                                        <a href="{{ $laporan['link_foto'] }}" target="_blank"
-                                            class="btn btn-outline-primary btn-sm"><i class="bi bi-camera-fill"></i>
-                                            Foto</a>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ $laporan['plate_number'] }}</span>
+                                    </td>
+                                    <td class="text-muted">
+                                        {{ $laporan['deskripsi'] }}
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a href="{{ $laporan['lokasi_gps'] }}" target="_blank"
+                                                class="btn btn-sm btn-outline-danger" title="Lihat Lokasi">
+                                                <i class="bi bi-geo-alt-fill"></i> Map
+                                            </a>
+                                            <a href="{{ $laporan['link_foto'] }}" target="_blank"
+                                                class="btn btn-sm btn-outline-dark" title="Lihat Bukti Foto">
+                                                <i class="bi bi-image"></i> Foto
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">Tidak ada laporan masalah darurat.</td>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="bi bi-shield-check display-4 d-block mb-3 opacity-25 text-success"></i>
+                                        <h5 class="text-success">Aman</h5>
+                                        <p class="mb-0">Tidak ada laporan darurat yang masuk.</p>
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -58,6 +68,5 @@
                 </div>
             </div>
         </div>
-
     </div>
 @endsection

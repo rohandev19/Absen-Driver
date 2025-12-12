@@ -14,7 +14,7 @@ class Driver extends Authenticatable
     protected $fillable = [
         'full_name',
         'driver_id_nik',
-        'sim_expiry_date', // <--- TAMBAHKAN INI
+        'sim_expiry_date',
         'password',
     ];
 
@@ -25,12 +25,25 @@ class Driver extends Authenticatable
 
     protected $casts = [
         'password' => 'hashed',
-        'sim_expiry_date' => 'date', // <--- TAMBAHKAN INI (Agar otomatis jadi object Carbon)
+        'sim_expiry_date' => 'date',
     ];
 
-    // ... relasi lainnya ...
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    /* =========================================================================
+     * BUSINESS LOGIC
+     * ========================================================================= */
+
+    /**
+     * Cek apakah driver sedang bertugas (On Duty).
+     * Definisi: Sudah Check-in (time_in ada), tapi belum Check-out (time_out NULL).
+     * @return bool
+     */
+    public function isOnDuty(): bool
+    {
+        return $this->attendances()->whereNull('time_out')->exists();
     }
 }

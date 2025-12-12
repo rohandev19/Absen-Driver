@@ -6,7 +6,7 @@ Tech Stack (Teknologi yang Digunakan)
 1. Backend & Web Admin (Server-Side)
    Framework: Laravel 10 (PHP)
 
-Database: MySQL / MariaDB
+Database: MySQL
 
 Templating Engine: Laravel Blade
 

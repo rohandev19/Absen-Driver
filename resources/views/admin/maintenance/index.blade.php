@@ -30,40 +30,51 @@
         </div>
 
         <div class="row">
-            @forelse($maintenanceData as $item)
+            {{-- Loop data Vehicle Model --}}
+            @forelse($maintenanceData as $vehicle)
                 <div class="col-lg-4 col-md-6 mb-4">
-                    {{-- Logic Border Merah jika Sisa KM habis ATAU Status Rusak --}}
                     <div
-                        class="card shadow border-0 h-100 maintenance-card {{ ($item['sisa_km'] <= 0 || $item['status_kesehatan'] == 'Perlu Perbaikan Fisik') ? 'border-start border-5 border-danger' : '' }}">
+                        class="card shadow border-0 h-100 maintenance-card {{ ($vehicle->health_status_code === 'service_due' || $vehicle->health_status_code === 'physical_issue') ? 'border-start border-5 border-danger' : '' }}">
+
                         <div class="card-body">
                             {{-- Judul Kartu --}}
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
-                                    <h5 class="fw-bold mb-0">{{ $item['plat'] }}</h5>
-                                    <small class="text-muted">{{ $item['jenis'] }}</small>
+                                    <h5 class="fw-bold mb-0">{{ $vehicle->plate_number }}</h5>
+                                    <small class="text-muted">{{ $vehicle->type }}</small>
                                 </div>
-                                <span class="badge bg-{{ $item['warna_status'] }}">{{ $item['status_kesehatan'] }}</span>
+
+                                @if($vehicle->health_status_code === 'service_due')
+                                    <span class="badge bg-danger">SERVIS SEKARANG</span>
+                                @elseif($vehicle->health_status_code === 'warning')
+                                    <span class="badge bg-warning text-dark">Warning Servis</span>
+                                @elseif($vehicle->health_status_code === 'physical_issue')
+                                    <span class="badge bg-danger">Perbaikan Fisik</span>
+                                @else
+                                    <span class="badge bg-success">Prima</span>
+                                @endif
                             </div>
 
                             {{-- Progress Bar --}}
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between small mb-1">
                                     <span>Sisa Jarak Servis</span>
-                                    <span class="fw-bold {{ $item['sisa_km'] < 1000 ? 'text-danger' : 'text-success' }}">
-                                        {{ number_format($item['sisa_km']) }} Km
+                                    <span
+                                        class="fw-bold {{ ($vehicle->sisa_km !== null && $vehicle->sisa_km < 1000) ? 'text-danger' : 'text-success' }}">
+                                        {{ $vehicle->sisa_km !== null ? number_format($vehicle->sisa_km) . ' Km' : '-' }}
                                     </span>
                                 </div>
+
                                 @php
                                     $percent = 100;
-                                    if ($item['km_servis_berikutnya'] > 0) {
-                                        $jarakTempuhSejakServis = $item['km_saat_ini'] - $item['km_servis_terakhir'];
-                                        $interval = $item['km_servis_berikutnya'] - $item['km_servis_terakhir'];
-                                        if ($interval > 0)
-                                            $percent = 100 - (($jarakTempuhSejakServis / $interval) * 100);
+                                    if ($vehicle->service_interval_km > 0) {
+                                        $jarakTempuh = $vehicle->current_km - $vehicle->last_service_km;
+                                        $percent = 100 - (($jarakTempuh / $vehicle->service_interval_km) * 100);
                                     }
                                     if ($percent < 0)
                                         $percent = 0;
                                 @endphp
+
                                 <div class="progress" style="height: 8px;">
                                     <div class="progress-bar {{ $percent < 20 ? 'bg-danger' : 'bg-success' }}"
                                         role="progressbar" style="width: {{ $percent }}%"></div>
@@ -72,48 +83,51 @@
 
                             {{-- Detail Info --}}
                             <div class="row g-2 small text-muted mb-4">
-                                <div class="col-6"><i class="bi bi-speedometer2 me-1"></i> KM Saat Ini:<br><strong
-                                        class="text-dark">{{ number_format($item['km_saat_ini']) }}</strong></div>
-                                <div class="col-6"><i class="bi bi-calendar-check me-1"></i> Update:<br><strong
-                                        class="text-dark">{{ $item['update_terakhir'] }}</strong></div>
+                                <div class="col-6">
+                                    <i class="bi bi-speedometer2 me-1"></i> KM Saat Ini:<br>
+                                    <strong class="text-dark">{{ number_format($vehicle->current_km) }}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <i class="bi bi-calendar-check me-1"></i> Update:<br>
+                                    <strong class="text-dark">
+                                        {{ $vehicle->latestAttendance ? $vehicle->latestAttendance->updated_at->diffForHumans() : '-' }}
+                                    </strong>
+                                </div>
                             </div>
 
-                            {{-- Tombol Aksi (Dipindahkan ke dalam loop agar terikat dengan $item) --}}
+                            {{-- Tombol Aksi --}}
                             <div class="d-grid gap-2">
                                 <div class="btn-group w-100">
-                                    {{-- Tombol Visual Check --}}
-                                    <a href="{{ route('admin.aset.visual', $item['id']) }}"
+                                    <a href="{{ route('admin.aset.visual', $vehicle->id) }}"
                                         class="btn btn-outline-primary btn-sm w-50">
                                         <i class="bi bi-eye-fill me-1"></i> Visual
                                     </a>
 
-                                    {{-- TOMBOL BARU: RIWAYAT --}}
-                                    <a href="{{ route('admin.aset.riwayat', $item['id']) }}"
+                                    <a href="{{ route('admin.aset.riwayat', $vehicle->id) }}"
                                         class="btn btn-outline-info btn-sm w-50">
                                         <i class="bi bi-journal-text me-1"></i> Riwayat
                                     </a>
                                 </div>
 
-                                @can('is-master-admin')
-                                    @if ($item['status_kesehatan'] == 'Perlu Perbaikan Fisik')
-                                        {{-- JIKA RUSAK: Tampilkan Tombol Reset (Merah) dengan SweetAlert --}}
-                                        <form action="{{ route('admin.aset.resolveIssue', $item['id']) }}" method="POST"
-                                            class="d-grid form-confirm-repair">
-                                            @csrf
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="bi bi-bandaid-fill me-2"></i> Tandai Selesai Perbaikan
-                                            </button>
-                                        </form>
-                                    @else
-                                        {{-- JIKA AMAN: Tampilkan Tombol Catat Servis (Hijau) --}}
-                                        <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#catatServisModal" data-plat-nomor="{{ $item['plat'] }}"
-                                            data-km-saat-ini="{{ $item['km_saat_ini'] }}"
-                                            data-action-url="{{ route('admin.aset.catatServis', $item['id']) }}">
-                                            <i class="bi bi-wrench-adjustable me-2"></i> Catat Servis Baru
+                                {{-- FITUR CATAT SERVIS & PERBAIKAN DIBUKA UNTUK SEMUA ADMIN --}}
+                                @if ($vehicle->health_status_code === 'physical_issue')
+                                    {{-- JIKA RUSAK FISIK: Tombol Selesai Perbaikan --}}
+                                    <form action="{{ route('admin.aset.resolveIssue', $vehicle->id) }}" method="POST"
+                                        class="d-grid form-confirm-repair">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-bandaid-fill me-2"></i> Tandai Selesai Perbaikan
                                         </button>
-                                    @endif
-                                @endcan
+                                    </form>
+                                @else
+                                    {{-- JIKA AMAN / SERVIS RUTIN: Tombol Catat Servis --}}
+                                    <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#catatServisModal" data-plat-nomor="{{ $vehicle->plate_number }}"
+                                        data-km-saat-ini="{{ $vehicle->current_km }}"
+                                        data-action-url="{{ route('admin.aset.catatServis', $vehicle->id) }}">
+                                        <i class="bi bi-wrench-adjustable me-2"></i> Catat Servis Baru
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -127,116 +141,36 @@
         </div>
     </div>
 
-    {{--
-    ========================================
-    MODAL CATAT SERVIS (EMBEDDED)
-    ========================================
-    Modal ini berada DI LUAR loop agar hanya ada satu instance di halaman.
-    --}}
-    @can('is-master-admin')
-        <div class="modal fade" id="catatServisModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title"><i class="bi bi-wrench-adjustable-circle me-2"></i> Catat Riwayat Servis</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-
-                    <form id="formCatatServis" action="" method="POST">
-                        @csrf
-                        <div class="modal-body">
-                            <div class="alert alert-success border-0 bg-success bg-opacity-10 d-flex align-items-center mb-3">
-                                <i class="bi bi-info-circle-fill text-success me-2 fs-4"></i>
-                                <div>
-                                    Mencatat servis untuk: <strong id="modalPlatNomor">...</strong>
-                                </div>
-                            </div>
-
-                            {{-- Tanggal Servis --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Tanggal Servis</label>
-                                <input type="date" class="form-control" name="service_date" value="{{ date('Y-m-d') }}"
-                                    required>
-                            </div>
-
-                            {{-- KM --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">KM Saat Servis (Odometer)</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="km_servis_saat_ini" name="km_servis_saat_ini"
-                                        required>
-                                    <span class="input-group-text">Km</span>
-                                </div>
-                            </div>
-
-                            {{-- Keterangan --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Keterangan Pengerjaan</label>
-                                <textarea class="form-control" name="description" rows="3"
-                                    placeholder="Contoh: Ganti Oli Mesin, Filter Oli, Cek Rem..." required></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-success px-4">Simpan Riwayat</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endcan
+    {{-- INCLUDE MODAL (DIBUKA UNTUK SEMUA ADMIN) --}}
+    @include('admin.components.modal_catat_servis')
 
 @endsection
 
 @push('scripts')
-    {{-- Pastikan SweetAlert2 sudah diload di layout utama (app.blade.php) --}}
-
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-
-            // --- 1. LOGIKA MODAL CATAT SERVIS ---
-            var catatServisModal = document.getElementById('catatServisModal');
-            if (catatServisModal) {
-                catatServisModal.addEventListener('show.bs.modal', function (event) {
-                    var button = event.relatedTarget;
-                    if (!button) return;
-
-                    var platNomor = button.getAttribute('data-plat-nomor');
-                    var kmSaatIni = button.getAttribute('data-km-saat-ini');
-                    var actionUrl = button.getAttribute('data-action-url');
-
-                    catatServisModal.querySelector('#modalPlatNomor').textContent = platNomor;
-                    catatServisModal.querySelector('#formCatatServis').setAttribute('action', actionUrl);
-
-                    if (kmSaatIni) {
-                        catatServisModal.querySelector('#km_servis_saat_ini').value = kmSaatIni;
-                    }
-                });
-            }
-
-            // --- 2. LOGIKA SWEETALERT KONFIRMASI PERBAIKAN ---
+            // SweetAlert Konfirmasi Perbaikan
             const repairForms = document.querySelectorAll('.form-confirm-repair');
             repairForms.forEach(form => {
                 form.addEventListener('submit', function (event) {
-                    event.preventDefault(); // Mencegah submit langsung
+                    event.preventDefault();
 
                     Swal.fire({
                         title: 'Selesai Perbaikan?',
                         text: "Status mobil akan dikembalikan menjadi 'Aman' dan siap beroperasi.",
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: '#198754', // Hijau
-                        cancelButtonColor: '#6c757d', // Abu
+                        confirmButtonColor: '#198754',
+                        cancelButtonColor: '#6c757d',
                         confirmButtonText: 'Ya, Selesai!',
                         cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            this.submit(); // Lanjutkan submit jika user klik Ya
+                            this.submit();
                         }
                     });
                 });
             });
-
         });
     </script>
 @endpush

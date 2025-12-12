@@ -67,8 +67,12 @@ class RekapAbsensiChecklistExport implements FromView, ShouldAutoSize, WithTitle
             }
 
             // Hitung total hadir
-            $totalHadir = $driverAtt ? $driverAtt->count() : 0;
-
+            // Hitung total hadir (BARU - HANYA MENGHITUNG JUMLAH HARI YANG ADA CEKLISNYA)
+// Kita filter array $row untuk mencari yang isinya '✔', lalu hitung jumlahnya.
+            $totalHadir = collect($row)->filter(function ($status) {
+                return $status === '✔';
+            })->count();
+            
             $matrix[] = [
                 'name' => $driver->full_name,
                 'data' => $row,

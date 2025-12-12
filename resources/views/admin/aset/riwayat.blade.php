@@ -49,8 +49,7 @@
                     </div>
 
                     <div class="d-grid">
-                        {{-- Tombol Cepat Catat Servis --}}
-                        @can('is-master-admin')
+                        {{-- Tombol Cepat Catat Servis (DIBUKA UNTUK SEMUA ADMIN) --}}
                         <button class="btn btn-success" data-bs-toggle="modal" 
                                 data-bs-target="#catatServisModal"
                                 data-plat-nomor="{{ $vehicle->plate_number }}"
@@ -58,7 +57,6 @@
                                 data-action-url="{{ route('admin.aset.catatServis', $vehicle->id) }}">
                             <i class="bi bi-plus-lg me-2"></i> Catat Servis Baru
                         </button>
-                        @endcan
                     </div>
                 </div>
             </div>
@@ -117,16 +115,14 @@
     </div>
 </div>
 
-{{-- Include Modal Catat Servis (Agar bisa langsung input dari sini) --}}
-@can('is-master-admin')
-    @include('admin.components.modal_catat_servis')
-@endcan
+{{-- Include Modal Catat Servis (DIBUKA UNTUK SEMUA ADMIN) --}}
+@include('admin.components.modal_catat_servis')
 
 @endsection
 
 @push('scripts')
 <script>
-    // Script Modal (Sama seperti di halaman maintenance)
+    // Script Modal
     document.addEventListener('DOMContentLoaded', function() {
         var catatServisModal = document.getElementById('catatServisModal');
         if (catatServisModal) {

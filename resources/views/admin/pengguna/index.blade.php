@@ -4,128 +4,127 @@
 
 @section('content')
     <div class="container-fluid p-0">
-        @if (session('success'))
-            <script>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: "{{ session('success') }}",
-                    showConfirmButton: false,
-                    timer: 2000 // Otomatis hilang dalam 2 detik
-                });
-            </script>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
 
-        <div class="card shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2 class="h5 mb-0"><i class="bi bi-people-fill"></i> Daftar Pengguna Admin</h2>
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <div class="row g-3 align-items-center justify-content-between">
+                    {{-- Judul --}}
+                    <div class="col-12 col-md-4">
+                        <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-people-fill me-2"></i> Daftar Pengguna Admin
+                        </h5>
+                    </div>
 
-                {{-- HANYA MASTER ADMIN --}}
-                @can('is-master-admin')
-                    <a href="{{ route('admin.pengguna.create') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-circle-fill"></i> Tambah Pengguna Baru
-                    </a>
-                @endcan
+                    {{-- Search & Tombol Tambah --}}
+                    <div class="col-12 col-md-8">
+                        <div class="d-flex justify-content-md-end align-items-center gap-2">
+                            {{-- Form Pencarian --}}
+                            <form action="{{ route('admin.pengguna.index') }}" method="GET" class="d-flex">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control form-control-sm"
+                                        placeholder="Cari Nama / Email..." value="{{ request('search') }}">
+                                    <button class="btn btn-outline-secondary btn-sm" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+
+                            {{-- Tombol Tambah --}}
+                            @can('is-master-admin')
+                                <a href="{{ route('admin.pengguna.create') }}" class="btn btn-primary btn-sm text-nowrap">
+                                    <i class="bi bi-plus-circle-fill me-1"></i> Tambah Baru
+                                </a>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
             </div>
+
             <div class="card-body">
+                {{-- Info Hasil Pencarian --}}
+                @if(request('search'))
+                    <div class="alert alert-info py-2 mb-3 small">
+                        <i class="bi bi-info-circle me-1"></i> Hasil pencarian: <strong>"{{ request('search') }}"</strong>
+                        <a href="{{ route('admin.pengguna.index') }}" class="fw-bold ms-2 text-decoration-none">Reset</a>
+                    </div>
+                @endif
 
                 <div class="table-responsive">
                     <table class="table table-hover table-striped table-sm align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>Role</th> {{-- Tambahan Info Role --}}
-                                <th>Tgl Dibuat</th>
-
-                                {{-- HANYA MASTER ADMIN --}}
+                                <th style="width: 5%;">No</th>
+                                <th style="width: 25%;">Nama Lengkap</th>
+                                <th style="width: 25%;">Email</th>
+                                <th style="width: 15%;">Role</th>
+                                <th style="width: 15%;">Tgl Dibuat</th>
                                 @can('is-master-admin')
-                                    <th class="text-center">Aksi</th>
+                                    <th class="text-center" style="width: 15%;">Aksi</th>
                                 @endcan
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($users as $user)
                                 <tr>
-                                    <td>{{ $user->id }}</td>
-                                    <td>{{ $user->name }}</td>
+                                    <td>{{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}</td>
+                                    <td class="fw-bold">{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
                                     <td>
                                         @if($user->role === 'master')
-                                            <span class="badge bg-danger">Master</span>
+                                            <span class="badge bg-danger"><i class="bi bi-shield-lock-fill me-1"></i> Master</span>
                                         @else
-                                            <span class="badge bg-info text-dark">Admin/Viewer</span>
+                                            <span class="badge bg-info text-dark"><i class="bi bi-person-badge me-1"></i>
+                                                Admin</span>
                                         @endif
                                     </td>
-                                    <td>{{ $user->created_at->format('Y-m-d H:i') }}</td>
+                                    <td class="small text-muted">{{ $user->created_at->format('d M Y') }}</td>
 
-                                    {{-- HANYA MASTER ADMIN --}}
                                     @can('is-master-admin')
                                         <td class="text-center">
-                                            <div class="d-inline-flex flex-nowrap" style="gap: 5px;">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                {{-- Tombol Edit --}}
                                                 <a href="{{ route('admin.pengguna.edit', $user->id) }}"
-                                                    class="btn btn-warning btn-sm">
-                                                    <i class="bi bi-pencil-fill"></i> Edit
+                                                    class="btn btn-warning btn-sm" title="Edit Pengguna">
+                                                    <i class="bi bi-pencil-fill"></i>
                                                 </a>
 
-                                                <form action="{{ route('admin.pengguna.destroy', $user->id) }}" method="POST"
-                                                    class="d-inline form-delete">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" {{ $user->id === Auth::id() ? 'disabled' : '' }}
-                                                        title="{{ $user->id === Auth::id() ? 'Tidak dapat menghapus diri sendiri' : '' }}">
-                                                        <i class="bi bi-trash-fill"></i> Hapus
+                                                {{-- Tombol Hapus --}}
+                                                @if($user->id !== Auth::id())
+                                                    <form action="{{ route('admin.pengguna.destroy', $user->id) }}" method="POST"
+                                                        class="form-delete-global"
+                                                        data-message="Hapus pengguna <strong>{{ $user->name }}</strong>? Data tidak bisa dikembalikan.">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus Pengguna">
+                                                            <i class="bi bi-trash-fill"></i>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <button class="btn btn-secondary btn-sm" disabled
+                                                        title="Tidak bisa menghapus diri sendiri">
+                                                        <i class="bi bi-trash"></i>
                                                     </button>
-                                                </form>
+                                                @endif
                                             </div>
                                         </td>
                                     @endcan
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="@can('is-master-admin') 6 @else 5 @endcan" class="text-center">Belum ada data
-                                        pengguna admin.</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="bi bi-people display-6 d-block mb-2 opacity-50"></i>
+                                        Belum ada data pengguna admin.
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Pagination --}}
+                <div class="mt-3">
+                    {{ $users->withQueryString()->links() }}
+                </div>
             </div>
         </div>
     </div>
-    <script>
-        // Pilih semua form dengan class 'form-delete'
-        const deleteForms = document.querySelectorAll('.form-delete');
-
-        deleteForms.forEach(form => {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault(); // Mencegah form dikirim langsung
-
-                const currentForm = this; // Simpan referensi ke form yang sedang diklik
-
-                Swal.fire({
-                    title: 'Hapus Pengguna?',
-                    text: "Data pengguna ini akan dihapus permanen!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33', // Merah (tanda bahaya)
-                    cancelButtonColor: '#3085d6', // Biru (batal)
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Jika user klik 'Ya', submit form secara manual
-                        currentForm.submit();
-                    }
-                });
-            });
-        });
-    </script>
 @endsection

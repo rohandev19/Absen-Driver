@@ -11,11 +11,6 @@ class EmergencyReport extends Model
 
     protected $table = 'emergency_reports';
 
-    /**
-     * PERBAIKAN:
-     * Hapus 'created_at' dan 'updated_at' dari $fillable.
-     * Kolom ini diurus otomatis oleh Laravel.
-     */
     protected $fillable = [
         'driver_id',
         'vehicle_id',
@@ -23,7 +18,6 @@ class EmergencyReport extends Model
         'gps_location',
         'description',
         'proof_photo_path'
-
     ];
 
     protected $casts = [
@@ -40,11 +34,25 @@ class EmergencyReport extends Model
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
 
+    /* =========================================================================
+     * ACCESSORS (FORMATTING DATA)
+     * ========================================================================= */
+
+    /**
+     * Buat Link Google Maps otomatis dari koordinat GPS.
+     */
+    public function getGoogleMapsLinkAttribute()
+    {
+        if ($this->gps_location) {
+            // PERBAIKAN: Menggunakan URL standard Google Maps
+            // Format: https://maps.google.com/?q=LATITUDE,LONGITUDE
+            return 'https://maps.google.com/?q=' . $this->gps_location;
+        }
+        return '#';
+    }
+
     public function getProofPhotoUrlAttribute()
     {
-        if (!$this->proof_photo_path) {
-            return null;
-        }
-        return asset('storage/' . $this->proof_photo_path);
+        return $this->proof_photo_path ? asset('storage/' . $this->proof_photo_path) : null;
     }
 }
