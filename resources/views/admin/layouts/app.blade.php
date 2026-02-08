@@ -40,9 +40,33 @@
             background: #212529;
             color: #fff;
             transition: all 0.3s;
-            overflow-y: auto;
+            /* FIX 1: Hapus overflow-y: auto di sini agar logout tidak ikut terscroll */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        /* FIX 2: Class baru untuk area menu yang bisa discroll */
+        .sidebar-scroll-area {
+            flex-grow: 1;
+            /* Mengisi sisa ruang yang ada */
+            overflow-y: auto;
+            /* Hanya area ini yang discroll */
+            overflow-x: hidden;
+        }
+
+        /* Opsional: Mempercantik Scrollbar Sidebar */
+        .sidebar-scroll-area::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar-scroll-area::-webkit-scrollbar-track {
+            background: #212529;
+        }
+
+        .sidebar-scroll-area::-webkit-scrollbar-thumb {
+            background: #495057;
+            border-radius: 10px;
         }
 
         #main-content {
@@ -84,6 +108,7 @@
             font-size: 1.5rem;
         }
 
+        /* --- STYLING LINK BIASA --- */
         #sidebar .nav-pills .nav-item {
             width: 100%;
         }
@@ -102,22 +127,75 @@
             background: #495057;
             color: #fff;
             border-left: 4px solid #0d6efd;
-            /* Indikator visual tambahan */
         }
 
-        #sidebar .nav-pills .dropdown-menu {
-            background: #343a40;
-            border: none;
-        }
-
-        #sidebar .nav-pills .dropdown-item {
+        /* --- STYLING DROPDOWN / COLLAPSE --- */
+        #sidebar .btn-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.75rem 1.25rem;
             color: #adb5bd;
+            background: transparent;
+            border: 0;
+            text-align: left;
+            transition: 0.2s;
+            font-size: 1rem;
+            border-radius: 0 !important;
         }
 
-        #sidebar .nav-pills .dropdown-item:hover,
-        #sidebar .nav-pills .dropdown-item.active {
-            background: #495057;
+        #sidebar .btn-toggle:hover,
+        #sidebar .btn-toggle[aria-expanded="true"] {
             color: #fff;
+            background: #495057;
+        }
+
+        #sidebar .btn-toggle[aria-expanded="true"] {
+            border-left: 4px solid #0d6efd;
+        }
+
+        #sidebar .btn-toggle::after {
+            width: 1.25em;
+            line-height: 0;
+            content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 14l6-6-6-6'/%3e%3c/svg%3e");
+            transition: transform 0.35s ease;
+            transform-origin: .5em 50%;
+        }
+
+        #sidebar .btn-toggle[aria-expanded="true"]::after {
+            transform: rotate(90deg);
+        }
+
+        #sidebar .btn-toggle-nav {
+            background-color: #2c3034;
+        }
+
+        #sidebar .btn-toggle-nav a {
+            padding: 0.5rem 1.25rem 0.5rem 2.8rem;
+            font-size: 0.95rem;
+            color: #adb5bd;
+            text-decoration: none;
+            display: block;
+            border-left: 4px solid transparent;
+        }
+
+        #sidebar .btn-toggle-nav a:hover,
+        #sidebar .btn-toggle-nav a.active {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        #sidebar .btn-toggle-nav a.active {
+            border-left: 4px solid #0d6efd;
+        }
+
+        /* --- LOGOUT BUTTON --- */
+        .sidebar-logout {
+            /* Pastikan border atas ada pemisah */
+            border-top: 1px solid #495057;
+            background: #212529;
+            /* Pastikan background solid agar tidak transparan saat scroll */
         }
 
         .btn-logout {
@@ -155,7 +233,6 @@
             z-index: 998;
         }
 
-        /* Mobile Responsive */
         @media (max-width: 992px) {
             #sidebar {
                 margin-left: -260px;
@@ -217,73 +294,127 @@
     <div class="wrapper">
         {{-- SIDEBAR --}}
         <nav id="sidebar" class="d-flex flex-column">
-            <div>
+
+            {{-- FIX 3: Wrapper untuk area yang bisa discroll (Header + Menu) --}}
+            <div class="sidebar-scroll-area">
                 <div class="sidebar-header">
                     <h3 class="fw-bold"><i class="bi bi-speedometer2"></i> Admin Hamada</h3>
                 </div>
 
                 <ul class="nav nav-pills flex-column mb-auto p-2">
-                    <li class="nav-item"><a href="{{ route('admin.dashboard') }}"
-                            class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i
-                                class="bi bi-person-workspace me-2"></i> Aktivitas Driver</a></li>
 
-                    <li class="nav-item"><a href="{{ route('admin.riwayat_driver') }}"
-                            class="nav-link {{ request()->routeIs('admin.riwayat_driver') ? 'active' : '' }}"><i
-                                class="bi bi-clock-history me-2"></i> Riwayat Driver</a></li>
-
-                    <li class="nav-item"><a href="{{ route('admin.laporan_darurat') }}"
-                            class="nav-link {{ request()->routeIs('admin.laporan_darurat') ? 'active' : '' }}"><i
-                                class="bi bi-exclamation-triangle me-2"></i> Laporan Darurat</a></li>
-
-                    <li class="nav-item"><a href="{{ route('admin.riwayat_unit') }}"
-                            class="nav-link {{ request()->routeIs('admin.riwayat_unit') ? 'active' : '' }}"><i
-                                class="bi bi-card-checklist me-2"></i> Riwayat Unit</a></li>
-
-                    <hr class="border-secondary my-2">
-
-                    <li class="nav-item"><a href="{{ route('admin.driver.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.driver.*') ? 'active' : '' }}"><i
-                                class="bi bi-person-badge me-2"></i> Kelola Driver</a></li>
-
-                    <li class="nav-item"><a href="{{ route('admin.pengguna.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.pengguna.*') ? 'active' : '' }}"><i
-                                class="bi bi-people-fill me-2"></i> Kelola Pengguna</a></li>
-
-                    <li class="nav-item"><a href="{{ route('admin.daftar_aset') }}"
-                            class="nav-link {{ request()->routeIs('admin.daftar_aset') ? 'active' : '' }}"><i
-                                class="bi bi-truck me-2"></i> Daftar Aset</a></li>
-
-                    <hr class="border-secondary my-2">
-
+                    {{-- 1. DASHBOARD UTAMA --}}
                     <li class="nav-item">
-                        <a href="{{ route('admin.maintenance.dashboard') }}"
-                            class="nav-link {{ request()->routeIs('admin.maintenance.dashboard', 'admin.aset.visual', 'admin.aset.riwayat') ? 'active' : '' }}">
-                            <i class="bi bi-wrench-adjustable-circle me-2"></i> Monitoring & Servis
+                        <a href="{{ route('admin.dashboard') }}"
+                            class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                            <i class="bi bi-speedometer me-2"></i> Dashboard
                         </a>
                     </li>
 
-                    <li class="nav-item"><a href="{{ route('admin.maintenance') }}"
-                            class="nav-link {{ request()->routeIs('admin.maintenance') ? 'active' : '' }}"><i
-                                class="bi bi-calendar-week me-2"></i> Kalender Servis</a></li>
+                    <hr class="border-secondary my-2">
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.rekap_harian', 'admin.rekap_bulanan') ? 'active' : '' }}"
-                            href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"> <i
-                                class="bi bi-journal-check me-2"></i> Rekap Laporan
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item {{ request()->routeIs('admin.rekap_harian') ? 'active' : '' }}"
-                                    href="{{ route('admin.rekap_harian') }}">Rekap Harian</a>
-                            </li>
-                            <li><a class="dropdown-item {{ request()->routeIs('admin.rekap_bulanan') ? 'active' : '' }}"
-                                    href="{{ route('admin.rekap_bulanan') }}">Rekap Bulanan</a></li>
-                        </ul>
+                    {{-- 2. GRUP: MANAJEMEN DRIVER --}}
+                    <li class="nav-item">
+                        <button class="btn btn-toggle d-flex align-items-center rounded collapsed"
+                            data-bs-toggle="collapse" data-bs-target="#driver-collapse"
+                            aria-expanded="{{ request()->routeIs('admin.driver.*', 'admin.riwayat_driver', 'admin.rekap_harian', 'admin.rekap_bulanan') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-person-badge me-2"></i> Manajemen Driver</span>
+                        </button>
+
+                        <div class="collapse {{ request()->routeIs('admin.driver.*', 'admin.riwayat_driver', 'admin.rekap_harian', 'admin.rekap_bulanan') ? 'show' : '' }}"
+                            id="driver-collapse">
+                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+                                <li><a href="{{ route('admin.driver.index') }}"
+                                        class="{{ request()->routeIs('admin.driver.*') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Kelola Driver</a>
+                                </li>
+                                <li><a href="{{ route('admin.riwayat_driver') }}"
+                                        class="{{ request()->routeIs('admin.riwayat_driver') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Riwayat Driver</a>
+                                </li>
+                                <li><a href="{{ route('admin.rekap_harian') }}"
+                                        class="{{ request()->routeIs('admin.rekap_harian') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Rekap Harian</a>
+                                </li>
+                                <li><a href="{{ route('admin.rekap_bulanan') }}"
+                                        class="{{ request()->routeIs('admin.rekap_bulanan') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Rekap Bulanan</a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
+
+                    {{-- 3. GRUP: MANAJEMEN UNIT --}}
+                    <li class="nav-item">
+                        <button class="btn btn-toggle d-flex align-items-center rounded collapsed"
+                            data-bs-toggle="collapse" data-bs-target="#unit-collapse"
+                            aria-expanded="{{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit', 'admin.maintenance.dashboard', 'admin.maintenance') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-truck me-2"></i> Manajemen Unit</span>
+                        </button>
+
+                        <div class="collapse {{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit', 'admin.maintenance.dashboard', 'admin.maintenance', 'admin.aset.visual', 'admin.aset.riwayat') ? 'show' : '' }}"
+                            id="unit-collapse">
+                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+                                <li><a href="{{ route('admin.daftar_aset') }}"
+                                        class="{{ request()->routeIs('admin.daftar_aset') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Daftar Aset</a>
+                                </li>
+                                <li><a href="{{ route('admin.riwayat_unit') }}"
+                                        class="{{ request()->routeIs('admin.riwayat_unit') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Riwayat Unit</a>
+                                </li>
+                                <li><a href="{{ route('admin.maintenance.dashboard') }}"
+                                        class="{{ request()->routeIs('admin.maintenance.dashboard', 'admin.aset.visual', 'admin.aset.riwayat') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Monitoring Servis</a>
+                                </li>
+                                <li><a href="{{ route('admin.maintenance') }}"
+                                        class="{{ request()->routeIs('admin.maintenance') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Kalender Servis</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <hr class="border-secondary my-2">
+
+                    {{-- 4. LAPORAN --}}
+                    <li class="nav-item">
+                        <a href="{{ route('admin.laporan_darurat') }}"
+                            class="nav-link {{ request()->routeIs('admin.laporan_darurat') ? 'active' : '' }}">
+                            <i class="bi bi-exclamation-triangle me-2"></i> Laporan Darurat
+                        </a>
+                    </li>
+
+                    {{-- 5. KELOLA PROJECT --}}
+                    <li class="nav-item">
+                        <a href="{{ route('admin.project.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.project.*') ? 'active' : '' }}">
+                            <i class="bi bi-tags-fill me-2"></i> Kelola Project
+                        </a>
+                    </li>
+
+                    {{-- 6. KELOLA PENGGUNA --}}
+                    <li class="nav-item">
+                        <a href="{{ route('admin.pengguna.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.pengguna.*') ? 'active' : '' }}">
+                            <i class="bi bi-people-fill me-2"></i> Kelola Pengguna
+                        </a>
+                    </li>
+
                 </ul>
             </div>
+            {{-- AKHIR WRAPPER SCROLL --}}
 
+            {{-- TOMBOL LOGOUT (Di luar wrapper scroll, agar fixed di bawah) --}}
             <div class="sidebar-logout p-2 mt-auto">
-                {{-- Form Logout dengan Class Global (Tanpa Onclick Manual) --}}
                 <form action="{{ route('admin.logout') }}" method="POST" class="form-logout-global">
                     @csrf
                     <button type="submit" class="btn btn-logout w-100">
@@ -301,7 +432,6 @@
                 <div class="d-flex align-items-center">
                     <i class="bi bi-list" id="sidebar-toggle"></i>
                 </div>
-                {{-- User Profile Area --}}
                 <div class="d-none d-md-block">
                     <span class="text-muted small">Selamat Datang, </span>
                     <span class="fw-bold">{{ Auth::user()->name ?? 'Admin' }}</span>
@@ -314,7 +444,7 @@
         </div>
     </div>
 
-    {{-- Toast Live Update (Wadah Saja) --}}
+    {{-- Toast Live Update --}}
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
         <div id="emergencyToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header bg-danger text-white">
@@ -332,8 +462,6 @@
     </div>
 
     {{-- === SYSTEM SCRIPTS === --}}
-
-    {{-- 1. Detektor Flash Message (Untuk SweetAlert Global) --}}
     @if(session('success'))
         <div class="flash-data" data-type="success" data-message="{{ session('success') }}"></div>
     @endif
@@ -341,19 +469,15 @@
         <div class="flash-data" data-type="error" data-message="{{ session('error') }}"></div>
     @endif
 
-    {{-- 2. Library --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    {{-- 3. Custom JS Global (Menghandle Toast, Delete, Logout, Link Confirm) --}}
     <script src="{{ asset('js/global-actions.js') }}"></script>
 
     @stack('scripts')
 
-    {{-- 4. Layout Logic (Sidebar Toggle) --}}
+    {{-- Layout Logic --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Toggle Sidebar
             var sidebarToggle = document.getElementById('sidebar-toggle');
             var sidebar = document.getElementById('sidebar');
             var body = document.body;
@@ -373,8 +497,6 @@
                     sidebar.classList.remove('active');
                 });
             }
-
-            // Note: Script confirmLogout() sudah dihapus karena digantikan oleh global-actions.js
         });
     </script>
 </body>

@@ -37,6 +37,17 @@
                             @enderror
                         </div>
 
+                        <div class="mb-4">
+                        <label for="project_id" class="form-label fw-bold">Project / Lokasi Unit</label>
+                             <select name="project_id" id="project_id" class="form-select">
+                               <option value="">-- Unit Pool / Umum --</option>
+                                @foreach($projects as $project)
+                        <option value="{{ $project->id }}">{{ $project->name }}</option>
+                      @endforeach
+                         </select>
+                   <div class="form-text">Pilih project jika mobil ini didedikasikan khusus.</div>
+                    </div>
+
                         {{-- Tombol Aksi --}}
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{{ route('admin.daftar_aset') }}" class="btn btn-light">Batal</a>

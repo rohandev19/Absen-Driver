@@ -16,6 +16,7 @@
                         @method('PUT')
                         <div class="card-body">
                             <div class="row g-3">
+                                {{-- Nama Lengkap --}}
                                 <div class="col-md-6 col-12">
                                     <label for="full_name" class="form-label fw-bold">Nama Lengkap</label>
                                     <input type="text" class="form-control @error('full_name') is-invalid @enderror"
@@ -23,6 +24,21 @@
                                         required>
                                     @error('full_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
+
+                                {{-- Project / Divisi (BARU) --}}
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label fw-bold">Penempatan Project / Divisi</label>
+                                    <select name="project_id" class="form-select">
+                                        <option value="">-- Tidak Ada / Pool --</option>
+                                        @foreach($projects as $project)
+                                            <option value="{{ $project->id }}" {{ $driver->project_id == $project->id ? 'selected' : '' }}>
+                                                {{ $project->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- NIK --}}
                                 <div class="col-md-6 col-12">
                                     <label for="driver_id_nik" class="form-label fw-bold">ID Driver (NIK)</label>
                                     <input type="text" class="form-control @error('driver_id_nik') is-invalid @enderror"
@@ -30,22 +46,40 @@
                                         value="{{ old('driver_id_nik', $driver->driver_id_nik) }}" required>
                                     @error('driver_id_nik') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
+                                <div class="col-md-6 col-12">
+                                    <label for="nik_ktp" class="form-label fw-bold">NIK (KTP)</label>
+                                    <input type="text" class="form-control" name="nik_ktp"
+                                        value="{{ old('nik_ktp', $driver->nik_ktp) }}">
+                                </div>
 
+                                {{-- Jenis SIM (BARU) --}}
+                                <div class="col-md-6 col-12">
+                                    <label for="sim_type" class="form-label fw-bold">Jenis SIM</label>
+                                    <select name="sim_type" id="sim_type" class="form-select" required>
+                                        <option value="">-- Pilih Jenis SIM --</option>
+                                        @foreach(['SIM A', 'SIM A Umum', 'SIM B1', 'SIM B1 Umum', 'SIM B2', 'SIM B2 Umum'] as $tipe)
+                                            <option value="{{ $tipe }}" {{ old('sim_type', $driver->sim_type) == $tipe ? 'selected' : '' }}>
+                                                {{ $tipe }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
+                                {{-- Masa Berlaku --}}
                                 <div class="col-md-6 col-12">
                                     <label for="sim_expiry_date" class="form-label fw-bold">Masa Berlaku SIM</label>
                                     <input type="date" class="form-control @error('sim_expiry_date') is-invalid @enderror"
                                         id="sim_expiry_date" name="sim_expiry_date"
-                                        value="{{ old('sim_expiry_date', $driver->sim_expiry_date ? $driver->sim_expiry_date->format('Y-m-d') : '') }}"
+                                        value="{{ old('sim_expiry_date', $driver->sim_expiry_date ? \Carbon\Carbon::parse($driver->sim_expiry_date)->format('Y-m-d') : '') }}"
                                         required>
                                     @error('sim_expiry_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
-
 
                                 <div class="col-12">
                                     <hr class="my-3 text-muted">
                                 </div>
 
+                                {{-- Reset Password --}}
                                 <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-key me-1"></i> Reset Password (Opsional)
                                 </h6>
                                 <div class="col-md-6 col-12">

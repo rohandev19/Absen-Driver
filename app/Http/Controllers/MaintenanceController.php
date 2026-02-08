@@ -6,44 +6,120 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
 use App\Models\Attendance;
+use App\Models\User;
+use App\Models\Driver;
+use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MaintenanceController extends Controller
 {
     /**
-     * 1. DASHBOARD MONITORING
+     * CONSTRUCTOR: SETTING BAHASA INDONESIA
+     * Agar hari muncul sebagai 'Senin', 'Minggu', dst.
+     */
+    public function __construct()
+    {
+        Carbon::setLocale('id');
+        setlocale(LC_TIME, 'id_ID');
+    }
+
+    /**
+     * 1. DASHBOARD MONITORING (FIXED STATS & LANGUAGE)
      */
     public function index(Request $request)
     {
         $query = Vehicle::query();
+
+        // 1. FILTER DATABASE
         if ($request->filled('search')) {
             $query->search($request->search);
         }
-        $maintenanceData = $query->with('latestAttendance')
-            ->orderBy('plate_number', 'asc')
-            ->get();
-        $searchKeyword = $request->search;
-        return view('admin.maintenance.index', compact('maintenanceData', 'searchKeyword'));
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        $vehicles = $query->with(['latestAttendance', 'project'])->get();
+
+        // 2. HITUNG STATISTIK (DIPERBAIKI)
+        // Hitung dulu yang bermasalah
+        $countDanger = $vehicles->filter(fn($v) => in_array($v->health_status_code, ['service_due', 'physical_issue']))->count();
+        $countWarning = $vehicles->filter(fn($v) => $v->health_status_code == 'warning')->count();
+        $countTotal = $vehicles->count();
+
+        // Sisa-nya pasti SEHAT (KONDISI PRIMA)
+        // Ini menjamin angka tidak akan 0 jika ada unit yang tersisa
+        $countSehat = $countTotal - $countDanger - $countWarning;
+
+        $stats = [
+            'total' => $countTotal,
+            'sehat' => $countSehat,
+            'warning' => $countWarning,
+            'danger' => $countDanger,
+        ];
+
+        // 3. FILTER STATUS (Interaksi Klik Kartu Atas)
+        if ($request->filled('status_filter')) {
+            $vehicles = $vehicles->filter(function ($vehicle) use ($request) {
+                if ($request->status_filter == 'danger') {
+                    return in_array($vehicle->health_status_code, ['service_due', 'physical_issue']);
+                }
+                if ($request->status_filter == 'warning') {
+                    return $vehicle->health_status_code == 'warning';
+                }
+                if ($request->status_filter == 'safe') {
+                    // Safe adalah selain danger dan warning
+                    return !in_array($vehicle->health_status_code, ['service_due', 'physical_issue', 'warning']);
+                }
+                return true;
+            });
+        }
+
+        // 4. SORTING FINAL
+        $maintenanceData = $vehicles->sortBy(function ($vehicle) {
+            if (($vehicle->sisa_km !== null && $vehicle->sisa_km < 0) || $vehicle->health_status_code === 'physical_issue')
+                return 1;
+            if ($vehicle->sisa_km !== null && $vehicle->sisa_km < 1000)
+                return 2;
+            return 3;
+        });
+
+        $projects = Project::orderBy('name')->get();
+        $types = Vehicle::select('type')->distinct()->orderBy('type')->pluck('type');
+
+        return view('admin.maintenance.index', compact(
+            'maintenanceData',
+            'stats',
+            'projects',
+            'types'
+        ));
     }
 
-    /**
-     * 2. DAFTAR ASET
-     */
+    // --- (FUNGSI LAIN DI BAWAH INI TIDAK BERUBAH) ---
+
     public function daftarAset(Request $request)
     {
-        $query = Vehicle::query();
-        if ($request->filled('search')) {
+        $query = Vehicle::with('project');
+        if ($request->filled('project_id'))
+            $query->where('project_id', $request->project_id);
+        if ($request->filled('kategori'))
+            $query->where('type', $request->kategori);
+        if ($request->filled('search'))
             $query->search($request->search);
-        }
-        // Mengurutkan aset terbaru ditambahkan di paling atas agar mudah dicek
+
         $vehicles = $query->orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.daftar_aset', compact('vehicles'));
+        $projects = Project::orderBy('name')->get();
+        $categories = Vehicle::select('type')->distinct()->pluck('type');
+
+        return view('admin.daftar_aset', compact('vehicles', 'projects', 'categories'));
     }
 
-    /**
-     * 3. VISUAL CHECK
-     */
     public function visualCheck($id)
     {
         $vehicle = Vehicle::findOrFail($id);
@@ -67,9 +143,6 @@ class MaintenanceController extends Controller
         return view('admin.aset.visual', compact('vehicle', 'status', 'lastLog'));
     }
 
-    /**
-     * 4. RIWAYAT SERVIS
-     */
     public function riwayatServis($id)
     {
         $vehicle = Vehicle::with(['maintenanceLogs.recorder'])->findOrFail($id);
@@ -89,17 +162,11 @@ class MaintenanceController extends Controller
         return view('admin.aset.riwayat', compact('vehicle', 'statusSummary'));
     }
 
-    /**
-     * 5. KALENDER
-     */
     public function calendar()
     {
         return view('admin.maintenance_calendar');
     }
 
-    /**
-     * 6. API EVENTS
-     */
     public function getEvents()
     {
         $vehicles = Vehicle::all();
@@ -136,9 +203,6 @@ class MaintenanceController extends Controller
         return response()->json($events);
     }
 
-    /**
-     * 7. CATAT SERVIS
-     */
     public function catatServis(Request $request, $id)
     {
         $vehicle = Vehicle::findOrFail($id);
@@ -159,9 +223,6 @@ class MaintenanceController extends Controller
         return back()->with('success', 'Servis berhasil dicatat.');
     }
 
-    /**
-     * 8. RESOLVE ISSUE
-     */
     public function resolveIssue($id)
     {
         $vehicle = Vehicle::findOrFail($id);
@@ -178,11 +239,11 @@ class MaintenanceController extends Controller
         return back()->with('error', 'Data riwayat pemeriksaan tidak ditemukan.');
     }
 
-    // --- CRUD: EDIT & UPDATE ---
     public function edit($id)
     {
         $vehicle = Vehicle::findOrFail($id);
-        return view('admin.aset.edit', compact('vehicle'));
+        $projects = Project::all();
+        return view('admin.aset.edit', compact('vehicle', 'projects'));
     }
 
     public function update(Request $request, $id)
@@ -193,11 +254,10 @@ class MaintenanceController extends Controller
         return redirect()->route('admin.daftar_aset')->with('success', 'Data aset diperbarui.');
     }
 
-    // --- CRUD: TAMBAH & HAPUS (BARU) ---
-
     public function create()
     {
-        return view('admin.aset.create');
+        $projects = Project::all();
+        return view('admin.aset.create', compact('projects'));
     }
 
     public function store(Request $request)
@@ -205,17 +265,14 @@ class MaintenanceController extends Controller
         $request->validate([
             'plate_number' => 'required|unique:vehicles,plate_number|max:15',
             'type' => 'required|string|max:50',
-        ], [
-            'plate_number.required' => 'Plat nomor wajib diisi.',
-            'plate_number.unique' => 'Plat nomor sudah terdaftar.',
-            'type.required' => 'Jenis mobil wajib diisi.',
         ]);
 
         Vehicle::create([
             'plate_number' => strtoupper($request->plate_number),
             'type' => $request->type,
-            'status' => 'ready',
+            // 'status' => 'ready',  <-- HAPUS ATAU KOMENTAR BARIS INI
             'current_km' => 0,
+            'project_id' => $request->project_id,
         ]);
 
         return redirect()->route('admin.daftar_aset')->with('success', 'Aset baru berhasil ditambahkan.');
@@ -226,5 +283,77 @@ class MaintenanceController extends Controller
         $vehicle = Vehicle::findOrFail($id);
         $vehicle->delete();
         return redirect()->route('admin.daftar_aset')->with('success', 'Data aset berhasil dihapus.');
+    }
+
+    public function exportExcel($id)
+    {
+        $vehicle = Vehicle::findOrFail($id);
+        $logs = $vehicle->maintenanceLogs()->orderBy('service_date', 'desc')->get();
+        $namaFile = 'Riwayat_Servis_' . str_replace(' ', '_', $vehicle->plate_number) . '.xls';
+
+        return response(view('admin.aset.riwayat_excel', compact('vehicle', 'logs')))
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="' . $namaFile . '"');
+    }
+
+    public function exportRekapAbsensi(Request $request)
+    {
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : Carbon::now()->startOfMonth();
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : Carbon::now()->endOfMonth();
+        $projectId = $request->project_id;
+
+        $periode = CarbonPeriod::create($startDate, $endDate);
+        $projectName = 'SEMUA PROJECT';
+        if ($projectId) {
+            $project = Project::find($projectId);
+            if ($project)
+                $projectName = strtoupper($project->name);
+        }
+
+        $query = Driver::with('project')->orderBy('full_name', 'asc');
+        if ($projectId)
+            $query->where('project_id', $projectId);
+        $drivers = $query->get();
+
+        $dataRekap = [];
+        foreach ($drivers as $driver) {
+            $row = [];
+            $row['nik_ktp'] = $driver->nik_ktp ?? '-';
+            $row['id_driver'] = $driver->driver_id_nik;
+            $row['nama'] = $driver->full_name;
+            $row['project'] = $driver->project->name ?? '-';
+            $row['id'] = $driver->id;
+
+            $lastLog = Attendance::where('driver_id', $driver->id)
+                ->whereBetween('created_at', [$startDate->copy()->startOfDay(), $endDate->copy()->endOfDay()])
+                ->with('vehicle')->latest()->first();
+
+            $row['no_pol'] = $lastLog && $lastLog->vehicle ? $lastLog->vehicle->plate_number : '-';
+            $row['type'] = $lastLog && $lastLog->vehicle ? $lastLog->vehicle->type : '-';
+
+            $totalHadir = 0;
+            $harian = [];
+            foreach ($periode as $date) {
+                $dateStr = $date->format('Y-m-d');
+                $isPresent = Attendance::where('driver_id', $driver->id)->whereDate('created_at', $dateStr)->exists();
+                if ($isPresent) {
+                    $harian[$dateStr] = '✓';
+                    $totalHadir++;
+                } else {
+                    $harian[$dateStr] = 'X';
+                }
+            }
+            $row['harian'] = $harian;
+            $row['total'] = $totalHadir;
+            $dataRekap[] = $row;
+        }
+
+        $rangeName = $startDate->format('dM') . '-' . $endDate->format('dM_Y');
+        $safeProjectName = str_replace([' ', '/', '\\'], '_', $projectName);
+        $namaFile = 'Rekap_Absensi_' . $safeProjectName . '_' . $rangeName . '.xls';
+
+        return response(view('admin.absensi.rekap_excel', compact('dataRekap', 'periode', 'startDate', 'endDate', 'projectName')))
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="' . $namaFile . '"');
     }
 }

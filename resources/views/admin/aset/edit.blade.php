@@ -33,6 +33,17 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+                                <div class="col-md-12">
+                                    <label for="project_id" class="form-label fw-bold">Project / Lokasi Unit</label>
+                                    <select name="project_id" id="project_id" class="form-select">
+                                        <option value="">-- Unit Pool / Umum --</option>
+                                        @foreach($projects as $project)
+                                            <option value="{{ $project->id }}" {{ $vehicle->project_id == $project->id ? 'selected' : '' }}>
+                                                {{ $project->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
                                 <hr class="my-3">
                                 <h5 class="mb-0">Data Monitoring Servis (KM)</h5>

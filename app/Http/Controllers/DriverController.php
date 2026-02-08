@@ -3,16 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Driver;
-use App\Http\Requests\StoreDriverRequest; // <--- Panggil Satpam yang kita buat tadi
+use App\Models\Project;
+use App\Http\Requests\StoreDriverRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-/**
- * Class DriverController
- * * Mengelola data Master Driver.
- * * Kode ini sudah direfactor untuk menggunakan Form Request Validation
- * dan Business Logic yang ada di Model.
- */
 class DriverController extends Controller
 {
     public function __construct()
@@ -20,31 +15,49 @@ class DriverController extends Controller
         $this->middleware('can:is-master-admin')->except(['index']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $drivers = Driver::latest()->paginate(20);
-        return view('admin.driver.index', compact('drivers'));
+        $query = Driver::with('project')->latest();
+
+        // 1. Filter Dropdown Project
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        // 2. Filter Search Teks (Nama / NIK)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('driver_id_nik', 'like', "%{$search}%");
+            });
+        }
+
+        $drivers = $query->paginate(20);
+
+        // 3. Ambil Data Project untuk Dropdown
+        $projects = Project::orderBy('name', 'asc')->get();
+
+        return view('admin.driver.index', compact('drivers', 'projects'));
     }
 
     public function create()
     {
-        return view('admin.driver.create');
+        $projects = Project::all();
+        return view('admin.driver.create', compact('projects'));
     }
 
-    /**
-     * Store Driver Baru.
-     * * REFACTOR: Kita ganti 'Request $request' jadi 'StoreDriverRequest $request'.
-     * Otomatis validasi jalan sebelum masuk method ini.
-     */
     public function store(StoreDriverRequest $request)
     {
-        // $request->validated() otomatis mengambil hanya data yang lolos validasi.
-        // Jauh lebih aman daripada $request->all().
+        // Pastikan di StoreDriverRequest validasi nik_ktp sudah ada
         Driver::create([
             'full_name' => $request->full_name,
             'driver_id_nik' => $request->driver_id_nik,
+            'nik_ktp' => $request->nik_ktp, // Sudah Benar
             'sim_expiry_date' => $request->sim_expiry_date,
+            'sim_type' => $request->sim_type,
             'password' => Hash::make($request->password),
+            'project_id' => $request->project_id,
         ]);
 
         return redirect()->route('admin.driver.index')->with('success', 'Driver baru berhasil ditambahkan.');
@@ -52,27 +65,34 @@ class DriverController extends Controller
 
     public function edit(Driver $driver)
     {
-        return view('admin.driver.edit', compact('driver'));
+        $projects = Project::all();
+        return view('admin.driver.edit', compact('driver', 'projects'));
     }
 
     /**
-     * Update Driver.
-     * * NOTE: Untuk update, validasinya sedikit beda (harus ignore ID sendiri).
-     * Biasanya kita buat 'UpdateDriverRequest' terpisah, tapi untuk sekarang
-     * pakai validasi manual di sini masih oke karena logic 'unique'-nya dinamis.
+     * PERBAIKAN DI SINI:
+     * Menambahkan validasi dan penyimpanan untuk 'nik_ktp'
      */
     public function update(Request $request, Driver $driver)
     {
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
+            // Validasi ID Badge (unik kecuali punya diri sendiri)
             'driver_id_nik' => ['required', 'string', 'max:255', 'unique:drivers,driver_id_nik,' . $driver->id],
+            // Validasi NIK KTP (tambahkan ini)
+            'nik_ktp' => ['nullable', 'string', 'max:20', 'unique:drivers,nik_ktp,' . $driver->id],
             'sim_expiry_date' => ['required', 'date'],
+            'sim_type' => ['required', 'string'],
             'password' => ['nullable', 'confirmed'],
+            'project_id' => ['nullable', 'exists:projects,id'],
         ]);
 
         $driver->full_name = $request->full_name;
         $driver->driver_id_nik = $request->driver_id_nik;
+        $driver->nik_ktp = $request->nik_ktp; // <--- PENTING: Jangan lupa update ini
         $driver->sim_expiry_date = $request->sim_expiry_date;
+        $driver->sim_type = $request->sim_type;
+        $driver->project_id = $request->project_id;
 
         if ($request->filled('password')) {
             $driver->password = Hash::make($request->password);
@@ -83,17 +103,11 @@ class DriverController extends Controller
         return redirect()->route('admin.driver.index')->with('success', 'Data driver diperbarui.');
     }
 
-    /**
-     * Hapus Driver.
-     * * REFACTOR: Menggunakan method isOnDuty() dari Model Driver.
-     * Tidak ada lagi query manual di controller.
-     */
     public function destroy(Driver $driver)
     {
         if ($driver->isOnDuty()) {
             return back()->with('error', 'GAGAL: Driver sedang aktif bertugas (Check-in).');
         }
-
         $driver->delete();
         return redirect()->route('admin.driver.index')->with('success', 'Driver berhasil dihapus.');
     }

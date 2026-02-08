@@ -11,11 +11,18 @@ class Driver extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * Daftar kolom yang boleh diisi (Mass Assignment).
+     * Pastikan semua kolom baru ada di sini.
+     */
     protected $fillable = [
         'full_name',
-        'driver_id_nik',
+        'driver_id_nik',    // ID Badge/Absen
+        'nik_ktp',          // <--- SUDAH BENAR (Data NIK KTP akan bisa tersimpan sekarang)
         'sim_expiry_date',
+        'sim_type',         // <--- SUDAH BENAR
         'password',
+        'project_id',       // <--- SUDAH BENAR
     ];
 
     protected $hidden = [
@@ -28,9 +35,18 @@ class Driver extends Authenticatable
         'sim_expiry_date' => 'date',
     ];
 
+    /* =========================================================================
+     * RELASI (RELATIONSHIPS)
+     * ========================================================================= */
+
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 
     /* =========================================================================

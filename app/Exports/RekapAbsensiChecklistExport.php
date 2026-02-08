@@ -16,24 +16,34 @@ class RekapAbsensiChecklistExport implements FromView, ShouldAutoSize, WithTitle
 {
     protected $bulan;
     protected $tahun;
+    protected $projectId;
+    protected $projectName;
 
-    public function __construct($bulan, $tahun)
+    public function __construct($bulan, $tahun, $projectId = null, $projectName = 'SEMUA PROJECT')
     {
         $this->bulan = $bulan;
         $this->tahun = $tahun;
+        $this->projectId = $projectId;
+        $this->projectName = $projectName;
     }
 
     public function view(): View
     {
-        // 1. Tentukan jumlah hari dalam bulan tersebut
+        // 1. Tentukan jumlah hari dalam bulan
         $daysInMonth = Carbon::createFromDate($this->tahun, $this->bulan)->daysInMonth;
         $dates = [];
         for ($i = 1; $i <= $daysInMonth; $i++) {
             $dates[] = $i;
         }
 
-        // 2. Ambil semua driver
-        $drivers = Driver::orderBy('full_name')->get();
+        // 2. Ambil Driver (Load relasi project agar nama project muncul)
+        $query = Driver::with('project')->orderBy('full_name');
+
+        if ($this->projectId) {
+            $query->where('project_id', $this->projectId);
+        }
+
+        $drivers = $query->get();
 
         // 3. Ambil data absensi bulan ini
         $attendances = Attendance::whereMonth('time_out', $this->bulan)
@@ -46,7 +56,6 @@ class RekapAbsensiChecklistExport implements FromView, ShouldAutoSize, WithTitle
         $matrix = [];
         foreach ($drivers as $driver) {
             $row = [];
-            // Ambil absensi milik driver ini
             $driverAtt = $attendances->get($driver->id);
 
             // Loop tanggal 1 s/d 30/31
@@ -54,7 +63,6 @@ class RekapAbsensiChecklistExport implements FromView, ShouldAutoSize, WithTitle
                 $isPresent = false;
 
                 if ($driverAtt) {
-                    // Cek apakah ada absensi di tanggal ini
                     $check = $driverAtt->filter(function ($item) use ($day) {
                         return Carbon::parse($item->time_out)->day == $day;
                     })->first();
@@ -62,28 +70,30 @@ class RekapAbsensiChecklistExport implements FromView, ShouldAutoSize, WithTitle
                     if ($check)
                         $isPresent = true;
                 }
-
                 $row[$day] = $isPresent ? '✔' : '✖';
             }
 
             // Hitung total hadir
-            // Hitung total hadir (BARU - HANYA MENGHITUNG JUMLAH HARI YANG ADA CEKLISNYA)
-// Kita filter array $row untuk mencari yang isinya '✔', lalu hitung jumlahnya.
-            $totalHadir = collect($row)->filter(function ($status) {
-                return $status === '✔';
-            })->count();
-            
+            $totalHadir = collect($row)->filter(fn($s) => $s === '✔')->count();
+
+            // --- PERBAIKAN DI SINI (MENAMBAHKAN DATA YANG HILANG) ---
             $matrix[] = [
                 'name' => $driver->full_name,
+                'nik_ktp' => $driver->nik_ktp ?? '-',          // <--- Fix Error: Undefined array key "nik_ktp"
+                'id_driver' => $driver->driver_id_nik ?? '-',    // <--- Fix Error: Undefined array key "id_driver"
+                'project' => $driver->project->name ?? '-',    // <--- Fix Error: Undefined array key "project"
                 'data' => $row,
                 'total' => $totalHadir
             ];
         }
 
+        // 5. Kirim Data ke View
         return view('exports.rekap_checklist', [
             'dates' => $dates,
             'matrix' => $matrix,
-            'monthName' => Carbon::createFromDate($this->tahun, $this->bulan)->translatedFormat('F Y')
+            'monthName' => Carbon::createFromDate($this->tahun, $this->bulan)->translatedFormat('F Y'),
+            'projectName' => $this->projectName, // <--- Fix Error: Undefined variable $projectName
+            'totalCols' => count($dates) + 5   // Update colspan (+5 untuk kolom identitas tambahan)
         ]);
     }
 
@@ -92,34 +102,31 @@ class RekapAbsensiChecklistExport implements FromView, ShouldAutoSize, WithTitle
         return 'Checklist Absensi';
     }
 
-    // FUNGSI UNTUK MEMBERI WARNA HIJAU/MERAH DI EXCEL
     public function styles(Worksheet $sheet)
     {
         $highestRow = $sheet->getHighestRow();
         $highestColumn = $sheet->getHighestColumn();
 
-        // Style Header (Hitam Putih)
+        // Style Header
         $sheet->getStyle('A1:' . $highestColumn . '1')->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '212529']],
             'alignment' => ['horizontal' => 'center']
         ]);
 
-        // Rata Tengah untuk semua data tanggal
+        // Rata Tengah
         $sheet->getStyle('B2:' . $highestColumn . $highestRow)->getAlignment()->setHorizontal('center');
 
-        // Loop untuk mewarnai Centang dan Silang
+        // Warna Centang/Silang
         for ($row = 2; $row <= $highestRow; $row++) {
             for ($col = 2; $col <= \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn) - 1; $col++) {
                 $colString = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
                 $cellValue = $sheet->getCell($colString . $row)->getValue();
 
                 if ($cellValue == '✔') {
-                    // Warna Hijau
                     $sheet->getStyle($colString . $row)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('008000'));
                     $sheet->getStyle($colString . $row)->getFont()->setBold(true);
                 } elseif ($cellValue == '✖') {
-                    // Warna Merah
                     $sheet->getStyle($colString . $row)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000'));
                 }
             }

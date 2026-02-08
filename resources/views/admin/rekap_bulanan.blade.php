@@ -3,100 +3,254 @@
 @section('title', 'Dashboard - Rekap Bulanan')
 
 @section('content')
+    <style>
+        /* === VARIABLES & RESET === */
+        :root {
+            --font-size-base: 14px;
+            --border-radius-comfort: 8px;
+            --transition-smooth: 0.2s ease-in-out;
+        }
+
+        body {
+            font-size: var(--font-size-base);
+        }
+
+        /* === 1. FILTER CONTAINER === */
+        .filter-container {
+            background: #fbfbfb;
+            border: 1px solid #e5e5e5;
+            padding: 20px 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        /* === 2. CORPORATE TABLE === */
+        .table-corporate {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .table-corporate thead th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            border-top: 1px solid #e2e8f0;
+            padding: 12px 16px;
+        }
+
+        .table-corporate tbody td {
+            padding: 12px 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+
+        .table-corporate tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* === 3. BADGES === */
+        .badge-corp {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid transparent;
+        }
+
+        .badge-corp-dark {
+            background-color: #1e293b;
+            color: #f8fafc;
+            border-color: #0f172a;
+        }
+
+        .badge-corp-light {
+            background-color: #f1f5f9;
+            color: #475569;
+            border-color: #e2e8f0;
+        }
+
+        /* === 4. MOBILE RESPONSIVE (CARD VIEW) === */
+        @media (max-width: 768px) {
+            .table-corporate thead {
+                display: none;
+            }
+
+            .table-corporate,
+            .table-corporate tbody,
+            .table-corporate tr,
+            .table-corporate td {
+                display: block;
+                width: 100%;
+            }
+
+            .table-corporate tbody tr {
+                margin-bottom: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background: #fff;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+                overflow: hidden;
+            }
+
+            .table-corporate td {
+                padding: 10px 16px;
+                text-align: left;
+                border-bottom: 1px solid #f1f5f9;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            /* Header Kartu (Nama/Plat) */
+            .table-corporate td:first-child {
+                background-color: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+                font-weight: bold;
+            }
+
+            .table-corporate td::before {
+                content: attr(data-label);
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: #94a3b8;
+                text-transform: uppercase;
+            }
+        }
+    </style>
+
     <div class="container-fluid p-0">
 
-        {{-- Header & Filter Section --}}
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        {{-- HEADER --}}
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div>
-                <h4 class="fw-bold text-dark mb-0">Rekapitulasi Bulanan</h4>
-                <small class="text-muted">Statistik performa driver dan penggunaan armada</small>
-            </div>
-            
-            <div class="d-flex gap-2">
-                {{-- Form Filter --}}
-                <form action="{{ route('admin.rekap_bulanan') }}" method="GET" class="d-flex align-items-center bg-white p-1 rounded shadow-sm border">
-                    <input type="month" class="form-control border-0 bg-transparent" name="bulan" value="{{ $selectedMonth }}">
-                    <button type="submit" class="btn btn-primary btn-sm rounded ms-2">Filter</button>
-                </form>
-
-                {{-- Tombol Export --}}
-                <a href="{{ route('admin.rekap_bulanan.export_checklist', ['bulan' => $selectedMonth]) }}"
-                    class="btn btn-success d-flex align-items-center shadow-sm link-confirm-global"
-                    data-title="Download Excel?"
-                    data-text="Unduh laporan checklist untuk periode {{ $selectedMonth }}?"
-                    data-confirm-text="Ya, Unduh">
-                    <i class="bi bi-file-earmark-excel me-2"></i> Export
-                </a>
+                <h3 class="fw-bold text-dark mb-1">Rekapitulasi Bulanan</h3>
+                <p class="text-muted mb-0 small">Statistik performa driver dan penggunaan armada.</p>
             </div>
         </div>
 
+        {{-- FILTER BAR --}}
+        <div class="filter-container">
+            <form action="{{ route('admin.rekap_bulanan') }}" method="GET">
+                <div class="row g-3 align-items-end">
+                    {{-- Filter Project --}}
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Project</label>
+                        <select name="project_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">-- Semua Project --</option>
+                            @foreach ($projects as $project)
+                                <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
+                                    {{ $project->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Filter Bulan --}}
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Periode Bulan</label>
+                        <input type="month" class="form-control form-select-sm" name="bulan" value="{{ $selectedMonth }}"
+                            onchange="this.form.submit()">
+                    </div>
+
+                    {{-- Tombol Export --}}
+                    <div class="col-md-4 d-flex justify-content-end">
+                        <a href="{{ route('admin.rekap_bulanan.export_checklist', ['bulan' => $selectedMonth, 'project_id' => request('project_id')]) }}"
+                            class="btn btn-success btn-sm w-100 w-md-auto d-flex align-items-center justify-content-center">
+                            <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         <div class="row g-4">
-            {{-- Kolom Kiri: Rekap Driver --}}
+            {{-- KOLOM KIRI: REKAP DRIVER --}}
             <div class="col-lg-6">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card shadow-sm border-0 h-100 rounded-3 overflow-hidden">
                     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-person-badge text-primary me-2"></i>Top Driver</h6>
-                        <span class="badge bg-light text-muted">Berdasarkan Total KM</span>
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-person-badge text-primary me-2"></i>Top Driver
+                        </h6>
+                        <span class="badge bg-light text-muted border">Total Jarak</span>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light text-muted small text-uppercase">
+                        <table class="table-corporate">
+                            <thead>
                                 <tr>
-                                    <th class="ps-4 py-2">Nama Driver</th>
-                                    <th class="text-end py-2">Trip</th>
-                                    <th class="text-end pe-4 py-2">Total Jarak</th>
+                                    <th class="ps-4">Nama Driver</th>
+                                    <th class="text-end">Jumlah Trip</th>
+                                    <th class="text-end pe-4">Total Jarak</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($rekapDriver as $nama => $data)
+                                @if(isset($rekapDriver))
+                                    @forelse ($rekapDriver as $nama => $data)
+                                        <tr>
+                                            <td class="ps-4 fw-medium text-dark" data-label="Nama">{{ $nama }}</td>
+                                            <td class="text-end" data-label="Trip">
+                                                <span class="badge-corp badge-corp-light">{{ $data['jumlah_tugas'] }} Trip</span>
+                                            </td>
+                                            <td class="text-end pe-4 fw-bold text-primary" data-label="Total Jarak">
+                                                {{ number_format($data['total_km']) }} Km
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4 text-muted">Belum ada data driver.</td>
+                                        </tr>
+                                    @endforelse
+                                @else
                                     <tr>
-                                        <td class="ps-4 fw-medium">{{ $nama }}</td>
-                                        <td class="text-end">
-                                            <span class="badge bg-secondary bg-opacity-10 text-dark border">{{ $data['jumlah_tugas'] }}</span>
-                                        </td>
-                                        <td class="text-end pe-4 fw-bold text-primary">{{ number_format($data['total_km']) }} km</td>
+                                        <td colspan="3" class="text-center py-4 text-danger">Data belum dimuat.</td>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="text-center py-4 text-muted">Belum ada data untuk bulan ini.</td>
-                                    </tr>
-                                @endforelse
+                                @endif
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            {{-- Kolom Kanan: Rekap Unit --}}
+            {{-- KOLOM KANAN: REKAP UNIT --}}
             <div class="col-lg-6">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card shadow-sm border-0 h-100 rounded-3 overflow-hidden">
                     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-truck text-info me-2"></i>Utilisasi Armada</h6>
-                        <span class="badge bg-light text-muted">Berdasarkan Total KM</span>
+                        <span class="badge bg-light text-muted border">Total Jarak</span>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light text-muted small text-uppercase">
+                        <table class="table-corporate">
+                            <thead>
                                 <tr>
-                                    <th class="ps-4 py-2">Plat Nomor</th>
-                                    <th class="text-end py-2">Trip</th>
-                                    <th class="text-end pe-4 py-2">Total Jarak</th>
+                                    <th class="ps-4">Plat Nomor</th>
+                                    <th class="text-end">Jumlah Trip</th>
+                                    <th class="text-end pe-4">Total Jarak</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($rekapUnit as $plat => $data)
                                     <tr>
-                                        <td class="ps-4">
-                                            <span class="badge bg-dark font-monospace">{{ $plat }}</span>
+                                        <td class="ps-4" data-label="Unit">
+                                            <span class="badge-corp badge-corp-dark font-monospace">{{ $plat }}</span>
                                         </td>
-                                        <td class="text-end">
-                                            <span class="badge bg-secondary bg-opacity-10 text-dark border">{{ $data['jumlah_tugas'] }}</span>
+                                        <td class="text-end" data-label="Trip">
+                                            <span class="badge-corp badge-corp-light">{{ $data['jumlah_tugas'] }} Trip</span>
                                         </td>
-                                        <td class="text-end pe-4 fw-bold text-info">{{ number_format($data['total_km']) }} km</td>
+                                        <td class="text-end pe-4 fw-bold text-info" data-label="Total Jarak">
+                                            {{ number_format($data['total_km']) }} Km
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-center py-4 text-muted">Belum ada data untuk bulan ini.</td>
+                                        <td colspan="3" class="text-center py-4 text-muted">Belum ada data unit.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

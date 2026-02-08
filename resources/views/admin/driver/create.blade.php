@@ -20,6 +20,7 @@
                             </div>
 
                             <div class="row g-3">
+                                {{-- Nama Lengkap --}}
                                 <div class="col-md-6 col-12">
                                     <label for="full_name" class="form-label fw-bold">Nama Lengkap</label>
                                     <input type="text" class="form-control @error('full_name') is-invalid @enderror"
@@ -27,13 +28,44 @@
                                         placeholder="Contoh: Budi Santoso" required>
                                     @error('full_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
+
+                                {{-- Project / Divisi (BARU) --}}
                                 <div class="col-md-6 col-12">
-                                    <label for="driver_id_nik" class="form-label fw-bold">ID Driver (NIK)</label>
-                                    <input type="number" class="form-control @error('driver_id_nik') is-invalid @enderror"
-                                        id="driver_id_nik" name="driver_id_nik" value="{{ old('driver_id_nik') }}"
-                                        placeholder="16 digit NIK" required>
-                                    @error('driver_id_nik') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <label class="form-label fw-bold">Penempatan Project / Divisi</label>
+                                    <select name="project_id" class="form-select">
+                                        <option value="">-- Tidak Ada / Pool --</option>
+                                        @foreach($projects as $project)
+                                            <option value="{{ $project->id }}">{{ $project->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
+
+                                {{-- NIK --}}
+                                <div class="col-md-6 col-12">
+                                    <label for="nik_ktp" class="form-label fw-bold">NIK (KTP)</label>
+                                    <input type="text" class="form-control" name="nik_ktp" placeholder="16 digit NIK KTP">
+                                </div>
+                                {{-- Ubah label "ID Driver (NIK)" menjadi "ID Driver (Badge/Absen)" --}}
+                                <div class="col-md-6 col-12">
+                                    <label for="driver_id_nik" class="form-label fw-bold">ID Driver (Badge/Absen)</label>
+                                    <input type="text" class="form-control" name="driver_id_nik" placeholder="ID Pegawai">
+                                </div>
+
+                                {{-- Jenis SIM (BARU) --}}
+                                <div class="col-md-6 col-12">
+                                    <label for="sim_type" class="form-label fw-bold">Jenis SIM</label>
+                                    <select name="sim_type" id="sim_type" class="form-select" required>
+                                        <option value="">-- Pilih Jenis SIM --</option>
+                                        <option value="SIM A">SIM A</option>
+                                        <option value="SIM A Umum">SIM A Umum</option>
+                                        <option value="SIM B1">SIM B1</option>
+                                        <option value="SIM B1 Umum">SIM B1 Umum</option>
+                                        <option value="SIM B2">SIM B2</option>
+                                        <option value="SIM B2 Umum">SIM B2 Umum</option>
+                                    </select>
+                                </div>
+
+                                {{-- Masa Berlaku SIM --}}
                                 <div class="col-md-6 col-12">
                                     <label for="sim_expiry_date" class="form-label fw-bold">Masa Berlaku SIM</label>
                                     <input type="date" class="form-control @error('sim_expiry_date') is-invalid @enderror"
@@ -46,6 +78,7 @@
                                     <hr class="text-muted">
                                 </div>
 
+                                {{-- Password --}}
                                 <div class="col-md-6 col-12">
                                     <label for="password" class="form-label fw-bold">Password Akun</label>
                                     <input type="password" class="form-control @error('password') is-invalid @enderror"

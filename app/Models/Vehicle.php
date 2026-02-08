@@ -8,39 +8,29 @@ use Illuminate\Support\Carbon;
 
 /**
  * Class Vehicle
- * * @property int $id
- * @property string $plate_number
- * @property string|null $type
- * @property int $service_interval_km
- * @property int $last_service_km
- * * // Kolom Tanggal (Otomatis jadi Carbon karena casts)
- * @property Carbon|null $pajak_stnk_berlaku_sampai
- * @property Carbon|null $kir_berlaku_sampai
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- * * // Custom Attributes (Accessors)
- * @property-read int $current_km
- * @property-read int|null $sisa_km
- * @property-read string $health_status_code
- * * // Relationships
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Attendance[] $attendances
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\MaintenanceLog[] $maintenanceLogs
- * @property-read \App\Models\Attendance|null $latestAttendance
+ * Mengelola data aset kendaraan.
  */
 class Vehicle extends Model
 {
     use HasFactory;
 
+    /**
+     * SATU-SATUNYA TEMPAT UNTUK $fillable.
+     * Pastikan semua kolom yang boleh diedit ada di sini.
+     */
     protected $fillable = [
         'plate_number',
         'type',
+        'project_id', // <--- Sudah ditambahkan
+        'status',
+        'current_km',
         'service_interval_km',
         'last_service_km',
         'pajak_stnk_berlaku_sampai',
         'kir_berlaku_sampai',
     ];
 
-    // Casting agar field tanggal otomatis jadi object Carbon (bisa diformat tanggalnya)
+    // Casting agar field tanggal otomatis jadi object Carbon
     protected $casts = [
         'pajak_stnk_berlaku_sampai' => 'date',
         'kir_berlaku_sampai' => 'date',
@@ -49,6 +39,11 @@ class Vehicle extends Model
     /* =========================================================================
      * RELATIONS (HUBUNGAN ANTAR TABEL)
      * ========================================================================= */
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
+    }
 
     public function attendances()
     {
@@ -60,24 +55,15 @@ class Vehicle extends Model
         return $this->hasMany(MaintenanceLog::class)->orderBy('service_date', 'desc');
     }
 
-    /**
-     * Relasi helper: Mengambil SATU data absensi terakhir.
-     * Penting untuk tahu KM terakhir mobil ada di angka berapa.
-     */
     public function latestAttendance()
     {
         return $this->hasOne(Attendance::class)->latest('time_out');
     }
 
     /* =========================================================================
-     * BUSINESS LOGIC (LOGIKA BISNIS) - OTAKNYA DI SINI
+     * BUSINESS LOGIC (LOGIKA BISNIS)
      * ========================================================================= */
 
-    /**
-     * Hitung KM Saat Ini secara otomatis.
-     * Logika: Cek speedo_akhir (kalau sudah pulang) atau speedo_awal (kalau baru berangkat).
-     * @return int
-     */
     public function getCurrentKmAttribute()
     {
         return $this->latestAttendance?->speedo_akhir
@@ -85,11 +71,6 @@ class Vehicle extends Model
             ?? 0;
     }
 
-    /**
-     * Hitung Sisa KM menuju servis berikutnya.
-     * Rumus: (KM Servis Terakhir + Interval) - KM Saat Ini.
-     * @return int|null
-     */
     public function getSisaKmAttribute()
     {
         if ($this->service_interval_km <= 0)
@@ -99,14 +80,9 @@ class Vehicle extends Model
         return $nextService - $this->current_km;
     }
 
-    /**
-     * Tentukan Status Kesehatan Mobil (Return KODE, bukan HTML).
-     * Frontend yang akan menentukan warnanya nanti berdasarkan kode ini.
-     * * Output: 'physical_issue', 'service_due', 'warning', atau 'healthy'.
-     */
     public function getHealthStatusCodeAttribute()
     {
-        // 1. Cek Fisik (Ban/Rem/Lampu) - Prioritas Utama
+        // 1. Cek Fisik
         $lastLog = $this->latestAttendance;
         if (
             $lastLog && (
@@ -130,10 +106,6 @@ class Vehicle extends Model
         return 'healthy';
     }
 
-    /**
-     * Scope untuk pencarian (Search).
-     * Biar Controller bersih dari query 'LIKE %...%'.
-     */
     public function scopeSearch($query, $keyword)
     {
         if (!$keyword)
