@@ -22,15 +22,33 @@ trait FormatAttendance
             $totalJamKerja = floor($totalMenit / 60) . " jam " . ($totalMenit % 60) . " menit";
         }
 
+        // --- TAMBAHAN UNTUK FITUR LIVE MAP LEAFLET ---
+        $latitude = 0;
+        $longitude = 0;
+
+        // Memecah koordinat (contoh format di DB: "-6.2088, 106.8456")
+        if (!empty($item->gps_location_in)) {
+            $coords = explode(',', $item->gps_location_in);
+            if (count($coords) >= 2) {
+                $latitude = (float) trim($coords[0]);
+                $longitude = (float) trim($coords[1]);
+            }
+        }
+        // ---------------------------------------------
+
         return [
+            'id' => $item->id, // Penting ditambahkan jika belum ada untuk modal edit
             'timestamp_masuk' => $timeIn->format('Y-m-d H:i:s'),
             'timestamp_keluar' => $item->time_out ? Carbon::parse($item->time_out)->format('Y-m-d H:i:s') : '-',
 
-            // --- PERBAIKAN FINAL DI SINI ---
-            // Format Link Standar: https://www.google.com/maps?q=-6.xxxx,106.xxxx
-            'gps_masuk' => $item->gps_location_in ? 'https://www.google.com/maps?q=' . $item->gps_location_in : '#',
-            'gps_keluar' => $item->gps_location_out ? 'https://www.google.com/maps?q=' . $item->gps_location_out : '#',
-            // -------------------------------
+            // Format Link Standar
+            'gps_masuk' => $item->gps_location_in ? 'http://maps.google.com/?q=' . urlencode($item->gps_location_in) : '#',
+            'gps_keluar' => $item->gps_location_out ? 'http://maps.google.com/?q=' . urlencode($item->gps_location_out) : '#',
+
+            // --- VARIABEL KOORDINAT UNTUK JAVASCRIPT ---
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            // -------------------------------------------
 
             'driver_name' => $item->driver->full_name ?? 'N/A',
             'plate_number' => $item->vehicle->plate_number ?? 'N/A',

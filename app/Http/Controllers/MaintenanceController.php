@@ -101,8 +101,6 @@ class MaintenanceController extends Controller
         ));
     }
 
-    // --- (FUNGSI LAIN DI BAWAH INI TIDAK BERUBAH) ---
-
     public function daftarAset(Request $request)
     {
         $query = Vehicle::with('project');
@@ -162,9 +160,23 @@ class MaintenanceController extends Controller
         return view('admin.aset.riwayat', compact('vehicle', 'statusSummary'));
     }
 
+    // ==============================================================
+    // FUNGSI INI YANG DIPERBAIKI (Penghitungan Banner Peringatan)
+    // ==============================================================
     public function calendar()
     {
-        return view('admin.maintenance_calendar');
+        $today = Carbon::now('Asia/Jakarta')->startOfDay();
+
+        // Hitung total kendaraan yang STNK atau KIR-nya sudah lewat hari ini
+        $overdueCount = Vehicle::where(function ($q) use ($today) {
+            $q->whereNotNull('pajak_stnk_berlaku_sampai')
+                ->where('pajak_stnk_berlaku_sampai', '<', $today);
+        })->orWhere(function ($q) use ($today) {
+            $q->whereNotNull('kir_berlaku_sampai')
+                ->where('kir_berlaku_sampai', '<', $today);
+        })->count();
+
+        return view('admin.maintenance_calendar', compact('overdueCount'));
     }
 
     public function getEvents()
@@ -179,6 +191,7 @@ class MaintenanceController extends Controller
                 $dateStnk = Carbon::parse($vehicle->pajak_stnk_berlaku_sampai)->startOfDay();
                 $color = $dateStnk->lt($today) ? '#dc3545' : ($dateStnk->lte($warningLimit) ? '#ffc107' : '#0d6efd');
                 $events[] = [
+                    'id' => 'stnk_' . $vehicle->id,
                     'title' => 'STNK: ' . $vehicle->plate_number,
                     'start' => $dateStnk->format('Y-m-d'),
                     'backgroundColor' => $color,
@@ -191,6 +204,7 @@ class MaintenanceController extends Controller
                 $dateKir = Carbon::parse($vehicle->kir_berlaku_sampai)->startOfDay();
                 $color = $dateKir->lt($today) ? '#dc3545' : ($dateKir->lte($warningLimit) ? '#ffc107' : '#198754');
                 $events[] = [
+                    'id' => 'kir_' . $vehicle->id,
                     'title' => 'KIR: ' . $vehicle->plate_number,
                     'start' => $dateKir->format('Y-m-d'),
                     'backgroundColor' => $color,
@@ -202,6 +216,7 @@ class MaintenanceController extends Controller
         }
         return response()->json($events);
     }
+    // ==============================================================
 
     public function catatServis(Request $request, $id)
     {
@@ -270,7 +285,6 @@ class MaintenanceController extends Controller
         Vehicle::create([
             'plate_number' => strtoupper($request->plate_number),
             'type' => $request->type,
-            // 'status' => 'ready',  <-- HAPUS ATAU KOMENTAR BARIS INI
             'current_km' => 0,
             'project_id' => $request->project_id,
         ]);

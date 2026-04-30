@@ -8,6 +8,20 @@
         <div class="row">
             <div class="col-12">
 
+                {{-- TAMPILAN BANNER PERINGATAN --}}
+                @if(isset($overdueCount) && $overdueCount > 0)
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4"
+                        role="alert" style="border-left: 5px solid #bd2130 !important;">
+                        <i class="bi bi-exclamation-triangle-fill fs-3 text-danger me-3"></i>
+                        <div>
+                            <h6 class="alert-heading fw-bold mb-1">Peringatan Kritis!</h6>
+                            <span class="mb-0">Terdapat <strong>{{ $overdueCount }} jadwal maintenance</strong> (STNK/KIR) yang
+                                sudah <u>lewat jatuh tempo</u> (Merah). Segera lakukan pengecekan!</span>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
                 {{-- Kartu Kalender --}}
                 <div class="card shadow-sm border-0">
 
@@ -63,8 +77,8 @@
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'id',
-                themeSystem: 'bootstrap5', // Menggunakan tema Bootstrap
-                height: 'auto',            // Tinggi otomatis menyesuaikan konten
+                themeSystem: 'bootstrap5',
+                height: 'auto',
                 contentHeight: 600,
 
                 // Konfigurasi Header Toolbar
@@ -86,18 +100,17 @@
 
                 // Interaksi
                 editable: false,
-                dayMaxEvents: true, // Tampilkan "+more" jika terlalu banyak event
+                dayMaxEvents: 3,
 
                 // Saat event diklik
                 eventClick: function (info) {
-                    info.jsEvent.preventDefault(); // Jangan redirect langsung
+                    info.jsEvent.preventDefault();
                     if (info.event.url) {
-                        // Buka di tab baru
-                        window.open(info.event.url, '_blank');
+                        window.location.href = info.event.url;
                     }
                 },
 
-                // Kustomisasi Tampilan Event (Opsional: Menambahkan Tooltip/Icon)
+                // Kustomisasi Tampilan Event
                 eventContent: function (arg) {
                     let icon = '';
                     if (arg.event.title.includes('STNK')) icon = '<i class="bi bi-file-text me-1"></i>';
@@ -152,7 +165,6 @@
         .fc-theme-standard td,
         .fc-theme-standard th {
             border-color: #f0f0f0;
-            /* Garis lebih halus */
         }
 
         .fc-col-header-cell {
@@ -166,7 +178,6 @@
         /* Hari Ini */
         .fc-day-today {
             background-color: #fff !important;
-            /* Reset warna default */
         }
 
         .fc-day-today .fc-daygrid-day-number {
@@ -184,12 +195,13 @@
         /* Event (Kotak Jadwal) */
         .fc-event {
             border: none !important;
-            border-radius: 6px !important;
-            padding: 3px 6px !important;
-            font-size: 0.85rem !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-radius: 4px !important;
+            padding: 4px 6px !important;
+            font-size: 0.82rem !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             cursor: pointer;
             transition: transform 0.1s;
+            margin-bottom: 3px !important;
         }
 
         .fc-event:hover {
@@ -203,6 +215,59 @@
             font-weight: 500;
             text-decoration: none !important;
             padding: 8px;
+        }
+
+        /* === STYLING UNTUK TOMBOL +MORE & POP-UP === */
+
+        /* Tombol +more (Berapa banyak yang disembunyikan) */
+        .fc-daygrid-more-link {
+            display: block;
+            text-align: center;
+            background-color: #e7f1ff;
+            color: #0d6efd !important;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 3px 0;
+            border-radius: 4px;
+            margin: 2px 4px;
+            text-decoration: none !important;
+            transition: background-color 0.2s;
+        }
+
+        .fc-daygrid-more-link:hover {
+            background-color: #0d6efd;
+            color: #fff !important;
+        }
+
+        /* Kotak Pop-up (Saat tombol +more diklik) */
+        .fc-popover {
+            border: none !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+            border-radius: 8px !important;
+            overflow: hidden;
+            z-index: 1050 !important;
+        }
+
+        /* Header Pop-up (Berisi nama tanggal) */
+        .fc-popover-header {
+            background-color: #f8f9fa !important;
+            padding: 10px 15px !important;
+            font-weight: bold;
+            color: #343a40;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* Body Pop-up (Berisi list event) */
+        .fc-popover-body {
+            padding: 12px !important;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Jarak antar item di dalam pop-up */
+        .fc-popover-body .fc-event {
+            margin-bottom: 6px !important;
+            white-space: normal !important;
         }
     </style>
 @endpush

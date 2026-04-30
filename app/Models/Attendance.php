@@ -11,8 +11,6 @@ class Attendance extends Model
 
     /**
      * Atribut yang boleh diisi secara massal (Mass Assignable).
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         // Kolom Check-in
@@ -26,8 +24,9 @@ class Attendance extends Model
         'condition_photo_2_path',
         'speedo_awal',
 
-        // Kolom Check-out (agar bisa di-update nanti)
+        // Kolom Check-out
         'time_out',
+        'gps_location_out', // <-- Ditambahkan agar aman jika ada data yang masuk
         'speedo_photo_akhir_path',
         'catatan',
         'check_ban',
@@ -36,17 +35,11 @@ class Attendance extends Model
         'speedo_akhir',
     ];
 
-    /**
-     * Relasi: Satu Absensi dimiliki oleh satu Driver.
-     */
     public function driver()
     {
         return $this->belongsTo(Driver::class);
     }
 
-    /**
-     * Relasi: Satu Absensi dimiliki oleh satu Mobil.
-     */
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
