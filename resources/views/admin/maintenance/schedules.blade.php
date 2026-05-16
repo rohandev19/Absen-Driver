@@ -16,7 +16,7 @@
         <div>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.maintenance.export.schedules', request()->all()) }}" class="btn btn-success">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                    <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
                 </a>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
                     <i class="bi bi-plus-lg me-1"></i> Tambah Jadwal
@@ -161,7 +161,7 @@
                                     <button class="btn-primary-corp" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#completeModal{{ $schedule->id }}">
-                                        <i class="bi bi-check-circle"></i> Complete
+                                        <i class="bi bi-check-circle"></i> Selesai
                                     </button>
                                 @else
                                     <span class="text-muted small">-</span>
@@ -176,7 +176,7 @@
                                     <form action="{{ route('admin.maintenance.schedules.complete', $schedule) }}" method="POST">
                                         @csrf
                                         <div class="modal-header">
-                                            <h5 class="modal-title">Complete Maintenance</h5>
+                                            <h5 class="modal-title">Selesaikan Maintenance</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
                                         <div class="modal-body">

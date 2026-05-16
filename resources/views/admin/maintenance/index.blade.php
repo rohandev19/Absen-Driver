@@ -20,7 +20,7 @@
 
             <div class="text-end d-flex justify-content-end align-items-center gap-2">
                 <a href="{{ route('admin.maintenance.export.dashboard', request()->all()) }}" class="btn btn-success">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                    <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
                 </a>
                 <a href="{{ route('admin.maintenance.schedules') }}" class="btn btn-primary">
                     <i class="bi bi-calendar-check me-1"></i> Jadwal Servis
@@ -260,7 +260,7 @@
                                                     id="dropdownActions{{ $vehicle->id }}" 
                                                     data-bs-toggle="dropdown" 
                                                     aria-expanded="false"
-                                                    title="More Actions">
+                                                    title="Aksi Lainnya">
                                                     <i class="bi bi-three-dots-vertical"></i>
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" 

@@ -16,7 +16,7 @@
         <div>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.maintenance.export.alerts', request()->all()) }}" class="btn btn-success">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                    <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
                 </a>
                 <span class="badge bg-light text-dark border px-3 py-2">
                     <i class="bi bi-calendar3 me-2"></i>{{ now()->format('d F Y') }}
@@ -153,13 +153,13 @@
                                                 <form action="{{ route('admin.maintenance.alerts.acknowledge', $alert) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn-action-corp" title="Tandai sudah dibaca">
-                                                        <i class="bi bi-check"></i> Acknowledge
+                                                        <i class="bi bi-check"></i> Tandai Dibaca
                                                     </button>
                                                 </form>
                                                 <form action="{{ route('admin.maintenance.alerts.resolve', $alert) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn-primary-corp" title="Tandai sudah selesai">
-                                                        <i class="bi bi-check-circle"></i> Resolve
+                                                        <i class="bi bi-check-circle"></i> Selesaikan
                                                     </button>
                                                 </form>
                                             </div>
