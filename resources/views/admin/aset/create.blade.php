@@ -15,6 +15,7 @@
                         @csrf
                         
                         {{-- Input Plat Nomor --}}
+                       {{-- Input Plat Nomor --}}
                         <div class="mb-3">
                             <label for="plate_number" class="form-label fw-bold">Plat Nomor</label>
                             <input type="text" class="form-control @error('plate_number') is-invalid @enderror" 
@@ -27,7 +28,7 @@
                         </div>
 
                         {{-- Input Jenis Mobil --}}
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label for="type" class="form-label fw-bold">Jenis Mobil / Tipe</label>
                             <input type="text" class="form-control @error('type') is-invalid @enderror" 
                                 id="type" name="type" placeholder="Contoh: BLINDVAN / CDE / GRANDMAX" 
@@ -37,16 +38,31 @@
                             @enderror
                         </div>
 
+                        {{-- TAMBAHAN BARU: Input Odometer Awal --}}
+                        <div class="mb-3">
+                            <label for="current_km" class="form-label fw-bold">Odometer Awal (KM Saat Ini)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control @error('current_km') is-invalid @enderror" 
+                                    id="current_km" name="current_km" placeholder="Contoh: 50000" 
+                                    value="{{ old('current_km', 0) }}" required min="0">
+                                <span class="input-group-text">Km</span>
+                            </div>
+                            <div class="form-text">Masukkan angka di speedometer mobil saat ini. Biarkan 0 jika mobil baru (dealer).</div>
+                            @error('current_km')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="mb-4">
-                        <label for="project_id" class="form-label fw-bold">Project / Lokasi Unit</label>
-                             <select name="project_id" id="project_id" class="form-select">
-                               <option value="">-- Unit Pool / Umum --</option>
+                            <label for="project_id" class="form-label fw-bold">Project / Lokasi Unit</label>
+                            <select name="project_id" id="project_id" class="form-select">
+                                <option value="">-- Unit Pool / Umum --</option>
                                 @foreach($projects as $project)
-                        <option value="{{ $project->id }}">{{ $project->name }}</option>
-                      @endforeach
-                         </select>
-                   <div class="form-text">Pilih project jika mobil ini didedikasikan khusus.</div>
-                    </div>
+                                    <option value="{{ $project->id }}">{{ $project->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Pilih project jika mobil ini didedikasikan khusus.</div>
+                        </div>
 
                         {{-- Tombol Aksi --}}
                         <div class="d-flex justify-content-end gap-2">

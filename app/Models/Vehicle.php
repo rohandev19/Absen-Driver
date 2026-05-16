@@ -60,17 +60,37 @@ class Vehicle extends Model
         return $this->hasOne(Attendance::class)->latest('time_out');
     }
 
+    public function components()
+    {
+        return $this->hasMany(VehicleComponent::class);
+    }
+
+    public function maintenanceSchedules()
+    {
+        return $this->hasMany(MaintenanceSchedule::class);
+    }
+
+    public function maintenanceAlerts()
+    {
+        return $this->hasMany(MaintenanceAlert::class);
+    }
+
     /* =========================================================================
      * BUSINESS LOGIC (LOGIKA BISNIS)
      * ========================================================================= */
 
     public function getCurrentKmAttribute()
     {
+        // Prioritas 1: Odometer dari absen keluar supir terakhir
+        // Prioritas 2: Odometer dari absen masuk supir terakhir
+        // Prioritas 3 (BARU): Nilai current_km dari database (inputan awal admin)
+        // Prioritas 4: Angka 0
+
         return $this->latestAttendance?->speedo_akhir
             ?? $this->latestAttendance?->speedo_awal
+            ?? $this->attributes['current_km']
             ?? 0;
     }
-
     public function getSisaKmAttribute()
     {
         if ($this->service_interval_km <= 0)

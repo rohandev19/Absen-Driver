@@ -20,14 +20,12 @@
         .timeline-dot {
             position: absolute;
             left: -33px;
-            /* Adjust based on padding + border */
             top: 0;
             width: 16px;
             height: 16px;
             border-radius: 50%;
             background: #fff;
             border: 4px solid #3b82f6;
-            /* Primary Color */
             box-shadow: 0 0 0 4px #eff6ff;
         }
 
@@ -110,7 +108,8 @@
                 <div class="card-metric-v h-100">
                     <div class="mb-4">
                         <div class="metric-v-label">ODOMETER SAAT INI</div>
-                        <div class="metric-v-value">{{ number_format($statusSummary['km_saat_ini']) }}</div>
+                        {{-- Mengambil langsung dari $vehicle->current_km --}}
+                        <div class="metric-v-value">{{ number_format($vehicle->current_km) }}</div>
                         <span class="text-muted small">Kilometer</span>
                     </div>
 
@@ -118,17 +117,24 @@
 
                     <div class="row text-start g-3">
                         <div class="col-6">
-                            <label class="small text-muted fw-bold">SERVIS BERIKUTNYA</label>
-                            <div class="fs-5 fw-bold text-dark">
-                                {{ number_format($vehicle->last_service_km + $vehicle->service_interval_km) }}
+                            <label class="small text-muted fw-bold">HEALTH SCORE</label>
+                            @php
+                                $scoreColor = $score >= 75 ? 'success' : ($score >= 40 ? 'warning' : 'danger');
+                            @endphp
+                            <div class="fs-5 fw-bold text-{{ $scoreColor }}">
+                                {{ round($score, 1) }}/100
                             </div>
                         </div>
                         <div class="col-6">
-                            <label class="small text-muted fw-bold">SISA JARAK</label>
+                            <label class="small text-muted fw-bold">JADWAL TERDEKAT</label>
                             <div>
-                                <span class="badge bg-{{ $statusSummary['color'] }} fs-6">
-                                    {{ number_format($statusSummary['sisa_km']) }} Km
-                                </span>
+                                @if($nextSchedule)
+                                    <span class="badge bg-primary mt-1" style="font-size: 0.85rem;">
+                                        {{ \Carbon\Carbon::parse($nextSchedule->scheduled_date)->format('d M Y') }}
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary mt-1" style="font-size: 0.85rem;">Belum Ada</span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -137,17 +143,16 @@
                         <a href="{{ route('admin.aset.visual', $vehicle->id) }}" class="btn btn-outline-primary">
                             <i class="bi bi-eye me-2"></i> Cek Fisik Terakhir
                         </a>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#catatServisModal"
-                            data-plat-nomor="{{ $vehicle->plate_number }}"
-                            data-km-saat-ini="{{ $statusSummary['km_saat_ini'] }}"
-                            data-action-url="{{ route('admin.aset.catatServis', $vehicle->id) }}">
-                            <i class="bi bi-wrench me-2"></i> Catat Servis Baru
-                        </button>
+
+                        <a href="{{ route('admin.maintenance.schedules', ['vehicle_id' => $vehicle->id]) }}"
+                            class="btn btn-primary">
+                            <i class="bi bi-calendar-plus me-2"></i> Buat Jadwal Servis
+                        </a>
                     </div>
                 </div>
             </div>
 
-            {{-- PANEL KANAN: TIMELINE --}}
+            {{-- PANEL KANAN: TIMELINE (Dari Maintenance Schedules) --}}
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm rounded-3">
                     <div class="card-header bg-white py-3 border-bottom">
@@ -157,33 +162,48 @@
                     <div class="card-body p-4 bg-light bg-opacity-25">
 
                         <div class="timeline">
-                            @forelse($vehicle->maintenanceLogs as $log)
+                            @forelse($vehicle->maintenanceSchedules as $jadwal)
                                 <div class="timeline-item">
                                     <div class="timeline-dot"></div>
                                     <span class="timeline-date">
-                                        {{ \Carbon\Carbon::parse($log->service_date)->translatedFormat('l, d F Y') }}
+                                        {{ \Carbon\Carbon::parse($jadwal->completed_at ?? $jadwal->scheduled_date)->translatedFormat('l, d F Y') }}
                                     </span>
 
                                     <div class="timeline-card">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <span class="badge bg-dark bg-opacity-10 text-dark border">
-                                                KM Servis: <strong>{{ number_format($log->km_at_service) }}</strong>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
+                                                {{ $jadwal->component ? $jadwal->component->component_name : 'General Checkup / Lainnya' }}
                                             </span>
-                                            <small class="text-muted fst-italic" style="font-size: 0.75rem;">
-                                                <i class="bi bi-pencil me-1"></i> {{ $log->recorder->name ?? 'Admin' }}
-                                            </small>
+                                            <span class="badge bg-dark bg-opacity-10 text-dark border">
+                                                KM: <strong>{{ number_format($jadwal->scheduled_km ?? 0) }}</strong>
+                                            </span>
                                         </div>
-                                        <p class="mb-0 text-secondary" style="white-space: pre-line; line-height: 1.5;">
-                                            {{ $log->description }}
+
+                                        <div class="row text-secondary mb-2 mt-3" style="font-size: 0.85rem;">
+                                            <div class="col-6">
+                                                <i class="bi bi-shop me-1"></i>
+                                                {{ $jadwal->workshop_name ?: 'Internal/Tdk. Diketahui' }}
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <i class="bi bi-cash me-1"></i> Rp
+                                                {{ number_format($jadwal->actual_cost ?: $jadwal->estimated_cost, 0, ',', '.') }}
+                                            </div>
+                                        </div>
+
+                                        <p class="mb-0 text-secondary bg-light p-2 rounded mt-2"
+                                            style="white-space: pre-line; font-size: 0.85rem;">
+                                            <strong>Catatan:</strong><br>
+                                            {{ $jadwal->notes ?: 'Tidak ada catatan khusus.' }}
                                         </p>
                                     </div>
                                 </div>
                             @empty
                                 <div class="text-center py-5">
                                     <div class="text-muted opacity-50 mb-2">
-                                        <i class="bi bi-journal-x display-4"></i>
+                                        <i class="bi bi-journal-check display-4"></i>
                                     </div>
-                                    <h6 class="text-muted">Belum ada riwayat servis tercatat.</h6>
+                                    <h6 class="text-muted">Belum ada riwayat servis yang diselesaikan.</h6>
+                                    <p class="small text-secondary">Silakan catat perawatan melalui menu Jadwal Servis.</p>
                                 </div>
                             @endforelse
                         </div>
@@ -193,30 +213,4 @@
             </div>
         </div>
     </div>
-
-    {{-- Include Modal Catat Servis --}}
-    @include('admin.components.modal_catat_servis')
-
 @endsection
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var catatServisModal = document.getElementById('catatServisModal');
-            if (catatServisModal) {
-                catatServisModal.addEventListener('show.bs.modal', function (event) {
-                    var button = event.relatedTarget;
-                    if (!button) return;
-
-                    var platNomor = button.getAttribute('data-plat-nomor');
-                    var kmSaatIni = button.getAttribute('data-km-saat-ini');
-                    var actionUrl = button.getAttribute('data-action-url');
-
-                    catatServisModal.querySelector('#modalPlatNomor').textContent = platNomor;
-                    catatServisModal.querySelector('#formCatatServis').setAttribute('action', actionUrl);
-                    if (kmSaatIni) catatServisModal.querySelector('#km_servis_saat_ini').value = kmSaatIni;
-                });
-            }
-        });
-    </script>
-@endpush

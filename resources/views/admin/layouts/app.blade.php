@@ -295,7 +295,7 @@
         {{-- SIDEBAR --}}
         <nav id="sidebar" class="d-flex flex-column">
 
-            {{-- FIX 3: Wrapper untuk area yang bisa discroll (Header + Menu) --}}
+            {{-- WRAPPER UNTUK AREA YANG BISA DISROLL (Header + Menu) --}}
             <div class="sidebar-scroll-area">
                 <div class="sidebar-header">
                     <h3 class="fw-bold"><i class="bi bi-speedometer2"></i> Admin Hamada</h3>
@@ -325,7 +325,7 @@
                             id="driver-collapse">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><a href="{{ route('admin.driver.index') }}"
-                                        class="{{ request()->routeIs('admin.driver.*') ? 'active' : '' }}">
+                                        class="{{ request()->routeIs('admin.driver.index') ? 'active' : '' }}">
                                         <i class="bi bi-circle me-2"
                                             style="font-size: 6px; vertical-align: middle;"></i> Kelola Driver</a>
                                 </li>
@@ -348,15 +348,15 @@
                         </div>
                     </li>
 
-                    {{-- 3. GRUP: MANAJEMEN UNIT --}}
+                    {{-- 3. GRUP: MANAJEMEN UNIT (Aset & Riwayat) --}}
                     <li class="nav-item">
                         <button class="btn btn-toggle d-flex align-items-center rounded collapsed"
                             data-bs-toggle="collapse" data-bs-target="#unit-collapse"
-                            aria-expanded="{{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit', 'admin.maintenance.dashboard', 'admin.maintenance') ? 'true' : 'false' }}">
+                            aria-expanded="{{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit') ? 'true' : 'false' }}">
                             <span><i class="bi bi-truck me-2"></i> Manajemen Unit</span>
                         </button>
 
-                        <div class="collapse {{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit', 'admin.maintenance.dashboard', 'admin.maintenance', 'admin.aset.visual', 'admin.aset.riwayat') ? 'show' : '' }}"
+                        <div class="collapse {{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit') ? 'show' : '' }}"
                             id="unit-collapse">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><a href="{{ route('admin.daftar_aset') }}"
@@ -369,60 +369,100 @@
                                         <i class="bi bi-circle me-2"
                                             style="font-size: 6px; vertical-align: middle;"></i> Riwayat Unit</a>
                                 </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    {{-- 4. GRUP BARU: MAINTENANCE MOBIL (Semua Fitur Perawatan) --}}
+                    <li class="nav-item">
+                        <button class="btn btn-toggle d-flex align-items-center rounded collapsed"
+                            data-bs-toggle="collapse" data-bs-target="#maintenance-collapse"
+                            aria-expanded="{{ request()->routeIs('admin.maintenance.*', 'admin.aset.visual', 'admin.aset.riwayat', 'admin.maintenance') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-wrench-adjustable me-2"></i> Maintenance Mobil</span>
+                        </button>
+
+                        <div class="collapse {{ request()->routeIs('admin.maintenance.*', 'admin.aset.visual', 'admin.aset.riwayat', 'admin.maintenance') ? 'show' : '' }}"
+                            id="maintenance-collapse">
+                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+                                {{-- Link ke Dashboard Monitoring & Health Score --}}
                                 <li><a href="{{ route('admin.maintenance.dashboard') }}"
-                                        class="{{ request()->routeIs('admin.maintenance.dashboard', 'admin.aset.visual', 'admin.aset.riwayat') ? 'active' : '' }}">
+                                        class="{{ request()->routeIs('admin.maintenance.dashboard', 'admin.maintenance.components', 'admin.aset.visual', 'admin.aset.riwayat') ? 'active' : '' }}">
                                         <i class="bi bi-circle me-2"
                                             style="font-size: 6px; vertical-align: middle;"></i> Monitoring Servis</a>
                                 </li>
+                                {{-- Link ke Kalender Pajak & KIR --}}
                                 <li><a href="{{ route('admin.maintenance') }}"
                                         class="{{ request()->routeIs('admin.maintenance') ? 'active' : '' }}">
                                         <i class="bi bi-circle me-2"
                                             style="font-size: 6px; vertical-align: middle;"></i> Kalender Servis</a>
                                 </li>
+                                {{-- Link ke Peringatan Otomatis --}}
+                                <li><a href="{{ route('admin.maintenance.alerts') }}"
+                                        class="{{ request()->routeIs('admin.maintenance.alerts') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Peringatan (Alerts)
+                                        @php $activeAlerts = \App\Models\MaintenanceAlert::where('status', 'active')->count(); @endphp
+                                        @if($activeAlerts > 0)
+                                            <span class="badge rounded-pill bg-danger float-end mt-1"
+                                                style="font-size: 10px;">{{ $activeAlerts }}</span>
+                                        @endif
+                                    </a>
+                                </li>
+                                {{-- Link ke Agenda Jadwal Bengkel --}}
+                                <li><a href="{{ route('admin.maintenance.schedules') }}"
+                                        class="{{ request()->routeIs('admin.maintenance.schedules') ? 'active' : '' }}">
+                                        <i class="bi bi-circle me-2"
+                                            style="font-size: 6px; vertical-align: middle;"></i> Jadwal Servis
+                                        @php 
+                                                                            $upcomingSchedules = \App\Models\MaintenanceSchedule::where('status', 'pending')
+                                            ->where('scheduled_date', '<=', now()->addDays(3))
+                                            ->count(); 
+                                        @endphp
+                                        @if($upcomingSchedules > 0)
+                                            <span class="badge rounded-pill bg-primary float-end mt-1" style="font-size: 10px;">{{ $upcomingSchedules }}</span>
+                                        @endif
+                                    </a>
+                        </li>
                             </ul>
-                        </div>
+                </div>
                     </li>
-
-                    <hr class="border-secondary my-2">
-
-                    {{-- 4. LAPORAN --}}
-                    <li class="nav-item">
+    
+                   <hr      class="border-secondary my-2">
+ 
+                         {{-- 5.   LAPORAN & MASTER DATA LAINNYA --}}
+                <li     class="nav-item">
                         <a href="{{ route('admin.laporan_darurat') }}"
-                            class="nav-link {{ request()->routeIs('admin.laporan_darurat') ? 'active' : '' }}">
+                    class="nav-link {{ request()->routeIs('admin.laporan_darurat') ? 'active' : '' }}">
                             <i class="bi bi-exclamation-triangle me-2"></i> Laporan Darurat
                         </a>
-                    </li>
-
-                    {{-- 5. KELOLA PROJECT --}}
-                    <li class="nav-item">
+                </li>
+       
+                  <li        class="nav-item">
                         <a href="{{ route('admin.project.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.project.*') ? 'active' : '' }}">
+                    class="nav-link {{ request()->routeIs('admin.project.*') ? 'active' : '' }}">
                             <i class="bi bi-tags-fill me-2"></i> Kelola Project
                         </a>
                     </li>
 
-                    {{-- 6. KELOLA PENGGUNA --}}
-                    <li class="nav-item">
+                         <li    class="nav-item">
                         <a href="{{ route('admin.pengguna.index') }}"
                             class="nav-link {{ request()->routeIs('admin.pengguna.*') ? 'active' : '' }}">
                             <i class="bi bi-people-fill me-2"></i> Kelola Pengguna
-                        </a>
+                </a>
                     </li>
-
                 </ul>
             </div>
-            {{-- AKHIR WRAPPER SCROLL --}}
 
-            {{-- TOMBOL LOGOUT (Di luar wrapper scroll, agar fixed di bawah) --}}
-            <div class="sidebar-logout p-2 mt-auto">
-                <form action="{{ route('admin.logout') }}" method="POST" class="form-logout-global">
+                 {{-- TOM   BOL LOGOUT (Fixed di bawah) --}}
+        <div class="    sidebar-logout p-2 mt-auto">
+          <for      m action="{{ route('admin.logout') }}" method="POST" class="form-logout-global">
                     @csrf
                     <button type="submit" class="btn btn-logout w-100">
                         <i class="bi bi-box-arrow-right me-2"></i> <span>Logout</span>
-                    </button>
-                </form>
-            </div>
-        </nav>
+            </button>
+        </form>
+    </div>
+</nav>
 
         {{-- MAIN CONTENT --}}
         <div id="main-content">
@@ -459,12 +499,12 @@
                     Detail</a>
             </div>
         </div>
-    </div>
+</div>
 
     {{-- === SYSTEM SCRIPTS === --}}
-    @if(session('success'))
-        <div class="flash-data" data-type="success" data-message="{{ session('success') }}"></div>
-    @endif
+@if(session('success'))
+    <div class="flash-data" data-type="success" data-message="{{ session('success') }}"></div>
+@endif
     @if(session('error'))
         <div class="flash-data" data-type="error" data-message="{{ session('error') }}"></div>
     @endif

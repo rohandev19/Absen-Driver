@@ -9,32 +9,37 @@ use App\Models\Attendance;
 use App\Models\User;
 use App\Models\Driver;
 use App\Models\Project;
+use App\Models\VehicleComponent;
+use App\Models\MaintenanceSchedule;
+use App\Models\MaintenanceAlert;
+use App\Services\VehicleHealthService;
+use App\Services\MaintenanceAlertService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\MaintenanceDashboardExport;
+use App\Exports\MaintenanceSchedulesExport;
+use App\Exports\MaintenanceAlertsExport;
 
 class MaintenanceController extends Controller
 {
-    /**
-     * CONSTRUCTOR: SETTING BAHASA INDONESIA
-     * Agar hari muncul sebagai 'Senin', 'Minggu', dst.
-     */
+    protected $healthService;
+    protected $alertService;
+
     public function __construct()
     {
         Carbon::setLocale('id');
         setlocale(LC_TIME, 'id_ID');
+        $this->healthService = new VehicleHealthService();
+        $this->alertService = new MaintenanceAlertService();
     }
 
-    /**
-     * 1. DASHBOARD MONITORING (FIXED STATS & LANGUAGE)
-     */
     public function index(Request $request)
     {
         $query = Vehicle::query();
 
-        // 1. FILTER DATABASE
         if ($request->filled('search')) {
             $query->search($request->search);
         }
@@ -45,60 +50,52 @@ class MaintenanceController extends Controller
             $query->where('type', $request->type);
         }
 
-        $vehicles = $query->with(['latestAttendance', 'project'])->get();
-
-        // 2. HITUNG STATISTIK (DIPERBAIKI)
-        // Hitung dulu yang bermasalah
-        $countDanger = $vehicles->filter(fn($v) => in_array($v->health_status_code, ['service_due', 'physical_issue']))->count();
-        $countWarning = $vehicles->filter(fn($v) => $v->health_status_code == 'warning')->count();
-        $countTotal = $vehicles->count();
-
-        // Sisa-nya pasti SEHAT (KONDISI PRIMA)
-        // Ini menjamin angka tidak akan 0 jika ada unit yang tersisa
-        $countSehat = $countTotal - $countDanger - $countWarning;
+        $vehicles = $query->with(['latestAttendance', 'project', 'components'])->get();
 
         $stats = [
-            'total' => $countTotal,
-            'sehat' => $countSehat,
-            'warning' => $countWarning,
-            'danger' => $countDanger,
+            'total' => $vehicles->count(),
+            'sehat' => 0,
+            'warning' => 0,
+            'danger' => 0,
         ];
 
-        // 3. FILTER STATUS (Interaksi Klik Kartu Atas)
+        foreach ($vehicles as $vehicle) {
+            $score = $this->healthService->calculateHealthScore($vehicle);
+            $vehicle->health_score = $score;
+
+            if ($vehicle->health_status_code === 'physical_issue' || $score < 40) {
+                $stats['danger']++;
+                $vehicle->dashboard_status = 'danger';
+            } elseif ($score >= 40 && $score < 75) {
+                $stats['warning']++;
+                $vehicle->dashboard_status = 'warning';
+            } else {
+                $stats['sehat']++;
+                $vehicle->dashboard_status = 'safe';
+            }
+        }
+
         if ($request->filled('status_filter')) {
             $vehicles = $vehicles->filter(function ($vehicle) use ($request) {
-                if ($request->status_filter == 'danger') {
-                    return in_array($vehicle->health_status_code, ['service_due', 'physical_issue']);
-                }
-                if ($request->status_filter == 'warning') {
-                    return $vehicle->health_status_code == 'warning';
-                }
-                if ($request->status_filter == 'safe') {
-                    // Safe adalah selain danger dan warning
-                    return !in_array($vehicle->health_status_code, ['service_due', 'physical_issue', 'warning']);
-                }
-                return true;
+                return $vehicle->dashboard_status === $request->status_filter;
             });
         }
 
-        // 4. SORTING FINAL
         $maintenanceData = $vehicles->sortBy(function ($vehicle) {
-            if (($vehicle->sisa_km !== null && $vehicle->sisa_km < 0) || $vehicle->health_status_code === 'physical_issue')
+            if ($vehicle->dashboard_status === 'danger')
                 return 1;
-            if ($vehicle->sisa_km !== null && $vehicle->sisa_km < 1000)
+            if ($vehicle->dashboard_status === 'warning')
                 return 2;
             return 3;
         });
 
         $projects = Project::orderBy('name')->get();
         $types = Vehicle::select('type')->distinct()->orderBy('type')->pluck('type');
+        
+        // Get unread alerts count
+        $unreadAlerts = MaintenanceAlert::where('status', 'active')->count();
 
-        return view('admin.maintenance.index', compact(
-            'maintenanceData',
-            'stats',
-            'projects',
-            'types'
-        ));
+        return view('admin.maintenance.index', compact('maintenanceData', 'stats', 'projects', 'types', 'unreadAlerts'));
     }
 
     public function daftarAset(Request $request)
@@ -141,33 +138,33 @@ class MaintenanceController extends Controller
         return view('admin.aset.visual', compact('vehicle', 'status', 'lastLog'));
     }
 
+    /**
+     * FUNGSI RIWAYAT SERVIS YANG SUDAH DIPERBARUI
+     */
     public function riwayatServis($id)
     {
-        $vehicle = Vehicle::with(['maintenanceLogs.recorder'])->findOrFail($id);
-        $sisaKm = $vehicle->sisa_km;
-        $color = 'success';
-        if ($sisaKm !== null) {
-            if ($sisaKm <= 0)
-                $color = 'danger';
-            elseif ($sisaKm < 1000)
-                $color = 'warning';
-        }
-        $statusSummary = [
-            'km_saat_ini' => $vehicle->current_km,
-            'sisa_km' => $sisaKm,
-            'color' => $color
-        ];
-        return view('admin.aset.riwayat', compact('vehicle', 'statusSummary'));
-    }
+        $vehicle = Vehicle::with([
+            'maintenanceSchedules' => function ($query) {
+                $query->where('status', 'completed')
+                    ->orderBy('scheduled_date', 'desc')
+                    ->with('component');
+            }
+        ])->findOrFail($id);
 
-    // ==============================================================
-    // FUNGSI INI YANG DIPERBAIKI (Penghitungan Banner Peringatan)
-    // ==============================================================
+        // Cari jadwal servis berikutnya yang belum selesai
+        $nextSchedule = MaintenanceSchedule::where('vehicle_id', $id)
+            ->whereIn('status', ['pending', 'scheduled'])
+            ->orderBy('scheduled_date', 'asc')
+            ->first();
+
+        // Hitung Health Score agar konsisten dengan dashboard
+        $score = $this->healthService->calculateHealthScore($vehicle);
+
+        return view('admin.aset.riwayat', compact('vehicle', 'nextSchedule', 'score'));
+    }
     public function calendar()
     {
         $today = Carbon::now('Asia/Jakarta')->startOfDay();
-
-        // Hitung total kendaraan yang STNK atau KIR-nya sudah lewat hari ini
         $overdueCount = Vehicle::where(function ($q) use ($today) {
             $q->whereNotNull('pajak_stnk_berlaku_sampai')
                 ->where('pajak_stnk_berlaku_sampai', '<', $today);
@@ -216,10 +213,10 @@ class MaintenanceController extends Controller
         }
         return response()->json($events);
     }
-    // ==============================================================
 
     public function catatServis(Request $request, $id)
     {
+        // Fungsi lama ini bisa dibiarkan saja di controller, tapi tidak akan dipanggil lagi oleh sistem baru.
         $vehicle = Vehicle::findOrFail($id);
         $request->validate([
             'service_date' => 'required|date',
@@ -280,12 +277,13 @@ class MaintenanceController extends Controller
         $request->validate([
             'plate_number' => 'required|unique:vehicles,plate_number|max:15',
             'type' => 'required|string|max:50',
+            'current_km' => 'required|numeric|min:0', // Validasi baru
         ]);
 
         Vehicle::create([
             'plate_number' => strtoupper($request->plate_number),
             'type' => $request->type,
-            'current_km' => 0,
+            'current_km' => $request->current_km, // Simpan Odometer inputan admin
             'project_id' => $request->project_id,
         ]);
 
@@ -295,14 +293,27 @@ class MaintenanceController extends Controller
     public function destroy($id)
     {
         $vehicle = Vehicle::findOrFail($id);
+
+        // Hapus kendaraan
         $vehicle->delete();
+
         return redirect()->route('admin.daftar_aset')->with('success', 'Data aset berhasil dihapus.');
     }
-
+    /**
+     * FUNGSI EXPORT EXCEL YANG SUDAH DIPERBARUI
+     */
     public function exportExcel($id)
     {
-        $vehicle = Vehicle::findOrFail($id);
-        $logs = $vehicle->maintenanceLogs()->orderBy('service_date', 'desc')->get();
+        // PERBAIKAN: Gunakan nama relasi yang benar yaitu 'maintenanceSchedules'
+        $vehicle = Vehicle::with([
+            'maintenanceSchedules' => function ($query) {
+                $query->where('status', 'completed')
+                    ->orderBy('scheduled_date', 'desc')
+                    ->with('component');
+            }
+        ])->findOrFail($id);
+
+        $logs = $vehicle->maintenanceSchedules;
         $namaFile = 'Riwayat_Servis_' . str_replace(' ', '_', $vehicle->plate_number) . '.xls';
 
         return response(view('admin.aset.riwayat_excel', compact('vehicle', 'logs')))
@@ -369,5 +380,218 @@ class MaintenanceController extends Controller
         return response(view('admin.absensi.rekap_excel', compact('dataRekap', 'periode', 'startDate', 'endDate', 'projectName')))
             ->header('Content-Type', 'application/vnd.ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $namaFile . '"');
+    }
+
+    public function components($vehicleId)
+    {
+        $vehicle = Vehicle::with('components')->findOrFail($vehicleId);
+        $healthReport = $this->healthService->getHealthReport($vehicle);
+
+        // PERBAIKAN: Ubah ke Bahasa Indonesia agar tabel bisa membaca data yang diinput
+        $categories = [
+            'Cairan & Pelumas' => ['Oli Mesin', 'Air Radiator', 'Minyak Rem', 'Oli Power Steering', 'Oli Transmisi'],
+            'Filter' => ['Filter Oli', 'Filter Udara', 'Filter Bahan Bakar', 'Filter AC / Kabin'],
+            'Rem' => ['Kampas Rem', 'Cakram Rem', 'Minyak Rem'],
+            'Ban' => ['Ban Depan Kiri', 'Ban Depan Kanan', 'Ban Belakang Kiri', 'Ban Belakang Kanan', 'Ban Serep'],
+            'Aki & Kelistrikan' => ['Aki', 'Alternator / Dinamo Ampere'],
+            'Lampu' => ['Lampu Utama', 'Lampu Belakang', 'Lampu Sein', 'Lampu Rem'],
+            'Fan Belt & Selang' => ['Timing Belt', 'V-Belt / Fan Belt', 'Selang Radiator'],
+            'Kaki-kaki & Suspensi' => ['Shockbreaker', 'Ball Joint', 'Tie Rod'],
+            'Mesin' => ['Busi', 'Koil Pengapian', 'Injektor'],
+            'Transmisi' => ['Oli Transmisi', 'Kampas Kopling'],
+        ];
+
+        return view('admin.maintenance.components', compact('vehicle', 'healthReport', 'categories'));
+    }
+
+    public function storeComponent(Request $request, $vehicleId)
+    {
+        $request->validate([
+            'component_name' => 'required|string|max:100',
+            'category' => 'required|string|max:50',
+            'replacement_interval_km' => 'nullable|integer|min:0',
+            'replacement_interval_days' => 'nullable|integer|min:0',
+            'last_replacement_km' => 'nullable|integer|min:0',
+            'last_replacement_date' => 'nullable|date',
+            'cost_per_replacement' => 'required|numeric|min:0',
+        ]);
+
+        $vehicle = Vehicle::findOrFail($vehicleId);
+        $vehicle->components()->create($request->all());
+
+        return back()->with('success', 'Komponen berhasil ditambahkan.');
+    }
+
+    public function updateComponent(Request $request, $componentId)
+    {
+        $component = VehicleComponent::findOrFail($componentId);
+
+        $request->validate([
+            'replacement_interval_km' => 'nullable|integer|min:0',
+            'replacement_interval_days' => 'nullable|integer|min:0',
+            'last_replacement_km' => 'nullable|integer|min:0',
+            'last_replacement_date' => 'nullable|date',
+            'cost_per_replacement' => 'nullable|numeric|min:0',
+        ]);
+
+        $component->update($request->all());
+
+        return back()->with('success', 'Komponen berhasil diupdate.');
+    }
+
+    public function deleteComponent($componentId)
+    {
+        $component = VehicleComponent::findOrFail($componentId);
+        $component->delete();
+
+        return back()->with('success', 'Komponen berhasil dihapus.');
+    }
+
+    public function alerts(Request $request)
+    {
+        $query = MaintenanceAlert::with(['vehicle', 'component']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        } else {
+            $query->active();
+        }
+
+        if ($request->filled('alert_type')) {
+            $query->where('alert_type', $request->alert_type);
+        }
+
+        $alerts = $query->orderBy('alert_type')
+            ->orderBy('triggered_at', 'desc')
+            ->paginate(20);
+
+        $summary = $this->alertService->getActiveAlertsSummary();
+
+        return view('admin.maintenance.alerts', compact('alerts', 'summary'));
+    }
+
+    public function acknowledgeAlert($alertId)
+    {
+        $alert = MaintenanceAlert::findOrFail($alertId);
+        $alert->acknowledge(Auth::user());
+
+        return back()->with('success', 'Alert telah di-acknowledge.');
+    }
+
+    public function resolveAlert($alertId)
+    {
+        $alert = MaintenanceAlert::findOrFail($alertId);
+        $alert->resolve();
+
+        return back()->with('success', 'Alert telah di-resolve.');
+    }
+
+    public function schedules(Request $request)
+    {
+        $query = MaintenanceSchedule::with(['vehicle', 'component']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('vehicle_id')) {
+            $query->where('vehicle_id', $request->vehicle_id);
+        }
+
+        $schedules = $query->orderBy('scheduled_date')->paginate(20);
+
+        $stats = [
+            'overdue' => MaintenanceSchedule::overdue()->count(),
+            'today' => MaintenanceSchedule::where('scheduled_date', now()->toDateString())
+                ->where('status', '!=', 'completed')->count(),
+            'this_week' => MaintenanceSchedule::upcoming(7)->count(),
+        ];
+
+        $vehicles = Vehicle::orderBy('plate_number')->get();
+
+        return view('admin.maintenance.schedules', compact('schedules', 'stats', 'vehicles'));
+    }
+
+    public function storeSchedule(Request $request)
+    {
+        $request->validate([
+            'vehicle_id' => 'required|exists:vehicles,id',
+            'component_id' => 'nullable|exists:vehicle_components,id',
+            'scheduled_date' => 'required|date',
+            'scheduled_km' => 'nullable|integer|min:0',
+            'type' => 'required|in:preventive,corrective,predictive',
+            'priority' => 'required|in:low,medium,high,critical',
+            'estimated_cost' => 'nullable|numeric|min:0',
+            'workshop_name' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        MaintenanceSchedule::create($request->all());
+
+        return back()->with('success', 'Jadwal maintenance berhasil dibuat.');
+    }
+
+    public function completeSchedule(Request $request, $scheduleId)
+    {
+        $schedule = MaintenanceSchedule::findOrFail($scheduleId);
+
+        $request->validate([
+            'actual_cost' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($request->filled('notes')) {
+            $schedule->notes = $request->notes;
+        }
+
+        $schedule->markAsCompleted(Auth::user(), $request->actual_cost);
+
+        return back()->with('success', 'Maintenance telah diselesaikan.');
+    }
+
+    public function getVehicleComponents($vehicleId)
+    {
+        $components = VehicleComponent::where('vehicle_id', $vehicleId)
+            ->select('id', 'component_name', 'category', 'status')
+            ->get();
+
+        return response()->json($components);
+    }
+
+    /**
+     * Export Dashboard to Excel
+     */
+    public function exportDashboard(Request $request)
+    {
+        $filters = $request->only(['project_id', 'type', 'search', 'status_filter']);
+        $filename = 'Maintenance_Dashboard_' . now()->format('Y-m-d_His') . '.xlsx';
+        
+        return Excel::download(new MaintenanceDashboardExport($filters), $filename);
+    }
+
+    /**
+     * Export Schedules to Excel
+     */
+    public function exportSchedules(Request $request)
+    {
+        $filters = $request->only(['status', 'priority', 'vehicle_id', 'type']);
+        $filename = 'Maintenance_Schedules_' . now()->format('Y-m-d_His') . '.xlsx';
+        
+        return Excel::download(new MaintenanceSchedulesExport($filters), $filename);
+    }
+
+    /**
+     * Export Alerts to Excel
+     */
+    public function exportAlerts(Request $request)
+    {
+        $filters = $request->only(['status', 'alert_type']);
+        $filename = 'Maintenance_Alerts_' . now()->format('Y-m-d_His') . '.xlsx';
+        
+        return Excel::download(new MaintenanceAlertsExport($filters), $filename);
     }
 }

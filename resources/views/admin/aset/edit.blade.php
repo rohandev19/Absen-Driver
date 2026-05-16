@@ -20,6 +20,8 @@
                         @method('PUT')
                         <div class="card-body">
                             <div class="row g-3">
+
+                                {{-- IDENTITAS KENDARAAN --}}
                                 <div class="col-md-6">
                                     <label class="form-label">Plat Nomor</label>
                                     <input type="text" class="form-control" value="{{ $vehicle->plate_number }}" disabled>
@@ -46,36 +48,11 @@
                                 </div>
 
                                 <hr class="my-3">
-                                <h5 class="mb-0">Data Monitoring Servis (KM)</h5>
+                                <h5 class="mb-0">Data Monitoring Dokumen (Surat-Surat)</h5>
 
+                                {{-- LEGALITAS / SURAT-SURAT --}}
                                 <div class="col-md-6">
-                                    <label for="service_interval_km" class="form-label">Interval Servis (per KM)</label>
-                                    <input type="number"
-                                        class="form-control @error('service_interval_km') is-invalid @enderror"
-                                        id="service_interval_km" name="service_interval_km"
-                                        value="{{ old('service_interval_km', $vehicle->service_interval_km) }}" required>
-                                    <div class="form-text">Contoh: 10000 (untuk setiap 10.000 KM)</div>
-                                    @error('service_interval_km')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="last_service_km" class="form-label">KM Servis Terakhir</label>
-                                    <input type="number" class="form-control @error('last_service_km') is-invalid @enderror"
-                                        id="last_service_km" name="last_service_km"
-                                        value="{{ old('last_service_km', $vehicle->last_service_km) }}" required>
-                                    <div class="form-text">Contoh: 50000</div>
-                                    @error('last_service_km')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <hr class="my-3">
-                                <h5 class="mb-0">Data Monitoring Tanggal</h5>
-
-                                <div class="col-md-6">
-                                    <label for="pajak_stnk_berlaku_sampai" class="form-label">STNK Berlaku
-                                        Sampai</label>
+                                    <label for="pajak_stnk_berlaku_sampai" class="form-label">STNK Berlaku Sampai</label>
                                     <input type="date"
                                         class="form-control @error('pajak_stnk_berlaku_sampai') is-invalid @enderror"
                                         id="pajak_stnk_berlaku_sampai" name="pajak_stnk_berlaku_sampai"
@@ -94,6 +71,7 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+
                             </div>
                         </div>
                         <div class="card-footer text-end">

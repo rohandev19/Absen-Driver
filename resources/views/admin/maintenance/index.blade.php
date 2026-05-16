@@ -2,361 +2,12 @@
 
 @section('title', 'Monitoring & Maintenance')
 
+{{-- INJEKSI SERVICE KE DALAM BLADE AGAR SCORE SINKRON --}}
+@inject('healthService', 'App\Services\VehicleHealthService')
+
 @section('content')
-    <style>
-        /* === VARIABLES & RESET === */
-        :root {
-            --font-size-base: 14px;
-            --border-radius-comfort: 8px;
-            --transition-smooth: 0.2s ease-in-out;
-        }
-
-        body {
-            font-size: var(--font-size-base);
-        }
-
-        /* === 1. CORPORATE STAT CARDS (Clean & Professional) === */
-        .card-metric {
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: var(--border-radius-comfort);
-            padding: 20px 24px;
-            transition: all var(--transition-smooth);
-            position: relative;
-            overflow: hidden;
-            height: 100%;
-            border-left: 5px solid transparent;
-        }
-
-        .card-metric:hover {
-            border-color: #b0b0b0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .card-metric.active {
-            background-color: #f8fbff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            transform: translateY(-4px);
-        }
-
-        .border-left-danger {
-            border-left-color: #dc3545;
-        }
-
-        .border-left-warning {
-            border-left-color: #ffc107;
-        }
-
-        .border-left-success {
-            border-left-color: #198754;
-        }
-
-        .border-left-primary {
-            border-left-color: #0d6efd;
-        }
-
-        .metric-value {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: #212529;
-            line-height: 1.2;
-            margin-top: 10px;
-            margin-bottom: 5px;
-        }
-
-        .metric-label {
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #6c757d;
-        }
-
-        .metric-desc {
-            font-size: 0.85rem;
-            color: #888;
-            margin-top: 4px;
-        }
-
-        .stat-link {
-            text-decoration: none;
-            display: block;
-            height: 100%;
-            color: inherit;
-        }
-
-        .card-icon {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 2.5rem;
-            opacity: 0.15;
-        }
-
-        /* === 2. PROFESSIONAL TABLE === */
-        .table-corporate {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        .table-corporate thead th {
-            background-color: #f8f9fa;
-            color: #495057;
-            font-weight: 600;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #dee2e6;
-            border-top: 1px solid #dee2e6;
-            padding: 14px 20px;
-        }
-
-        .table-corporate tbody td {
-            padding: 16px 20px;
-            vertical-align: middle;
-            border-bottom: 1px solid #e9ecef;
-            color: #333;
-        }
-
-        .table-corporate tbody tr:hover {
-            background-color: #fdfdfd;
-        }
-
-        .table-corporate tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* === 3. COMPONENTS === */
-        .badge-corp {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid transparent;
-        }
-
-        .badge-corp-danger {
-            background-color: #fff5f5;
-            color: #c62828;
-            border-color: #ffcdd2;
-        }
-
-        .badge-corp-warning {
-            background-color: #fffbf0;
-            color: #f57f17;
-            border-color: #ffe58f;
-        }
-
-        .badge-corp-success {
-            background-color: #f6ffed;
-            color: #389e0d;
-            border-color: #b7eb8f;
-        }
-
-        .progress-corp-bg {
-            background-color: #eee;
-            height: 8px;
-            width: 100px;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .progress-corp-fill {
-            height: 100%;
-        }
-
-        /* Buttons */
-        .btn-action-corp {
-            background: white;
-            border: 1px solid #d9d9d9;
-            color: #333;
-            padding: 6px 16px;
-            font-size: 0.85rem;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-action-corp:hover {
-            border-color: #40a9ff;
-            color: #096dd9;
-            background-color: #e6f7ff;
-        }
-
-        .btn-primary-corp {
-            background: #1890ff;
-            border: 1px solid #1890ff;
-            color: white;
-            padding: 6px 16px;
-            font-size: 0.85rem;
-            border-radius: 6px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .btn-primary-corp:hover {
-            background: #40a9ff;
-            border-color: #40a9ff;
-            color: white;
-        }
-
-        .btn-danger-corp {
-            background: #ff4d4f;
-            border: 1px solid #ff4d4f;
-            color: white;
-            padding: 6px 16px;
-            font-size: 0.85rem;
-            border-radius: 6px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-danger-corp:hover {
-            background: #ff7875;
-            border-color: #ff7875;
-            color: white;
-        }
-
-        .filter-container {
-            background: #fbfbfb;
-            border: 1px solid #e5e5e5;
-            padding: 16px 24px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-        }
-
-        /* === 4. MOBILE RESPONSIVE (TRANSFORM TABLE TO CARDS) === */
-        @media (max-width: 768px) {
-
-            /* Sembunyikan Header Tabel */
-            .table-corporate thead {
-                display: none;
-            }
-
-            /* Ubah Tabel jadi Blok */
-            .table-corporate,
-            .table-corporate tbody,
-            .table-corporate tr,
-            .table-corporate td {
-                display: block;
-                width: 100%;
-            }
-
-            /* Style Kartu (Baris) */
-            .table-corporate tbody tr {
-                margin-bottom: 20px;
-                border: 1px solid #e0e0e0;
-                border-radius: 12px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-                background: #fff;
-                overflow: hidden;
-            }
-
-            /* Style Cell */
-            .table-corporate td {
-                padding: 12px 16px;
-                text-align: left;
-                border-bottom: 1px solid #f0f0f0;
-                position: relative;
-            }
-
-            /* Header Kartu (Identitas) */
-            .table-corporate td:first-child {
-                background-color: #f8f9fa;
-                border-bottom: 2px solid #e9ecef;
-                padding: 15px;
-            }
-
-            /* Label Data */
-            .table-corporate td:nth-of-type(2)::before {
-                content: "STATUS KESEHATAN";
-                display: block;
-                font-size: 0.7rem;
-                font-weight: bold;
-                color: #adb5bd;
-                margin-bottom: 5px;
-            }
-
-            .table-corporate td:nth-of-type(3)::before {
-                content: "MONITORING KM";
-                display: block;
-                font-size: 0.7rem;
-                font-weight: bold;
-                color: #adb5bd;
-                margin-bottom: 5px;
-            }
-
-            .table-corporate td:nth-of-type(4)::before {
-                content: "UPDATE TERAKHIR";
-                display: block;
-                font-size: 0.7rem;
-                font-weight: bold;
-                color: #adb5bd;
-                margin-bottom: 5px;
-            }
-
-            /* Tombol Aksi */
-            .table-corporate td:last-child {
-                border-bottom: none;
-                background-color: #fff;
-                padding: 15px;
-            }
-
-            /* Layout Tombol Mobile */
-            .table-corporate td:last-child .d-flex {
-                justify-content: space-between !important;
-                width: 100%;
-                gap: 10px;
-            }
-
-            .btn-action-corp,
-            .btn-primary-corp,
-            .btn-danger-corp {
-                flex: 1;
-                justify-content: center;
-                padding: 10px;
-            }
-
-            .progress-corp-bg {
-                width: 100%;
-            }
-
-            /* Filter Mobile */
-            .filter-container {
-                padding: 15px;
-            }
-
-            .filter-container select,
-            .filter-container input,
-            .filter-container button {
-                width: 100%;
-            }
-
-            .filter-container .d-flex {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .filter-container .input-group {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-        }
-    </style>
+    {{-- Include centralized design system for consistent UI/UX --}}
+    @include('admin.maintenance.partials._design-system')
 
     <div class="container-fluid p-0">
 
@@ -366,8 +17,24 @@
                 <h3 class="fw-bold text-dark mb-1">Maintenance Monitor</h3>
                 <p class="text-muted mb-0 small">Dashboard operasional kendaraan & jadwal servis.</p>
             </div>
-            <div class="text-end">
-                <span class="badge bg-light text-dark border px-3 py-2">
+
+            <div class="text-end d-flex justify-content-end align-items-center gap-2">
+                <a href="{{ route('admin.maintenance.export.dashboard', request()->all()) }}" class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                </a>
+                <a href="{{ route('admin.maintenance.schedules') }}" class="btn btn-primary">
+                    <i class="bi bi-calendar-check me-1"></i> Jadwal Servis
+                </a>
+                <a href="{{ route('admin.maintenance.alerts') }}" class="btn btn-danger position-relative">
+                    <i class="bi bi-bell-fill me-1"></i> Cek Peringatan
+                    @if(isset($unreadAlerts) && $unreadAlerts > 0)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+                            {{ $unreadAlerts }}
+                            <span class="visually-hidden">unread alerts</span>
+                        </span>
+                    @endif
+                </a>
+                <span class="badge bg-light text-dark border px-3 py-2 ms-2">
                     <i class="bi bi-calendar3 me-2"></i>{{ now()->format('d F Y') }}
                 </span>
             </div>
@@ -375,21 +42,16 @@
 
         {{-- BAGIAN 1: METRIC CARDS --}}
         <div class="row mb-4 g-3">
-            {{-- DANGER --}}
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'danger']) }}" class="stat-link">
                     <div class="card-metric border-left-danger {{ request('status_filter') == 'danger' ? 'active' : '' }}">
                         <div class="metric-label text-danger">Perlu Perhatian</div>
                         <div class="metric-value">{{ $stats['danger'] }}</div>
                         <div class="metric-desc">Unit Rusak / Telat Servis</div>
-                        <div class="card-icon">
-                            <i class="bi bi-exclamation-octagon-fill text-danger"></i>
-                        </div>
+                        <div class="card-icon"><i class="bi bi-exclamation-octagon-fill text-danger"></i></div>
                     </div>
                 </a>
             </div>
-
-            {{-- WARNING --}}
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'warning']) }}" class="stat-link">
                     <div
@@ -397,28 +59,20 @@
                         <div class="metric-label text-warning">Segera Servis</div>
                         <div class="metric-value">{{ $stats['warning'] }}</div>
                         <div class="metric-desc">Sisa KM &lt; 1.000</div>
-                        <div class="card-icon">
-                            <i class="bi bi-cone-striped text-warning"></i>
-                        </div>
+                        <div class="card-icon"><i class="bi bi-cone-striped text-warning"></i></div>
                     </div>
                 </a>
             </div>
-
-            {{-- SUCCESS --}}
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'safe']) }}" class="stat-link">
                     <div class="card-metric border-left-success {{ request('status_filter') == 'safe' ? 'active' : '' }}">
                         <div class="metric-label text-success">Kondisi Prima</div>
                         <div class="metric-value">{{ $stats['sehat'] }}</div>
                         <div class="metric-desc">Siap Operasi</div>
-                        <div class="card-icon">
-                            <i class="bi bi-check-circle-fill text-success"></i>
-                        </div>
+                        <div class="card-icon"><i class="bi bi-check-circle-fill text-success"></i></div>
                     </div>
                 </a>
             </div>
-
-            {{-- TOTAL --}}
             <div class="col-xl-3 col-md-6">
                 <a href="{{ route('admin.maintenance.dashboard', request()->except(['status_filter'])) }}"
                     class="stat-link">
@@ -426,9 +80,7 @@
                         <div class="metric-label text-primary">Total Armada</div>
                         <div class="metric-value">{{ $stats['total'] }}</div>
                         <div class="metric-desc">Unit Terdaftar</div>
-                        <div class="card-icon">
-                            <i class="bi bi-truck text-primary"></i>
-                        </div>
+                        <div class="card-icon"><i class="bi bi-truck text-primary"></i></div>
                     </div>
                 </a>
             </div>
@@ -441,7 +93,6 @@
                 @if(request('status_filter'))
                     <input type="hidden" name="status_filter" value="{{ request('status_filter') }}">
                 @endif
-
                 <div class="flex-grow-1">
                     <div class="row g-3">
                         <div class="col-md-3">
@@ -477,7 +128,6 @@
                         </div>
                     </div>
                 </div>
-
                 @if(request()->hasAny(['search', 'project_id', 'type', 'status_filter']))
                     <div class="mb-1">
                         <a href="{{ route('admin.maintenance.dashboard') }}"
@@ -498,13 +148,35 @@
                             <tr>
                                 <th class="ps-4">Unit Kendaraan</th>
                                 <th>Status Kesehatan</th>
-                                <th>Monitoring KM</th>
+                                <th>Health Score</th>
                                 <th>Update Terakhir</th>
                                 <th class="text-end pe-4">Tindakan</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($maintenanceData as $vehicle)
+                                @php
+                                    // 1. HITUNG SKOR REAL-TIME (Sinkronisasi dengan Component Blade)
+                                    $score = $healthService->calculateHealthScore($vehicle);
+
+                                    // 2. TENTUKAN WARNA PROGRESS BAR & STATUS
+                                    if ($score >= 75) {
+                                        $barColor = '#52c41a'; // Hijau
+                                        $statusClass = 'badge-corp-success';
+                                        $statusIcon = 'bi-check-circle-fill';
+                                        $statusText = 'Prima';
+                                    } elseif ($score >= 40) {
+                                        $barColor = '#faad14'; // Kuning
+                                        $statusClass = 'badge-corp-warning';
+                                        $statusIcon = 'bi-clock-history';
+                                        $statusText = 'Segera Servis';
+                                    } else {
+                                        $barColor = '#ff4d4f'; // Merah
+                                        $statusClass = 'badge-corp-danger';
+                                        $statusIcon = 'bi-exclamation-diamond-fill';
+                                        $statusText = 'Telat Servis';
+                                    }
+                                @endphp
                                 <tr>
                                     {{-- IDENTITAS --}}
                                     <td class="ps-4">
@@ -527,43 +199,27 @@
 
                                     {{-- STATUS --}}
                                     <td>
-                                        @if($vehicle->health_status_code === 'service_due')
-                                            <span class="badge-corp badge-corp-danger"><i
-                                                    class="bi bi-exclamation-diamond-fill"></i> Telat Servis</span>
-                                        @elseif($vehicle->health_status_code === 'physical_issue')
+                                        @if($vehicle->health_status_code === 'physical_issue')
                                             <span class="badge-corp badge-corp-danger"><i class="bi bi-wrench"></i> Isu Fisik</span>
-                                        @elseif($vehicle->health_status_code === 'warning')
-                                            <span class="badge-corp badge-corp-warning"><i class="bi bi-clock-history"></i> Segera
-                                                Servis</span>
                                         @else
-                                            <span class="badge-corp badge-corp-success"><i class="bi bi-check-circle-fill"></i>
-                                                Prima</span>
+                                            <span class="badge-corp {{ $statusClass }}">
+                                                <i class="bi {{ $statusIcon }}"></i> {{ $statusText }}
+                                            </span>
                                         @endif
                                     </td>
 
-                                    {{-- PROGRESS KM --}}
+                                    {{-- PROGRESS KESEHATAN --}}
                                     <td>
-                                        @php
-                                            $percent = 100;
-                                            if ($vehicle->service_interval_km > 0) {
-                                                $jarakTempuh = $vehicle->current_km - $vehicle->last_service_km;
-                                                $percent = 100 - (($jarakTempuh / $vehicle->service_interval_km) * 100);
-                                            }
-                                            if ($percent < 0)
-                                                $percent = 0;
-                                            $barColor = $percent < 20 ? '#ff4d4f' : '#52c41a';
-                                        @endphp
-
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="progress-corp-bg">
                                                 <div class="progress-corp-fill"
-                                                    style="width: {{ $percent }}%; background-color: {{ $barColor }};"></div>
+                                                    style="width: {{ $score }}%; background-color: {{ $barColor }};"></div>
                                             </div>
                                             <div style="min-width: 80px;">
                                                 <div class="fw-bold text-dark" style="font-size: 0.85rem;">
-                                                    {{ $vehicle->sisa_km !== null ? number_format($vehicle->sisa_km) : '0' }}
+                                                    {{ round($score, 1) }}/100
                                                 </div>
-                                                <div class="text-muted" style="font-size: 0.7rem;">Km lagi</div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">Score</div>
                                             </div>
                                         </div>
                                     </td>
@@ -576,13 +232,13 @@
                                     {{-- AKSI --}}
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-2">
-                                            <a href="{{ route('admin.aset.visual', $vehicle->id) }}" class="btn-action-corp">
-                                                <i class="bi bi-eye"></i> Fisik
-                                            </a>
-                                            <a href="{{ route('admin.aset.riwayat', $vehicle->id) }}" class="btn-action-corp">
-                                                <i class="bi bi-journal-text"></i> Riwayat
+                                            {{-- Primary Action: Komponen --}}
+                                            <a href="{{ route('admin.maintenance.components', $vehicle->id) }}"
+                                                class="btn-action-corp" title="Kelola Komponen">
+                                                <i class="bi bi-gear"></i> Komponen
                                             </a>
 
+                                            {{-- Conditional Action: Jadwal atau Selesai --}}
                                             @if ($vehicle->health_status_code === 'physical_issue')
                                                 <form action="{{ route('admin.aset.resolveIssue', $vehicle->id) }}" method="POST"
                                                     class="form-confirm-repair">
@@ -592,14 +248,41 @@
                                                     </button>
                                                 </form>
                                             @else
-                                                <button class="btn-primary-corp" data-bs-toggle="modal"
-                                                    data-bs-target="#catatServisModal"
-                                                    data-plat-nomor="{{ $vehicle->plate_number }}"
-                                                    data-km-saat-ini="{{ $vehicle->current_km }}"
-                                                    data-action-url="{{ route('admin.aset.catatServis', $vehicle->id) }}">
-                                                    <i class="bi bi-wrench"></i> Servis
-                                                </button>
+                                                <a href="{{ route('admin.maintenance.schedules', ['vehicle_id' => $vehicle->id]) }}"
+                                                    class="btn-primary-corp">
+                                                    <i class="bi bi-calendar-plus"></i> Jadwal
+                                                </a>
                                             @endif
+
+                                            {{-- Dropdown Menu: More Actions --}}
+                                            <div class="dropdown">
+                                                <button class="btn-action-corp dropdown-toggle" type="button" 
+                                                    id="dropdownActions{{ $vehicle->id }}" 
+                                                    data-bs-toggle="dropdown" 
+                                                    aria-expanded="false"
+                                                    title="More Actions">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm" 
+                                                    aria-labelledby="dropdownActions{{ $vehicle->id }}">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.aset.visual', $vehicle->id) }}">
+                                                            <i class="bi bi-eye text-info me-2"></i> Cek Fisik
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.aset.riwayat', $vehicle->id) }}">
+                                                            <i class="bi bi-journal-text text-primary me-2"></i> Riwayat Servis
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.aset.edit', $vehicle->id) }}">
+                                                            <i class="bi bi-pencil text-warning me-2"></i> Edit Data
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -618,7 +301,7 @@
         </div>
     </div>
 
-    @include('admin.components.modal_catat_servis')
+
 @endsection
 
 @push('scripts')

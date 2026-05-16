@@ -46,6 +46,20 @@
                         </a>
                     </li>
 
+                    <a class="nav-link position-relative" href="{{ route('admin.maintenance.alerts') }}">
+                        <i class="bi bi-bell fs-5"></i>
+                        @if($activeAlertCount > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ $activeAlertCount }}
+                            </span>
+                        @endif
+                    </a>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.maintenance.schedules') ? 'active' : '' }}"
+                            href="{{ route('admin.maintenance.schedules') }}">
+                            <i class="bi bi-calendar-check me-1"></i> Jadwal
+                        </a>
+                    </li>
                     {{-- Item: Riwayat Unit --}}
                     <li class="nav-item">
                         <a href="{{ route('admin.riwayat_unit') }}"

@@ -107,6 +107,28 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
         // Export Rekap Absensi (Versi Detail/Harian)
         Route::get('/absensi/rekap-export', 'exportRekapAbsensi')->name('admin.absensi.export_rekap');
+
+        // === PREVENTIVE MAINTENANCE (NEW) ===
+        Route::get('/maintenance/components/{vehicle}', 'components')->name('admin.maintenance.components');
+        Route::post('/maintenance/components/{vehicle}/store', 'storeComponent')->name('admin.maintenance.components.store');
+        Route::put('/maintenance/components/{component}/update', 'updateComponent')->name('admin.maintenance.components.update');
+        Route::delete('/maintenance/components/{component}/delete', 'deleteComponent')->name('admin.maintenance.components.delete');
+        
+        Route::get('/maintenance/alerts', 'alerts')->name('admin.maintenance.alerts');
+        Route::post('/maintenance/alerts/{alert}/acknowledge', 'acknowledgeAlert')->name('admin.maintenance.alerts.acknowledge');
+        Route::post('/maintenance/alerts/{alert}/resolve', 'resolveAlert')->name('admin.maintenance.alerts.resolve');
+        
+        Route::get('/maintenance/schedules', 'schedules')->name('admin.maintenance.schedules');
+        Route::post('/maintenance/schedules/store', 'storeSchedule')->name('admin.maintenance.schedules.store');
+        Route::post('/maintenance/schedules/{schedule}/complete', 'completeSchedule')->name('admin.maintenance.schedules.complete');
+        
+        // API Helper untuk AJAX
+        Route::get('/api/vehicles/{vehicle}/components', 'getVehicleComponents')->name('admin.api.vehicle.components');
+        
+        // === EXPORT EXCEL ROUTES ===
+        Route::get('/maintenance/export/dashboard', 'exportDashboard')->name('admin.maintenance.export.dashboard');
+        Route::get('/maintenance/export/schedules', 'exportSchedules')->name('admin.maintenance.export.schedules');
+        Route::get('/maintenance/export/alerts', 'exportAlerts')->name('admin.maintenance.export.alerts');
     });
 
     // ====================================================

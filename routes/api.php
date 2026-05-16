@@ -4,6 +4,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\VehicleComponentController;
+use App\Http\Controllers\VehicleHealthController;
+use App\Http\Controllers\MaintenanceScheduleController;
+use App\Http\Controllers\MaintenanceAlertController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +50,34 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     // D. UTILITIES
     // Endpoint ini sekarang sudah ada method-nya di Controller (public function clearCache)
     Route::post('/clear-cache', [AttendanceController::class, 'clearCache']);
+
+    // E. PREVENTIVE MAINTENANCE
+    // Vehicle Health
+    Route::get('/vehicles/health', [VehicleHealthController::class, 'index']);
+    Route::get('/vehicles/{vehicle}/health', [VehicleHealthController::class, 'show']);
+
+    // Vehicle Components
+    Route::get('/vehicles/{vehicle}/components', [VehicleComponentController::class, 'index']);
+    Route::post('/vehicles/{vehicle}/components', [VehicleComponentController::class, 'store']);
+    Route::put('/vehicles/{vehicle}/components/{component}', [VehicleComponentController::class, 'update']);
+    Route::delete('/vehicles/{vehicle}/components/{component}', [VehicleComponentController::class, 'destroy']);
+    Route::get('/component-categories', [VehicleComponentController::class, 'categories']);
+
+    // Maintenance Schedules
+    Route::get('/maintenance/schedules', [MaintenanceScheduleController::class, 'index']);
+    Route::post('/maintenance/schedules', [MaintenanceScheduleController::class, 'store']);
+    Route::put('/maintenance/schedules/{schedule}', [MaintenanceScheduleController::class, 'update']);
+    Route::delete('/maintenance/schedules/{schedule}', [MaintenanceScheduleController::class, 'destroy']);
+    Route::post('/maintenance/schedules/{schedule}/complete', [MaintenanceScheduleController::class, 'complete']);
+    Route::get('/maintenance/dashboard', [MaintenanceScheduleController::class, 'dashboard']);
+
+    // Maintenance Alerts
+    Route::get('/maintenance/alerts', [MaintenanceAlertController::class, 'index']);
+    Route::get('/maintenance/alerts/summary', [MaintenanceAlertController::class, 'summary']);
+    Route::post('/maintenance/alerts/{alert}/acknowledge', [MaintenanceAlertController::class, 'acknowledge']);
+    Route::post('/maintenance/alerts/{alert}/resolve', [MaintenanceAlertController::class, 'resolve']);
+    Route::post('/maintenance/alerts/{alert}/dismiss', [MaintenanceAlertController::class, 'dismiss']);
+    Route::post('/maintenance/alerts/generate', [MaintenanceAlertController::class, 'generate']);
 });
 
 
