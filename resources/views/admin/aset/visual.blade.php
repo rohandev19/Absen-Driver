@@ -6,20 +6,38 @@
     <div class="container-fluid p-0">
 
         {{-- HEADER HALAMAN --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h1 class="h3 fw-bold text-dark mb-0">Kondisi Kendaraan</h1>
+                <h1 class="h3 fw-bold text-dark mb-0">Diagnostic Dashboard</h1>
                 <div class="d-flex align-items-center gap-2 mt-1">
                     <span class="badge bg-primary fs-6">{{ $vehicle->plate_number }}</span>
+                    <span class="badge bg-secondary fs-6">
+                        <i class="bi bi-truck me-1"></i>{{ $vehicle->type }}
+                    </span>
                     <span class="text-muted small border-start ps-2 ms-1">
-                        {{ $vehicle->type }} | Update:
-                        {{ $lastLog ? \Carbon\Carbon::parse($lastLog->time_out)->format('d/m/Y H:i') : '-' }}
+                        Update: {{ $lastLog ? \Carbon\Carbon::parse($lastLog->time_out)->format('d/m/Y H:i') : '-' }}
                     </span>
                 </div>
             </div>
             <a href="{{ route('admin.maintenance.dashboard') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Kembali
             </a>
+        </div>
+
+        {{-- DISCLAIMER --}}
+        <div class="alert alert-light border mb-4">
+            <div class="d-flex align-items-start">
+                <i class="bi bi-info-circle text-primary fs-4 me-3 mt-1"></i>
+                <div>
+                    <strong>Tentang Diagnostic Dashboard</strong>
+                    <p class="mb-0 small text-muted">
+                        Model 3D ini adalah representasi generik untuk visualisasi sistem diagnostik.
+                        Sistem menggabungkan data operasional (checklist driver) dengan data prediktif (interval
+                        maintenance)
+                        untuk memberikan analisis yang lebih akurat. Fokus pada status komponen di panel kanan.
+                    </p>
+                </div>
+            </div>
         </div>
 
         <div class="row g-4">
@@ -50,86 +68,212 @@
             <div class="col-lg-4">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-white py-3">
-                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-cpu text-primary me-2"></i>System Diagnostics
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-cpu text-primary me-2"></i>System Diagnostics
                         </h5>
+                        <small class="text-muted">Hybrid Analysis: Operasional + Prediktif</small>
                     </div>
                     <div class="card-body">
                         <div class="vstack gap-3">
 
                             {{-- 1. KONDISI BAN --}}
-                            <div class="diagnostic-item p-3 rounded border {{ $status['ban'] == 'danger' ? 'border-danger bg-danger-subtle' : '' }}"
+                            <div class="diagnostic-item p-3 rounded border 
+                                    {{ $finalStatus['ban'] == 'danger' ? 'border-danger bg-danger-subtle' : ($finalStatus['ban'] == 'warning' ? 'border-warning bg-warning-subtle' : '') }}"
                                 onmouseover="highlightPart('wheels')" onmouseout="resetHighlight()">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="d-flex align-items-start gap-3">
                                         <i
-                                            class="bi bi-vinyl fs-4 {{ $status['ban'] == 'danger' ? 'text-danger' : 'text-success' }}"></i>
-                                        <div>
+                                            class="bi bi-vinyl fs-4 mt-1
+                                                {{ $finalStatus['ban'] == 'danger' ? 'text-danger' : ($finalStatus['ban'] == 'warning' ? 'text-warning' : 'text-success') }}">
+                                        </i>
+                                        <div class="flex-grow-1">
                                             <div class="fw-bold">Kondisi Ban</div>
-                                            <div class="small text-muted">Tekanan & Fisik</div>
+                                            <div class="small text-muted mb-2">Tekanan & Fisik</div>
+
+                                            {{-- Status Badges --}}
+                                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                                <span
+                                                    class="badge badge-sm {{ $operationalStatus['ban'] == 'danger' ? 'bg-danger' : 'bg-success' }}">
+                                                    Driver:
+                                                    {{ $operationalStatus['ban'] == 'danger' ? 'Bermasalah' : 'Aman' }}
+                                                </span>
+                                                @if($predictiveStatus['ban'] != 'unknown')
+                                                    <span
+                                                        class="badge badge-sm {{ $predictiveStatus['ban'] == 'danger' ? 'bg-warning text-dark' : 'bg-info' }}">
+                                                        Interval: {{ $predictiveStatus['ban'] == 'danger' ? 'Due' : 'OK' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            {{-- Detail Info --}}
+                                            @if($operationalStatus['ban'] == 'danger' || $predictiveStatus['ban'] != 'safe')
+                                                <div class="small text-muted">
+                                                    @if($operationalStatus['ban'] == 'danger')
+                                                        <div><i class="bi bi-exclamation-triangle text-danger"></i> Driver
+                                                            melaporkan masalah</div>
+                                                    @endif
+                                                    @if($predictiveStatus['ban'] == 'danger' && isset($detailInfo['ban']))
+                                                        @foreach($detailInfo['ban'] as $detail)
+                                                            <div><i class="bi bi-clock-history text-warning"></i> {{ $detail['name'] }}:
+                                                                Sisa {{ number_format($detail['km_remaining']) }} KM</div>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                     <span
-                                        class="badge rounded-pill {{ $status['ban'] == 'danger' ? 'bg-danger' : 'bg-success' }}">
-                                        {{ $status['ban'] == 'danger' ? 'PERIKSA' : 'OK' }}
+                                        class="badge rounded-pill 
+                                            {{ $finalStatus['ban'] == 'danger' ? 'bg-danger' : ($finalStatus['ban'] == 'warning' ? 'bg-warning text-dark' : 'bg-success') }}">
+                                        {{ $finalStatus['ban'] == 'danger' ? 'PERIKSA' : ($finalStatus['ban'] == 'warning' ? 'WARNING' : 'OK') }}
                                     </span>
                                 </div>
                             </div>
 
                             {{-- 2. SISTEM REM --}}
-                            <div class="diagnostic-item p-3 rounded border {{ $status['rem'] == 'danger' ? 'border-danger bg-danger-subtle' : '' }}"
+                            <div class="diagnostic-item p-3 rounded border 
+                                    {{ $finalStatus['rem'] == 'danger' ? 'border-danger bg-danger-subtle' : ($finalStatus['rem'] == 'warning' ? 'border-warning bg-warning-subtle' : '') }}"
                                 onmouseover="highlightPart('rem')" onmouseout="resetHighlight()">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="d-flex align-items-start gap-3">
                                         <i
-                                            class="bi bi-sign-stop-fill fs-4 {{ $status['rem'] == 'danger' ? 'text-danger' : 'text-success' }}"></i>
-                                        <div>
+                                            class="bi bi-sign-stop-fill fs-4 mt-1
+                                                {{ $finalStatus['rem'] == 'danger' ? 'text-danger' : ($finalStatus['rem'] == 'warning' ? 'text-warning' : 'text-success') }}">
+                                        </i>
+                                        <div class="flex-grow-1">
                                             <div class="fw-bold">Sistem Rem</div>
-                                            <div class="small text-muted">Kampas & Minyak</div>
+                                            <div class="small text-muted mb-2">Kampas & Minyak</div>
+
+                                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                                <span
+                                                    class="badge badge-sm {{ $operationalStatus['rem'] == 'danger' ? 'bg-danger' : 'bg-success' }}">
+                                                    Driver:
+                                                    {{ $operationalStatus['rem'] == 'danger' ? 'Bermasalah' : 'Aman' }}
+                                                </span>
+                                                @if($predictiveStatus['rem'] != 'unknown')
+                                                    <span
+                                                        class="badge badge-sm {{ $predictiveStatus['rem'] == 'danger' ? 'bg-warning text-dark' : 'bg-info' }}">
+                                                        Interval: {{ $predictiveStatus['rem'] == 'danger' ? 'Due' : 'OK' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if($operationalStatus['rem'] == 'danger' || $predictiveStatus['rem'] != 'safe')
+                                                <div class="small text-muted">
+                                                    @if($operationalStatus['rem'] == 'danger')
+                                                        <div><i class="bi bi-exclamation-triangle text-danger"></i> Driver
+                                                            melaporkan masalah</div>
+                                                    @endif
+                                                    @if($predictiveStatus['rem'] == 'danger' && isset($detailInfo['rem']))
+                                                        @foreach($detailInfo['rem'] as $detail)
+                                                            <div><i class="bi bi-clock-history text-warning"></i> {{ $detail['name'] }}:
+                                                                Sisa {{ number_format($detail['km_remaining']) }} KM</div>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                     <span
-                                        class="badge rounded-pill {{ $status['rem'] == 'danger' ? 'bg-danger' : 'bg-success' }}">
-                                        {{ $status['rem'] == 'danger' ? 'BAHAYA' : 'OK' }}
+                                        class="badge rounded-pill 
+                                            {{ $finalStatus['rem'] == 'danger' ? 'bg-danger' : ($finalStatus['rem'] == 'warning' ? 'bg-warning text-dark' : 'bg-success') }}">
+                                        {{ $finalStatus['rem'] == 'danger' ? 'BAHAYA' : ($finalStatus['rem'] == 'warning' ? 'WARNING' : 'OK') }}
                                     </span>
                                 </div>
                             </div>
 
                             {{-- 3. KELISTRIKAN --}}
-                            <div class="diagnostic-item p-3 rounded border {{ $status['lampu'] == 'danger' ? 'border-danger bg-danger-subtle' : '' }}"
+                            <div class="diagnostic-item p-3 rounded border 
+                                    {{ $finalStatus['lampu'] == 'danger' ? 'border-danger bg-danger-subtle' : ($finalStatus['lampu'] == 'warning' ? 'border-warning bg-warning-subtle' : '') }}"
                                 onmouseover="highlightPart('lampu')" onmouseout="resetHighlight()">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="d-flex align-items-start gap-3">
                                         <i
-                                            class="bi bi-lightbulb-fill fs-4 {{ $status['lampu'] == 'danger' ? 'text-danger' : 'text-success' }}"></i>
-                                        <div>
+                                            class="bi bi-lightbulb-fill fs-4 mt-1
+                                                {{ $finalStatus['lampu'] == 'danger' ? 'text-danger' : ($finalStatus['lampu'] == 'warning' ? 'text-warning' : 'text-success') }}">
+                                        </i>
+                                        <div class="flex-grow-1">
                                             <div class="fw-bold">Kelistrikan</div>
-                                            <div class="small text-muted">Lampu & Sein</div>
+                                            <div class="small text-muted mb-2">Lampu & Sein</div>
+
+                                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                                <span
+                                                    class="badge badge-sm {{ $operationalStatus['lampu'] == 'danger' ? 'bg-danger' : 'bg-success' }}">
+                                                    Driver:
+                                                    {{ $operationalStatus['lampu'] == 'danger' ? 'Bermasalah' : 'Aman' }}
+                                                </span>
+                                                @if($predictiveStatus['lampu'] != 'unknown')
+                                                    <span
+                                                        class="badge badge-sm {{ $predictiveStatus['lampu'] == 'danger' ? 'bg-warning text-dark' : 'bg-info' }}">
+                                                        Interval: {{ $predictiveStatus['lampu'] == 'danger' ? 'Due' : 'OK' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if($operationalStatus['lampu'] == 'danger' || $predictiveStatus['lampu'] != 'safe')
+                                                <div class="small text-muted">
+                                                    @if($operationalStatus['lampu'] == 'danger')
+                                                        <div><i class="bi bi-exclamation-triangle text-danger"></i> Driver
+                                                            melaporkan masalah</div>
+                                                    @endif
+                                                    @if($predictiveStatus['lampu'] == 'danger' && isset($detailInfo['lampu']))
+                                                        @foreach($detailInfo['lampu'] as $detail)
+                                                            <div><i class="bi bi-clock-history text-warning"></i> {{ $detail['name'] }}:
+                                                                Perlu penggantian</div>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                     <span
-                                        class="badge rounded-pill {{ $status['lampu'] == 'danger' ? 'bg-danger' : 'bg-success' }}">
-                                        {{ $status['lampu'] == 'danger' ? 'RUSAK' : 'OK' }}
+                                        class="badge rounded-pill 
+                                            {{ $finalStatus['lampu'] == 'danger' ? 'bg-danger' : ($finalStatus['lampu'] == 'warning' ? 'bg-warning text-dark' : 'bg-success') }}">
+                                        {{ $finalStatus['lampu'] == 'danger' ? 'RUSAK' : ($finalStatus['lampu'] == 'warning' ? 'WARNING' : 'OK') }}
                                     </span>
                                 </div>
                             </div>
 
                             {{-- 4. MESIN --}}
-                            <div class="diagnostic-item p-3 rounded border {{ $status['mesin'] == 'danger' ? 'border-danger bg-danger-subtle' : '' }}"
+                            <div class="diagnostic-item p-3 rounded border 
+                                    {{ $finalStatus['mesin'] == 'danger' ? 'border-danger bg-danger-subtle' : ($finalStatus['mesin'] == 'warning' ? 'border-warning bg-warning-subtle' : '') }}"
                                 onmouseover="highlightPart('cabin')" onmouseout="resetHighlight()">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="d-flex align-items-start gap-3">
                                         <i
-                                            class="bi bi-gear-wide-connected fs-4 {{ $status['mesin'] == 'danger' ? 'text-danger' : 'text-success' }}"></i>
-                                        <div>
+                                            class="bi bi-gear-wide-connected fs-4 mt-1
+                                                {{ $finalStatus['mesin'] == 'danger' ? 'text-danger' : ($finalStatus['mesin'] == 'warning' ? 'text-warning' : 'text-success') }}">
+                                        </i>
+                                        <div class="flex-grow-1">
                                             <div class="fw-bold">Mesin & Oli</div>
-                                            <div class="small text-muted">Interval Servis</div>
+                                            <div class="small text-muted mb-2">Interval Servis</div>
+
+                                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                                @if($predictiveStatus['mesin'] != 'unknown')
+                                                    <span
+                                                        class="badge badge-sm {{ $predictiveStatus['mesin'] == 'danger' ? 'bg-warning text-dark' : 'bg-info' }}">
+                                                        Interval: {{ $predictiveStatus['mesin'] == 'danger' ? 'Due' : 'OK' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if($predictiveStatus['mesin'] != 'safe')
+                                                <div class="small text-muted">
+                                                    @if($predictiveStatus['mesin'] == 'danger' && isset($detailInfo['mesin']))
+                                                        @foreach($detailInfo['mesin'] as $detail)
+                                                            <div><i class="bi bi-clock-history text-warning"></i> {{ $detail['name'] }}:
+                                                                Sisa {{ number_format($detail['km_remaining']) }} KM</div>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
-                                    @if ($status['mesin'] == 'danger')
-                                        <span class="badge bg-danger rounded-pill">DUE</span>
-                                    @else
-                                        <span class="badge bg-success rounded-pill">PRIMA</span>
-                                    @endif
+                                    <span
+                                        class="badge rounded-pill 
+                                            {{ $finalStatus['mesin'] == 'danger' ? 'bg-danger' : ($finalStatus['mesin'] == 'warning' ? 'bg-warning text-dark' : 'bg-success') }}">
+                                        {{ $finalStatus['mesin'] == 'danger' ? 'DUE' : ($finalStatus['mesin'] == 'warning' ? 'WARNING' : 'PRIMA') }}
+                                    </span>
                                 </div>
                             </div>
 
@@ -253,8 +397,9 @@
 
     {{-- SCRIPTS --}}
     @push('scripts')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+        {{-- FIX: Gunakan satu CDN yang sama (unpkg) agar THREE.OrbitControls terdaftar dengan benar --}}
+        <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+        <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
         <script>
             // --- VARIABLES ---
@@ -265,13 +410,24 @@
             let damagedParts = [];
             let pulseTime = 0;
 
-            // Data Status dari Controller
+            // Data Status dari Controller (Hybrid Analysis)
             const vehicleStatus = {
-                ban: "{{ $status['ban'] }}",
-                rem: "{{ $status['rem'] }}",
-                lampu: "{{ $status['lampu'] }}",
-                mesin: "{{ $status['mesin'] }}"
+                ban: "{{ $finalStatus['ban'] }}",
+                rem: "{{ $finalStatus['rem'] }}",
+                lampu: "{{ $finalStatus['lampu'] }}",
+                mesin: "{{ $finalStatus['mesin'] }}"
             };
+
+            // Vehicle Type untuk dynamic coloring
+            const vehicleType = "{{ $vehicle->type }}";
+
+            // Mapping warna berdasarkan tipe kendaraan
+            let cabinColorHex = 0xf1c40f; // Default kuning
+            if (vehicleType.toLowerCase().includes('pickup')) cabinColorHex = 0x3498db; // Biru
+            else if (vehicleType.toLowerCase().includes('minibus')) cabinColorHex = 0xe74c3c; // Merah
+            else if (vehicleType.toLowerCase().includes('sedan')) cabinColorHex = 0x2ecc71; // Hijau
+            else if (vehicleType.toLowerCase().includes('suv')) cabinColorHex = 0x9b59b6; // Ungu
+            else if (vehicleType.toLowerCase().includes('truk')) cabinColorHex = 0xf39c12; // Orange
 
             function init() {
                 const container = document.getElementById('vehicle-3d');
@@ -353,10 +509,10 @@
 
                 // --- Materials ---
                 const matCabin = new THREE.MeshStandardMaterial({
-                    color: 0xf1c40f,
+                    color: cabinColorHex, // Dynamic color based on vehicle type
                     roughness: 0.3,
                     metalness: 0.1
-                }); // Yellow
+                }); // Vehicle color
                 const matChassis = new THREE.MeshStandardMaterial({
                     color: 0x111111,
                     roughness: 0.9
@@ -599,8 +755,26 @@
             window.highlightPart = highlightPart;
             window.resetHighlight = resetHighlight;
 
-            // Start
-            init();
+            // Start — FIX: Bungkus dalam DOMContentLoaded agar layout ter-compute sebelum init
+            // dan tambahkan try-catch agar error tampil, bukan loading spinner stuck selamanya
+            document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    init();
+                } catch (err) {
+                    console.error('[3D Visual] Gagal memuat model:', err);
+                    const loader = document.getElementById('loader');
+                    if (loader) {
+                        loader.innerHTML = `
+                                    <div class="text-center text-white p-4">
+                                        <i class="bi bi-exclamation-triangle-fill text-warning fs-1 d-block mb-3"></i>
+                                        <strong>Gagal Memuat Model 3D</strong>
+                                        <p class="small mt-2 text-white-50">
+                                            ${err.message || 'Periksa konsol browser untuk detail error.'}
+                                        </p>
+                                    </div>`;
+                    }
+                }
+            });
         </script>
     @endpush
 @endsection

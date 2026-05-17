@@ -115,27 +115,143 @@ class MaintenanceController extends Controller
         return view('admin.daftar_aset', compact('vehicles', 'projects', 'categories'));
     }
 
+    /**
+     * VISUAL CHECK - HYBRID APPROACH
+     * Menggabungkan data operasional (driver checklist) dengan data prediktif (components)
+     * untuk analisis yang lebih akurat dan preventif
+     */
     public function visualCheck($id)
     {
-        $vehicle = Vehicle::findOrFail($id);
-        $lastLog = Attendance::where('vehicle_id', $id)->whereNotNull('time_out')->orderBy('time_out', 'desc')->first();
-        $status = ['ban' => 'safe', 'rem' => 'safe', 'lampu' => 'safe', 'mesin' => 'safe'];
-
+        $vehicle = Vehicle::with('components')->findOrFail($id);
+        
+        // 1. OPERATIONAL STATUS (dari driver checklist)
+        $lastLog = Attendance::where('vehicle_id', $id)
+            ->whereNotNull('time_out')
+            ->orderBy('time_out', 'desc')
+            ->first();
+        
+        $operationalStatus = [
+            'ban' => 'safe',
+            'rem' => 'safe',
+            'lampu' => 'safe',
+            'mesin' => 'safe'
+        ];
+        
         if ($lastLog) {
             $valBan = $lastLog->check_ban;
             $valRem = $lastLog->check_rem;
             $valLampu = $lastLog->check_lampu;
-            $status['ban'] = ($valBan == 'Aman' || $valBan == 1) ? 'safe' : 'danger';
-            $status['rem'] = ($valRem == 'Aman' || $valRem == 1) ? 'safe' : 'danger';
-            $status['lampu'] = ($valLampu == 'Aman' || $valLampu == 1) ? 'safe' : 'danger';
+            
+            $operationalStatus['ban'] = ($valBan == 'Aman' || $valBan == 1) ? 'safe' : 'danger';
+            $operationalStatus['rem'] = ($valRem == 'Aman' || $valRem == 1) ? 'safe' : 'danger';
+            $operationalStatus['lampu'] = ($valLampu == 'Aman' || $valLampu == 1) ? 'safe' : 'danger';
         }
-
-        $sisaKm = $vehicle->sisa_km;
-        if ($sisaKm !== null && $sisaKm < 1000) {
-            $status['mesin'] = 'danger';
+        
+        // 2. PREDICTIVE STATUS (dari components tracking)
+        $predictiveStatus = [
+            'ban' => $this->getComponentStatus($vehicle, ['Ban Depan Kiri', 'Ban Depan Kanan', 'Ban Belakang Kiri', 'Ban Belakang Kanan']),
+            'rem' => $this->getComponentStatus($vehicle, ['Kampas Rem', 'Minyak Rem', 'Cakram Rem']),
+            'lampu' => $this->getComponentStatus($vehicle, ['Lampu Utama', 'Lampu Belakang', 'Lampu Sein', 'Lampu Rem']),
+            'mesin' => $this->getComponentStatus($vehicle, ['Oli Mesin', 'Filter Oli', 'Filter Udara', 'Busi'])
+        ];
+        
+        // 3. COMBINED ANALYSIS (worst case wins - safety first)
+        $finalStatus = [];
+        foreach (['ban', 'rem', 'lampu', 'mesin'] as $system) {
+            $finalStatus[$system] = $this->combineStatus(
+                $operationalStatus[$system],
+                $predictiveStatus[$system]
+            );
         }
-
-        return view('admin.aset.visual', compact('vehicle', 'status', 'lastLog'));
+        
+        // 4. DETAIL INFO untuk setiap sistem
+        $detailInfo = [
+            'ban' => $this->getComponentDetails($vehicle, ['Ban Depan Kiri', 'Ban Depan Kanan', 'Ban Belakang Kiri', 'Ban Belakang Kanan']),
+            'rem' => $this->getComponentDetails($vehicle, ['Kampas Rem', 'Minyak Rem', 'Cakram Rem']),
+            'lampu' => $this->getComponentDetails($vehicle, ['Lampu Utama', 'Lampu Belakang', 'Lampu Sein', 'Lampu Rem']),
+            'mesin' => $this->getComponentDetails($vehicle, ['Oli Mesin', 'Filter Oli', 'Filter Udara', 'Busi'])
+        ];
+        
+        return view('admin.aset.visual', compact(
+            'vehicle',
+            'finalStatus',
+            'operationalStatus',
+            'predictiveStatus',
+            'detailInfo',
+            'lastLog'
+        ));
+    }
+    
+    /**
+     * Get component status dari preventive maintenance data
+     */
+    private function getComponentStatus($vehicle, $componentNames)
+    {
+        $components = $vehicle->components()
+            ->whereIn('component_name', $componentNames)
+            ->get();
+        
+        if ($components->isEmpty()) {
+            return 'unknown'; // Tidak ada data components
+        }
+        
+        // Check worst status among components
+        $statuses = $components->pluck('status')->toArray();
+        
+        if (in_array('overdue', $statuses)) return 'danger';
+        if (in_array('critical', $statuses)) return 'danger';
+        if (in_array('warning', $statuses)) return 'warning';
+        
+        return 'safe';
+    }
+    
+    /**
+     * Get component details untuk ditampilkan di UI
+     */
+    private function getComponentDetails($vehicle, $componentNames)
+    {
+        $components = $vehicle->components()
+            ->whereIn('component_name', $componentNames)
+            ->get();
+        
+        if ($components->isEmpty()) {
+            return null;
+        }
+        
+        $details = [];
+        foreach ($components as $comp) {
+            if (in_array($comp->status, ['overdue', 'critical', 'warning'])) {
+                $details[] = [
+                    'name' => $comp->component_name,
+                    'status' => $comp->status,
+                    'km_remaining' => $comp->km_remaining,
+                    'next_replacement_km' => $comp->next_replacement_km
+                ];
+            }
+        }
+        
+        return $details;
+    }
+    
+    /**
+     * Combine operational and predictive status
+     * Rule: Worst case wins (safety first)
+     */
+    private function combineStatus($operational, $predictive)
+    {
+        // Priority: danger > warning > safe > unknown
+        $priority = [
+            'danger' => 3,
+            'warning' => 2,
+            'safe' => 1,
+            'unknown' => 0
+        ];
+        
+        $opPriority = $priority[$operational] ?? 0;
+        $predPriority = $priority[$predictive] ?? 0;
+        
+        // Return worst status
+        return ($opPriority >= $predPriority) ? $operational : $predictive;
     }
 
     /**
@@ -216,22 +332,59 @@ class MaintenanceController extends Controller
 
     public function catatServis(Request $request, $id)
     {
-        // Fungsi lama ini bisa dibiarkan saja di controller, tapi tidak akan dipanggil lagi oleh sistem baru.
         $vehicle = Vehicle::findOrFail($id);
-        $request->validate([
+        
+        // Validate input
+        $validated = $request->validate([
             'service_date' => 'required|date',
-            'km_servis_saat_ini' => 'required|numeric|min:' . $vehicle->last_service_km,
+            'km_servis_saat_ini' => 'required|numeric|min:0',
             'description' => 'required|string',
         ]);
+        
+        $kmServis = $validated['km_servis_saat_ini'];
+        $serviceDate = Carbon::parse($validated['service_date']);
+        $description = $validated['description'];
+        
+        // Check if this is an old service record (archival)
+        $isOldRecord = $kmServis < $vehicle->last_service_km;
+        
+        // Prevent unrealistic KM input
+        // Get latest attendance record to check if KM is realistic
+        $latestAttendance = Attendance::where('vehicle_id', $vehicle->id)
+            ->whereNotNull('speedo_akhir')
+            ->latest('time_out')
+            ->first();
+            
+        if ($latestAttendance) {
+            // Check if KM is too high compared to latest attendance
+            $maxRealisticKm = $latestAttendance->speedo_akhir + 1000;
+            
+            if ($kmServis > $maxRealisticKm) {
+                // KM too high (more than 1000km difference from last recorded)
+                return back()->with('error', 'KM servis tidak realistis. Selisih terlalu besar dengan data terakhir (' . $latestAttendance->speedo_akhir . ' km).');
+            }
+        }
+        
+        // If old record, append note to description
+        if ($isOldRecord) {
+            $description .= ' (Arsip Susulan)';
+        }
+        
+        // Create maintenance log
         if (method_exists($vehicle, 'maintenanceLogs')) {
             $vehicle->maintenanceLogs()->create([
-                'service_date' => $request->service_date,
-                'km_at_service' => $request->km_servis_saat_ini,
-                'description' => $request->description,
+                'service_date' => $serviceDate,
+                'km_at_service' => $kmServis,
+                'description' => $description,
                 'recorded_by' => Auth::id(),
             ]);
         }
-        $vehicle->update(['last_service_km' => $request->km_servis_saat_ini]);
+        
+        // Only update vehicle's last_service_km if this is NOT an old record
+        if (!$isOldRecord) {
+            $vehicle->update(['last_service_km' => $kmServis]);
+        }
+        
         return back()->with('success', 'Servis berhasil dicatat.');
     }
 

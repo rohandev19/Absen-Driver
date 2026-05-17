@@ -15,10 +15,10 @@
         </div>
         <div>
             <div class="d-flex gap-2">
-                <a href="{{ route('admin.maintenance.export.schedules', request()->all()) }}" class="btn btn-success">
+                <a href="{{ route('admin.maintenance.export.schedules', request()->all()) }}" class="btn-primary-corp">
                     <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
                 </a>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                <button class="btn-primary-corp" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
                     <i class="bi bi-plus-lg me-1"></i> Tambah Jadwal
                 </button>
             </div>
@@ -194,8 +194,8 @@
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-success">Selesai</button>
+                                            <button type="button" class="btn-action-corp" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn-primary-corp">Selesai</button>
                                         </div>
                                     </form>
                                 </div>
@@ -289,8 +289,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Tambah Jadwal</button>
+                    <button type="button" class="btn-action-corp" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn-primary-corp">Tambah Jadwal</button>
                 </div>
             </form>
         </div>

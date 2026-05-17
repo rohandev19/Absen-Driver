@@ -13,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
+        // SECURITY FIX: Add security headers to all web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
         // --- TAMBAHKAN BLOK INI ---
         // Ini akan mengarahkan user yang BELUM login
         // ke halaman login admin yang sudah kita buat.

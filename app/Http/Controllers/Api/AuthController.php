@@ -68,7 +68,15 @@ class AuthController extends Controller
         try {
             $request->validate([
                 'current_password' => 'required',
-                'new_password' => 'required|min:6|confirmed',
+                'new_password' => [
+                    'required',
+                    'confirmed',
+                    \Illuminate\Validation\Rules\Password::min(12)
+                        ->mixedCase()      // Require uppercase and lowercase
+                        ->numbers()        // Require at least one number
+                        ->symbols()        // Require at least one symbol
+                        ->uncompromised(), // Check against haveibeenpwned.com
+                ],
             ]);
 
             $driver = $request->user();

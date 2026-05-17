@@ -35,9 +35,10 @@ Route::prefix('admin')->group(function () {
 /*
 |--------------------------------------------------------------------------
 | C. ADMIN PANEL (DILINDUNGI MIDDLEWARE)
+| SECURITY FIX: Added rate limiting to prevent brute force and DoS attacks
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'throttle:60,1'])->prefix('admin')->group(function () {
 
     // ====================================================
     // 1. DASHBOARD UTAMA
@@ -49,14 +50,17 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
     // ====================================================
     // 2. MONITORING & LAPORAN (REPORT CONTROLLER)
+    // SECURITY FIX: Rate limiting for data modification
     // ====================================================
     Route::controller(ReportController::class)->group(function () {
 
         // A. Laporan Harian & Detail
         Route::get('/riwayat-driver', 'riwayatDriver')->name('admin.riwayat_driver');
         
-        // --- [BARU] ROUTE KOREKSI KM (Modal Popup) ---
-        Route::put('/attendance/{id}/update-km', 'updateKm')->name('admin.attendance.updateKm');
+        // --- [BARU] ROUTE KOREKSI KM (Modal Popup) - Rate limited ---
+        Route::middleware('throttle:30,1')->group(function () {
+            Route::put('/attendance/{id}/update-km', 'updateKm')->name('admin.attendance.updateKm');
+        });
 
         Route::get('admin/report/driver/export', 'exportRiwayatDriver')->name('admin.riwayat_driver.export');
         Route::get('/riwayat-unit', 'riwayatUnit')->name('admin.riwayat_unit');
@@ -77,6 +81,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
     // ====================================================
     // 3. MANAJEMEN ASET & MAINTENANCE (MAINTENANCE CONTROLLER)
+    // SECURITY FIX: Stricter rate limiting for destructive actions
     // ====================================================
     Route::controller(MaintenanceController::class)->group(function () {
         // Dashboard Khusus Maintenance
@@ -94,10 +99,17 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         Route::post('/aset/simpan', 'store')->name('admin.aset.store');
         Route::get('/aset/{vehicle}/edit', 'edit')->name('admin.aset.edit');
         Route::put('/aset/{vehicle}/update', 'update')->name('admin.aset.update');
-        Route::delete('/aset/{vehicle}/hapus', 'destroy')->name('admin.aset.destroy');
+        
+        // DESTRUCTIVE ACTION: Stricter rate limit (10 requests/minute)
+        Route::middleware('throttle:10,1')->group(function () {
+            Route::delete('/aset/{vehicle}/hapus', 'destroy')->name('admin.aset.destroy');
+        });
 
         // Fitur Servis & Visual Check
-        Route::post('/daftar-aset/{vehicle}/catat-servis', 'catatServis')->name('admin.aset.catatServis');
+        Route::middleware('throttle:30,1')->group(function () {
+            Route::post('/daftar-aset/{vehicle}/catat-servis', 'catatServis')->name('admin.aset.catatServis');
+        });
+        
         Route::get('/aset/{vehicle}/visual-check', 'visualCheck')->name('admin.aset.visual');
         Route::post('/aset/{vehicle}/resolve-issue', 'resolveIssue')->name('admin.aset.resolveIssue');
         Route::get('/aset/{vehicle}/riwayat-servis', 'riwayatServis')->name('admin.aset.riwayat');
@@ -129,29 +141,60 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         Route::get('/maintenance/export/dashboard', 'exportDashboard')->name('admin.maintenance.export.dashboard');
         Route::get('/maintenance/export/schedules', 'exportSchedules')->name('admin.maintenance.export.schedules');
         Route::get('/maintenance/export/alerts', 'exportAlerts')->name('admin.maintenance.export.alerts');
+        
+        // === TEST DESIGN SYSTEM (TEMPORARY) ===
+        Route::get('/maintenance/test-design-system', function () {
+            return view('admin.maintenance.test-design-system');
+        })->name('admin.maintenance.test-design-system');
     });
 
     // ====================================================
     // 4. MASTER DATA PENGGUNA
+    // SECURITY FIX: Stricter rate limiting for destructive actions
     // ====================================================
-    Route::resource('/driver', DriverController::class)->except(['show'])->names('admin.driver');
-    Route::resource('/pengguna', PenggunaController::class)->except(['show'])->names('admin.pengguna');
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::delete('/driver/{driver}', [DriverController::class, 'destroy'])->name('admin.driver.destroy');
+        Route::delete('/pengguna/{pengguna}', [PenggunaController::class, 'destroy'])->name('admin.pengguna.destroy');
+    });
+    
+    Route::resource('/driver', DriverController::class)->except(['show', 'destroy'])->names('admin.driver');
+    Route::resource('/pengguna', PenggunaController::class)->except(['show', 'destroy'])->names('admin.pengguna');
 
 });
 
 /*
 |--------------------------------------------------------------------------
-| D. DARURAT: BYPASS STORAGE LINK
+| D. SECURE FILE STORAGE ACCESS
+| SECURITY FIX: Added authentication, path traversal prevention, and file type validation
 |--------------------------------------------------------------------------
 */
-Route::get('/storage/photos/{filename}', function ($filename) {
+Route::middleware(['auth'])->get('/storage/photos/{filename}', function ($filename) {
+    // 1. Sanitize filename - prevent path traversal attacks
+    $filename = basename($filename);
+    
+    // 2. Whitelist allowed extensions
+    $allowedExtensions = ['jpg', 'jpeg', 'png'];
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    
+    if (!in_array($extension, $allowedExtensions)) {
+        abort(403, 'File type not allowed');
+    }
+    
+    // 3. Build safe path
     $path = storage_path('app/public/photos/' . $filename);
-    if (!file_exists($path)) {
+    
+    // 4. Verify file is within allowed directory (prevent path traversal)
+    $realPath = realpath($path);
+    $allowedPath = realpath(storage_path('app/public/photos'));
+    
+    if (!$realPath || strpos($realPath, $allowedPath) !== 0) {
+        abort(403, 'Access denied');
+    }
+    
+    if (!file_exists($realPath)) {
         abort(404);
     }
-    $file = file_get_contents($path);
-    $type = mime_content_type($path);
-    $response = Response::make($file, 200);
-    $response->header("Content-Type", $type);
-    return $response;
+    
+    // 5. Return file securely
+    return response()->file($realPath);
 });

@@ -28,7 +28,8 @@
                 <a href="{{ route('admin.maintenance.alerts') }}" class="btn btn-danger position-relative">
                     <i class="bi bi-bell-fill me-1"></i> Cek Peringatan
                     @if(isset($unreadAlerts) && $unreadAlerts > 0)
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
                             {{ $unreadAlerts }}
                             <span class="visually-hidden">unread alerts</span>
                         </span>
@@ -142,7 +143,8 @@
         {{-- BAGIAN 3: TABLE DATA --}}
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
-                <div class="table-responsive">
+            
+                <div class="table-responsive-lg" style="padding-bottom: 120px;">
                     <table class="table-corporate">
                         <thead>
                             <tr>
@@ -256,28 +258,31 @@
 
                                             {{-- Dropdown Menu: More Actions --}}
                                             <div class="dropdown">
-                                                <button class="btn-action-corp dropdown-toggle" type="button" 
-                                                    id="dropdownActions{{ $vehicle->id }}" 
-                                                    data-bs-toggle="dropdown" 
-                                                    aria-expanded="false"
-                                                    title="Aksi Lainnya">
+                                                <button class="btn-action-corp dropdown-toggle" type="button"
+                                                    id="dropdownActions{{ $vehicle->id }}" data-bs-toggle="dropdown"
+                                                    aria-expanded="false" title="Aksi Lainnya">
                                                     <i class="bi bi-three-dots-vertical"></i>
                                                 </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm" 
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm"
                                                     aria-labelledby="dropdownActions{{ $vehicle->id }}">
                                                     <li>
-                                                        <a class="dropdown-item" href="{{ route('admin.aset.visual', $vehicle->id) }}">
+                                                        <a class="dropdown-item"
+                                                            href="{{ route('admin.aset.visual', $vehicle->id) }}">
                                                             <i class="bi bi-eye text-info me-2"></i> Cek Fisik
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item" href="{{ route('admin.aset.riwayat', $vehicle->id) }}">
+                                                        <a class="dropdown-item"
+                                                            href="{{ route('admin.aset.riwayat', $vehicle->id) }}">
                                                             <i class="bi bi-journal-text text-primary me-2"></i> Riwayat Servis
                                                         </a>
                                                     </li>
-                                                    <li><hr class="dropdown-divider"></li>
                                                     <li>
-                                                        <a class="dropdown-item" href="{{ route('admin.aset.edit', $vehicle->id) }}">
+                                                        <hr class="dropdown-divider">
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                            href="{{ route('admin.aset.edit', $vehicle->id) }}">
                                                             <i class="bi bi-pencil text-warning me-2"></i> Edit Data
                                                         </a>
                                                     </li>

@@ -132,6 +132,7 @@ class MaintenanceLogicTest extends TestCase
             'vehicle_id' => $this->vehicle->id,
             'driver_id' => $this->driver->id, 
             'time_in' => now(), 
+            'time_out' => now()->addHours(2), // FIX: Add time_out so query finds it
             'speedo_awal' => 10000,
             'speedo_akhir' => 10500, 
             
@@ -139,6 +140,10 @@ class MaintenanceLogicTest extends TestCase
             'gps_location_in' => '-6.2,106.8',
             'selfie_photo_path' => 'dummy/selfie.jpg',
             'speedo_photo_awal_path' => 'dummy/awal.jpg', 
+            'speedo_photo_akhir_path' => 'dummy/akhir.jpg', // FIX: Add this
+            'check_ban' => 'Aman',
+            'check_rem' => 'Aman',
+            'check_lampu' => 'Aman',
         ]);
 
         $response = $this->actingAs($this->admin)
