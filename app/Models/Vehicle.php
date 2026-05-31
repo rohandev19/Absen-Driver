@@ -75,6 +75,11 @@ class Vehicle extends Model
         return $this->hasMany(MaintenanceAlert::class);
     }
 
+    public function transportCosts()
+    {
+        return $this->hasMany(TransportCost::class);
+    }
+
     /* =========================================================================
      * BUSINESS LOGIC (LOGIKA BISNIS)
      * ========================================================================= */

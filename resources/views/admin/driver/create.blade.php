@@ -12,7 +12,7 @@
                         <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-plus-circle-fill me-2"></i> Tambah Driver Baru
                         </h5>
                     </div>
-                    <form action="{{ route('admin.driver.store') }}" method="POST">
+                    <form action="{{ route('admin.driver.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="card-body">
                             <div class="alert alert-light border-start border-4 border-info small mb-4">
@@ -72,6 +72,27 @@
                                         id="sim_expiry_date" name="sim_expiry_date" value="{{ old('sim_expiry_date') }}"
                                         required>
                                     @error('sim_expiry_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <hr class="text-muted">
+                                </div>
+
+                                {{-- Upload Dokumen (Opsional) --}}
+                                <div class="col-md-6 col-12">
+                                    <label for="foto_ktp" class="form-label fw-bold">Foto KTP <span class="text-muted fw-normal">(Opsional)</span></label>
+                                    <input type="file" class="form-control @error('foto_ktp') is-invalid @enderror"
+                                        id="foto_ktp" name="foto_ktp" accept="image/jpeg,image/png,image/jpg">
+                                    @error('foto_ktp') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <small class="text-muted">Format: JPG, PNG. Max: 2MB.</small>
+                                </div>
+
+                                <div class="col-md-6 col-12">
+                                    <label for="foto_sim" class="form-label fw-bold">Foto SIM <span class="text-muted fw-normal">(Opsional)</span></label>
+                                    <input type="file" class="form-control @error('foto_sim') is-invalid @enderror"
+                                        id="foto_sim" name="foto_sim" accept="image/jpeg,image/png,image/jpg">
+                                    @error('foto_sim') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <small class="text-muted">Format: JPG, PNG. Max: 2MB.</small>
                                 </div>
 
                                 <div class="col-12">

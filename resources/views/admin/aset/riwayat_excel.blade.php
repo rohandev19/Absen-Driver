@@ -15,7 +15,7 @@
         </tr>
         <tr>
             <td colspan="6" style="text-align: center;">
-                PT HAMADA LOGISTIK
+                PT Hamada Logistik
             </td>
         </tr>
         <tr>

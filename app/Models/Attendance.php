@@ -44,4 +44,9 @@ class Attendance extends Model
     {
         return $this->belongsTo(Vehicle::class);
     }
+
+    public function transportCost()
+    {
+        return $this->hasOne(TransportCost::class);
+    }
 }

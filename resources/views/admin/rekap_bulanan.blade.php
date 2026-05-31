@@ -162,10 +162,13 @@
                             onchange="this.form.submit()">
                     </div>
 
-                    {{-- Tombol Export --}}
-                    <div class="col-md-4 d-flex justify-content-end">
+                    {{-- Tombol Export & Cetak --}}
+                    <div class="col-md-4 d-flex justify-content-end gap-2">
+                        <button type="button" onclick="window.print()" class="btn btn-primary btn-sm w-100 w-md-auto d-flex align-items-center justify-content-center d-print-none shadow-sm">
+                            <i class="bi bi-printer me-2"></i> Cetak
+                        </button>
                         <a href="{{ route('admin.rekap_bulanan.export_checklist', ['bulan' => $selectedMonth, 'project_id' => request('project_id')]) }}"
-                            class="btn btn-success btn-sm w-100 w-md-auto d-flex align-items-center justify-content-center">
+                            class="btn btn-success btn-sm w-100 w-md-auto d-flex align-items-center justify-content-center shadow-sm">
                             <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
                         </a>
                     </div>

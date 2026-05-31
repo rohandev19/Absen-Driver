@@ -8,20 +8,18 @@
 
 <div class="container-fluid">
     {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
         <div>
             <h3 class="fw-bold mb-1">Jadwal Maintenance</h3>
             <p class="text-muted mb-0">Kelola jadwal servis dan maintenance kendaraan</p>
         </div>
-        <div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('admin.maintenance.export.schedules', request()->all()) }}" class="btn-primary-corp">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
-                </a>
-                <button class="btn-primary-corp" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
-                    <i class="bi bi-plus-lg me-1"></i> Tambah Jadwal
-                </button>
-            </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.maintenance.export.schedules', request()->all()) }}" class="btn-primary-corp">
+                <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
+            </a>
+            <button class="btn-primary-corp" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                <i class="bi bi-plus-lg me-1"></i> Tambah Jadwal
+            </button>
         </div>
     </div>
 

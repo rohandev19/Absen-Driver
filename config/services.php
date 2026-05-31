@@ -51,4 +51,21 @@ return [
         'retry_attempts' => env('GOOGLE_API_RETRY_ATTEMPTS', 2),
         'spreadsheet_id' => env('GOOGLE_SPREADSHEET_ID', '1JaQaEjtOUOJTO1I0jsGItnqMrrnso-v2S_vzQ4nqqcs'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | WhatsApp Gateway Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for WhatsApp notification gateway (Fonnte, WaBlas, etc.)
+    | Used for sending service report notifications.
+    |
+    */
+
+    'wa' => [
+        'gateway_url' => env('WA_GATEWAY_URL', 'https://api.fonnte.com/send'),
+        'gateway_token' => env('WA_GATEWAY_TOKEN'),
+        'service_admin_phone' => env('WA_SERVICE_ADMIN_PHONE'),
+        'customer_default_phone' => env('WA_CUSTOMER_DEFAULT_PHONE'),
+    ],
 ];

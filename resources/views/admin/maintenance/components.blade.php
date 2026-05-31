@@ -24,7 +24,7 @@
 
     <div class="container-fluid">
         {{-- Header --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
             <div>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-2">
@@ -34,20 +34,20 @@
                     </ol>
                 </nav>
                 <h3 class="fw-bold mb-1">{{ $vehicle->plate_number }}</h3>
-                <p class="text-muted mb-0 d-flex align-items-center gap-2">
+                <p class="text-muted mb-0 d-flex flex-wrap align-items-center gap-2">
                     <span>{{ $vehicle->type }} • {{ $vehicle->project->name ?? 'Pool' }}</span>
-                    <span class="badge bg-dark border border-secondary px-3 py-2 ms-2 fs-6">
+                    <span class="badge bg-dark border border-secondary px-3 py-2 fs-6">
                         <i class="bi bi-speedometer2 text-info me-1"></i> Odometer: {{ number_format($vehicle->current_km) }} KM
                     </span>
                 </p>
             </div>  
-            <div class="text-end">
+            <div class="text-start text-sm-end">
                 <div class="mb-2">
                     <span class="badge bg-{{ $healthReport['status']['color'] }} fs-5 px-4 py-2">
                         {!! $healthReport['status']['icon'] !!} Health Score: {{ $healthReport['health_score'] }}/100
                     </span>
                 </div>
-                <small class="text-muted">{{ $healthReport['status']['label'] }} -
+                <small class="text-muted d-block">{{ $healthReport['status']['label'] }} -
                     {{ $healthReport['status']['action'] }}</small>
             </div>
         </div>

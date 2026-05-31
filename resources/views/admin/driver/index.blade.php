@@ -127,6 +127,13 @@
                                     @can('is-master-admin')
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-1">
+                                                <button type="button" class="btn btn-info btn-sm text-white" title="Lihat Dokumen"
+                                                    data-bs-toggle="modal" data-bs-target="#dokumenModal"
+                                                    data-nama="{{ $driver->full_name }}"
+                                                    data-ktp="{{ $driver->foto_ktp ? route('admin.driver.dokumen', ['id' => $driver->id, 'jenis' => 'ktp']) : '' }}"
+                                                    data-sim="{{ $driver->foto_sim ? route('admin.driver.dokumen', ['id' => $driver->id, 'jenis' => 'sim']) : '' }}">
+                                                    <i class="bi bi-person-vcard"></i>
+                                                </button>
                                                 <a href="{{ route('admin.driver.edit', $driver->id) }}" class="btn btn-warning btn-sm" title="Edit Data">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </a>
@@ -160,4 +167,65 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Dokumen --}}
+    <div class="modal fade" id="dokumenModal" tabindex="-1" aria-labelledby="dokumenModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="dokumenModalLabel">Dokumen Driver: <span id="modalDriverName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6 text-center">
+                            <h6 class="fw-bold">Foto KTP</h6>
+                            <div id="ktpContainer" class="border rounded p-2 bg-light d-flex align-items-center justify-content-center" style="min-height: 200px;">
+                                <span class="text-muted">Tidak ada foto KTP</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <h6 class="fw-bold">Foto SIM</h6>
+                            <div id="simContainer" class="border rounded p-2 bg-light d-flex align-items-center justify-content-center" style="min-height: 200px;">
+                                <span class="text-muted">Tidak ada foto SIM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var dokumenModal = document.getElementById('dokumenModal')
+            if (dokumenModal) {
+                dokumenModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget
+                    var nama = button.getAttribute('data-nama')
+                    var ktp = button.getAttribute('data-ktp')
+                    var sim = button.getAttribute('data-sim')
+                    
+                    document.getElementById('modalDriverName').textContent = nama
+                    
+                    var ktpContainer = document.getElementById('ktpContainer')
+                    if (ktp) {
+                        ktpContainer.innerHTML = '<a href="' + ktp + '" target="_blank"><img src="' + ktp + '" class="img-fluid rounded" alt="Foto KTP"></a>'
+                    } else {
+                        ktpContainer.innerHTML = '<span class="text-muted">Tidak ada foto KTP</span>'
+                    }
+                    
+                    var simContainer = document.getElementById('simContainer')
+                    if (sim) {
+                        simContainer.innerHTML = '<a href="' + sim + '" target="_blank"><img src="' + sim + '" class="img-fluid rounded" alt="Foto SIM"></a>'
+                    } else {
+                        simContainer.innerHTML = '<span class="text-muted">Tidak ada foto SIM</span>'
+                    }
+                })
+            }
+        })
+    </script>
 @endsection

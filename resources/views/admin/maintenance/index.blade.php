@@ -12,30 +12,29 @@
     <div class="container-fluid p-0">
 
         {{-- HEADER --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
             <div>
                 <h3 class="fw-bold text-dark mb-1">Maintenance Monitor</h3>
                 <p class="text-muted mb-0 small">Dashboard operasional kendaraan & jadwal servis.</p>
             </div>
 
-            <div class="text-end d-flex justify-content-end align-items-center gap-2">
-                <a href="{{ route('admin.maintenance.export.dashboard', request()->all()) }}" class="btn btn-success">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <a href="{{ route('admin.maintenance.export.dashboard', request()->all()) }}" class="btn btn-sm btn-success">
                     <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
                 </a>
-                <a href="{{ route('admin.maintenance.schedules') }}" class="btn btn-primary">
+                <a href="{{ route('admin.maintenance.schedules') }}" class="btn btn-sm btn-primary">
                     <i class="bi bi-calendar-check me-1"></i> Jadwal Servis
                 </a>
-                <a href="{{ route('admin.maintenance.alerts') }}" class="btn btn-danger position-relative">
+                <a href="{{ route('admin.maintenance.alerts') }}" class="btn btn-sm btn-danger position-relative">
                     <i class="bi bi-bell-fill me-1"></i> Cek Peringatan
                     @if(isset($unreadAlerts) && $unreadAlerts > 0)
                         <span
-                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" style="font-size: 0.65rem; padding: 0.25em 0.5em;">
                             {{ $unreadAlerts }}
-                            <span class="visually-hidden">unread alerts</span>
                         </span>
                     @endif
                 </a>
-                <span class="badge bg-light text-dark border px-3 py-2 ms-2">
+                <span class="badge bg-light text-dark border px-3 py-2">
                     <i class="bi bi-calendar3 me-2"></i>{{ now()->format('d F Y') }}
                 </span>
             </div>

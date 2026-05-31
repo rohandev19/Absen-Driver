@@ -11,6 +11,10 @@ use App\Http\Controllers\DriverController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ServiceReportController;
+use App\Http\Controllers\CustomerApprovalController;
+use App\Http\Controllers\TransportCostAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +32,9 @@ Route::get('/', function () {
 */
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('/login', [AdminLoginController::class, 'login'])->name('admin.login.submit');
+    Route::post('/login', [AdminLoginController::class, 'login'])
+        ->middleware('throttle:5,1')
+        ->name('admin.login.submit');
     Route::post('/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 });
 
@@ -36,9 +42,10 @@ Route::prefix('admin')->group(function () {
 |--------------------------------------------------------------------------
 | C. ADMIN PANEL (DILINDUNGI MIDDLEWARE)
 | SECURITY FIX: Added rate limiting to prevent brute force and DoS attacks
+| SECURITY FIX: Added role middleware to prevent unauthorized access
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'throttle:60,1'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:master,service_admin', 'throttle:60,1'])->prefix('admin')->group(function () {
 
     // ====================================================
     // 1. DASHBOARD UTAMA
@@ -77,6 +84,11 @@ Route::middleware(['auth', 'throttle:60,1'])->prefix('admin')->group(function ()
         Route::resource('/project', ProjectController::class)
             ->except(['create', 'edit', 'show'])
             ->names('admin.project');
+
+        // E. Manajemen Customer
+        Route::resource('/customer', CustomerController::class)
+            ->except(['create', 'edit', 'show'])
+            ->names('admin.customer');
     });
 
     // ====================================================
@@ -127,6 +139,7 @@ Route::middleware(['auth', 'throttle:60,1'])->prefix('admin')->group(function ()
         Route::delete('/maintenance/components/{component}/delete', 'deleteComponent')->name('admin.maintenance.components.delete');
         
         Route::get('/maintenance/alerts', 'alerts')->name('admin.maintenance.alerts');
+        Route::post('/maintenance/alerts/generate', 'generateAlerts')->name('admin.maintenance.alerts.generate');
         Route::post('/maintenance/alerts/{alert}/acknowledge', 'acknowledgeAlert')->name('admin.maintenance.alerts.acknowledge');
         Route::post('/maintenance/alerts/{alert}/resolve', 'resolveAlert')->name('admin.maintenance.alerts.resolve');
         
@@ -157,9 +170,89 @@ Route::middleware(['auth', 'throttle:60,1'])->prefix('admin')->group(function ()
         Route::delete('/pengguna/{pengguna}', [PenggunaController::class, 'destroy'])->name('admin.pengguna.destroy');
     });
     
+    Route::get('/driver/dokumen/{id}/{jenis}', [DriverController::class, 'lihatDokumen'])->name('admin.driver.dokumen');
     Route::resource('/driver', DriverController::class)->except(['show', 'destroy'])->names('admin.driver');
     Route::resource('/pengguna', PenggunaController::class)->except(['show', 'destroy'])->names('admin.pengguna');
 
+    // ====================================================
+    // 5. SERVICE DARURAT (Master & Service Admin)
+    // ====================================================
+    Route::middleware('role:master,service_admin')->prefix('service')->controller(ServiceReportController::class)->group(function () {
+        Route::get('/', 'index')->name('admin.service.index');
+        // SECURITY FIX: Rute statis HARUS dideklarasikan SEBELUM rute {id} wildcard
+        Route::get('/customer-approvals/list', 'customerApprovalsView')->name('admin.service.customer_approvals');
+        Route::get('/{id}', 'show')->name('admin.service.show');
+        Route::middleware('throttle:30,1')->post('/{id}/approve', 'approve')->name('admin.service.approve');
+        Route::middleware('throttle:10,1')->post('/{id}/reject', 'reject')->name('admin.service.reject');
+        Route::get('/{id}/export-finance', 'exportFinance')->name('admin.service.export_finance');
+    });
+
+    // ====================================================
+    // 6. TRANSPORT COST MONITORING (Uang Jalan)
+    // ====================================================
+    Route::prefix('transport-costs')->controller(TransportCostAdminController::class)->group(function () {
+        // Dashboard
+        Route::get('/dashboard', 'dashboard')->name('admin.transport-costs.dashboard');
+        
+        // Trip Entry List & Detail
+        Route::get('/', 'index')->name('admin.transport-costs.index');
+        Route::get('/{id}', 'show')->name('admin.transport-costs.show');
+        
+        // Approval Actions (stricter rate limit)
+        Route::middleware('throttle:10,1')->group(function () {
+            Route::post('/{id}/approve', 'approve')->name('admin.transport-costs.approve');
+            Route::post('/{id}/reject', 'reject')->name('admin.transport-costs.reject');
+        });
+        
+        // Monthly Recap
+        Route::get('/recap/monthly', 'recap')->name('admin.transport-costs.recap');
+        
+        // Finance Actions
+        Route::post('/{id}/submit-to-finance', 'submitToFinance')->name('admin.transport-costs.submit_to_finance');
+        Route::post('/bulk-submit-to-finance', 'bulkSubmitToFinance')->name('admin.transport-costs.bulk_submit_to_finance');
+        Route::get('/{id}/export-finance', 'exportFinance')->name('admin.transport-costs.export_finance');
+        Route::get('/recap/export-finance', 'exportFinanceRecap')->name('admin.transport-costs.export_finance_recap');
+    });
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| E. CUSTOMER PORTAL (Customer Role Only)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:customer', 'throttle:60,1'])->prefix('customer')->group(function () {
+    // 1. Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\CustomerDashboardController::class, 'index'])->name('customer.dashboard');
+
+    // 2. Unit Kendaraan (with customer.vehicle protection for detail pages)
+    Route::controller(\App\Http\Controllers\CustomerVehicleController::class)->group(function () {
+        Route::get('/vehicles', 'index')->name('customer.vehicles');
+        
+        Route::middleware('customer.vehicle')->group(function () {
+            Route::get('/vehicles/{vehicle}', 'show')->name('customer.vehicles.show');
+            Route::get('/vehicles/{vehicle}/certificate', 'certificate')->name('customer.vehicles.certificate');
+        });
+    });
+
+    // 3. Service Approvals
+    Route::controller(\App\Http\Controllers\CustomerApprovalController::class)->group(function () {
+        Route::get('/approve', 'index')->name('customer.approve.index');
+        Route::get('/approve/{id}', 'show')->name('customer.approve.show');
+        Route::get('/approve/{id}/download', 'downloadApprovalDoc')->name('customer.approve.download');
+        Route::middleware('throttle:10,1')->post('/approve/{id}/upload', 'uploadSignedDocument')->name('customer.approve.upload');
+    });
+
+    // 4. Account & Profile
+    Route::controller(\App\Http\Controllers\CustomerProfileController::class)->group(function () {
+        Route::get('/profile', 'showProfile')->name('customer.profile');
+        Route::get('/profile/change-password', 'showChangePasswordForm')->name('customer.password.form');
+        Route::post('/profile/change-password', 'changePassword')->name('customer.password.update');
+    });
+
+    // 5. Informasi & Kebijakan
+    Route::get('/about', fn() => view('customer.about'))->name('customer.about');
+    Route::get('/privacy', fn() => view('customer.privacy'))->name('customer.privacy');
 });
 
 /*
@@ -181,11 +274,11 @@ Route::middleware(['auth'])->get('/storage/photos/{filename}', function ($filena
     }
     
     // 3. Build safe path
-    $path = storage_path('app/public/photos/' . $filename);
+    $path = storage_path('app/photos/' . $filename);
     
     // 4. Verify file is within allowed directory (prevent path traversal)
     $realPath = realpath($path);
-    $allowedPath = realpath(storage_path('app/public/photos'));
+    $allowedPath = realpath(storage_path('app/photos'));
     
     if (!$realPath || strpos($realPath, $allowedPath) !== 0) {
         abort(403, 'Access denied');
@@ -197,4 +290,37 @@ Route::middleware(['auth'])->get('/storage/photos/{filename}', function ($filena
     
     // 5. Return file securely
     return response()->file($realPath);
-});
+})->where('filename', '.*');
+
+// Secure Route for Receipts
+// SECURITY FIX: Added file type validation matching photos route pattern
+Route::middleware(['auth'])->get('/storage/receipts/{filename}', function ($filename) {
+    // 1. Sanitize filename - prevent path traversal
+    $filename = basename($filename);
+    
+    // 2. Whitelist allowed extensions
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    
+    if (!in_array($extension, $allowedExtensions)) {
+        abort(403, 'File type not allowed');
+    }
+    
+    // 3. Build safe path
+    $path = storage_path('app/receipts/' . $filename);
+    
+    // 4. Verify file is within allowed directory
+    $realPath = realpath($path);
+    $allowedPath = realpath(storage_path('app/receipts'));
+    
+    if (!$realPath || strpos($realPath, $allowedPath) !== 0) {
+        abort(403, 'Access denied');
+    }
+    
+    if (!file_exists($realPath)) {
+        abort(404, 'File not found');
+    }
+    
+    // 5. Return file securely
+    return response()->file($realPath);
+})->where('filename', '.*');

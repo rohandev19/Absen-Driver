@@ -12,7 +12,6 @@ window.Toast = Swal.mixin({
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-    
     // --- 1. CEK FLASH DATA (Pesan dari Controller Laravel) ---
     const flashData = document.querySelector(".flash-data");
     if (flashData) {
@@ -31,7 +30,9 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".form-delete-global").forEach((form) => {
         form.addEventListener("submit", function (e) {
             e.preventDefault();
-            const message = this.getAttribute("data-message") || "Data ini akan dihapus permanen!";
+            const message =
+                this.getAttribute("data-message") ||
+                "Data ini akan dihapus permanen!";
 
             Swal.fire({
                 title: "Anda Yakin?",
@@ -56,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".form-logout-global").forEach((form) => {
         form.addEventListener("submit", function (e) {
             e.preventDefault();
-            
+
             Swal.fire({
                 title: "Konfirmasi Logout",
                 text: "Apakah Anda yakin ingin keluar dari sistem?",
@@ -81,8 +82,10 @@ document.addEventListener("DOMContentLoaded", function () {
             e.preventDefault();
             const url = this.getAttribute("href");
             const title = this.getAttribute("data-title") || "Konfirmasi";
-            const text = this.getAttribute("data-text") || "Lanjutkan aksi ini?";
-            const confirmText = this.getAttribute("data-confirm-text") || "Ya, Lanjutkan!";
+            const text =
+                this.getAttribute("data-text") || "Lanjutkan aksi ini?";
+            const confirmText =
+                this.getAttribute("data-confirm-text") || "Ya, Lanjutkan!";
             const iconType = this.getAttribute("data-icon") || "question"; // Bisa custom icon
 
             Swal.fire({
@@ -98,7 +101,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (result.isConfirmed) {
                     window.location.href = url;
                     // Feedback visual kecil
-                    window.Toast.fire({ icon: "info", title: "Memproses permintaan..." });
+                    window.Toast.fire({
+                        icon: "info",
+                        title: "Memproses permintaan...",
+                    });
                 }
             });
         });

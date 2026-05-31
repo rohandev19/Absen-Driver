@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Http\Requests\StoreDriverRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class DriverController extends Controller
 {
@@ -49,16 +50,25 @@ class DriverController extends Controller
 
     public function store(StoreDriverRequest $request)
     {
-        // Pastikan di StoreDriverRequest validasi nik_ktp sudah ada
-        Driver::create([
+        $data = [
             'full_name' => $request->full_name,
             'driver_id_nik' => $request->driver_id_nik,
-            'nik_ktp' => $request->nik_ktp, // Sudah Benar
+            'nik_ktp' => $request->nik_ktp,
             'sim_expiry_date' => $request->sim_expiry_date,
             'sim_type' => $request->sim_type,
             'password' => Hash::make($request->password),
             'project_id' => $request->project_id,
-        ]);
+        ];
+
+        if ($request->hasFile('foto_sim')) {
+            $data['foto_sim'] = $request->file('foto_sim')->store('drivers', 'local');
+        }
+
+        if ($request->hasFile('foto_ktp')) {
+            $data['foto_ktp'] = $request->file('foto_ktp')->store('drivers', 'local');
+        }
+
+        Driver::create($data);
 
         return redirect()->route('admin.driver.index')->with('success', 'Driver baru berhasil ditambahkan.');
     }
@@ -77,22 +87,36 @@ class DriverController extends Controller
     {
         $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
-            // Validasi ID Badge (unik kecuali punya diri sendiri)
             'driver_id_nik' => ['required', 'string', 'max:255', 'unique:drivers,driver_id_nik,' . $driver->id],
-            // Validasi NIK KTP (tambahkan ini)
             'nik_ktp' => ['nullable', 'string', 'max:20', 'unique:drivers,nik_ktp,' . $driver->id],
             'sim_expiry_date' => ['required', 'date'],
             'sim_type' => ['required', 'string'],
             'password' => ['nullable', 'confirmed'],
             'project_id' => ['nullable', 'exists:projects,id'],
+            'foto_sim' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'foto_ktp' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ]);
 
         $driver->full_name = $request->full_name;
         $driver->driver_id_nik = $request->driver_id_nik;
-        $driver->nik_ktp = $request->nik_ktp; // <--- PENTING: Jangan lupa update ini
+        $driver->nik_ktp = $request->nik_ktp; 
         $driver->sim_expiry_date = $request->sim_expiry_date;
         $driver->sim_type = $request->sim_type;
         $driver->project_id = $request->project_id;
+
+        if ($request->hasFile('foto_sim')) {
+            if ($driver->foto_sim) {
+                Storage::disk('local')->delete($driver->foto_sim);
+            }
+            $driver->foto_sim = $request->file('foto_sim')->store('drivers', 'local');
+        }
+
+        if ($request->hasFile('foto_ktp')) {
+            if ($driver->foto_ktp) {
+                Storage::disk('local')->delete($driver->foto_ktp);
+            }
+            $driver->foto_ktp = $request->file('foto_ktp')->store('drivers', 'local');
+        }
 
         if ($request->filled('password')) {
             $driver->password = Hash::make($request->password);
@@ -108,7 +132,33 @@ class DriverController extends Controller
         if ($driver->isOnDuty()) {
             return back()->with('error', 'GAGAL: Driver sedang aktif bertugas (Check-in).');
         }
+        
+        if ($driver->foto_sim) {
+            Storage::disk('local')->delete($driver->foto_sim);
+        }
+        if ($driver->foto_ktp) {
+            Storage::disk('local')->delete($driver->foto_ktp);
+        }
+
         $driver->delete();
         return redirect()->route('admin.driver.index')->with('success', 'Driver berhasil dihapus.');
+    }
+
+    public function lihatDokumen($id, $jenis)
+    {
+        $driver = Driver::findOrFail($id);
+        
+        $path = '';
+        if ($jenis === 'ktp' && $driver->foto_ktp) {
+            $path = $driver->foto_ktp;
+        } elseif ($jenis === 'sim' && $driver->foto_sim) {
+            $path = $driver->foto_sim;
+        }
+
+        if (!$path || !Storage::disk('local')->exists($path)) {
+            abort(404, 'Dokumen tidak ditemukan.');
+        }
+
+        return response()->file(storage_path('app/' . $path));
     }
 }

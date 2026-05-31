@@ -11,7 +11,7 @@
                     <div class="card-header bg-white py-3">
                         <h5 class="mb-0 fw-bold text-warning"><i class="bi bi-pencil-square me-2"></i> Edit Data Driver</h5>
                     </div>
-                    <form action="{{ route('admin.driver.update', $driver->id) }}" method="POST">
+                    <form action="{{ route('admin.driver.update', $driver->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="card-body">
@@ -73,6 +73,41 @@
                                         value="{{ old('sim_expiry_date', $driver->sim_expiry_date ? \Carbon\Carbon::parse($driver->sim_expiry_date)->format('Y-m-d') : '') }}"
                                         required>
                                     @error('sim_expiry_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <hr class="text-muted">
+                                </div>
+
+                                {{-- Upload Dokumen (Opsional) --}}
+                                <div class="col-md-6 col-12">
+                                    <label for="foto_ktp" class="form-label fw-bold">Foto KTP <span class="text-muted fw-normal">(Opsional)</span></label>
+                                    @if($driver->foto_ktp)
+                                        <div class="mb-2">
+                                            <a href="{{ route('admin.driver.dokumen', ['id' => $driver->id, 'jenis' => 'ktp']) }}" target="_blank">
+                                                <img src="{{ route('admin.driver.dokumen', ['id' => $driver->id, 'jenis' => 'ktp']) }}" alt="Foto KTP" class="img-thumbnail" style="max-height: 100px;">
+                                            </a>
+                                        </div>
+                                    @endif
+                                    <input type="file" class="form-control @error('foto_ktp') is-invalid @enderror"
+                                        id="foto_ktp" name="foto_ktp" accept="image/jpeg,image/png,image/jpg">
+                                    @error('foto_ktp') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <small class="text-muted">Upload ulang untuk mengganti. Max: 2MB.</small>
+                                </div>
+
+                                <div class="col-md-6 col-12">
+                                    <label for="foto_sim" class="form-label fw-bold">Foto SIM <span class="text-muted fw-normal">(Opsional)</span></label>
+                                    @if($driver->foto_sim)
+                                        <div class="mb-2">
+                                            <a href="{{ route('admin.driver.dokumen', ['id' => $driver->id, 'jenis' => 'sim']) }}" target="_blank">
+                                                <img src="{{ route('admin.driver.dokumen', ['id' => $driver->id, 'jenis' => 'sim']) }}" alt="Foto SIM" class="img-thumbnail" style="max-height: 100px;">
+                                            </a>
+                                        </div>
+                                    @endif
+                                    <input type="file" class="form-control @error('foto_sim') is-invalid @enderror"
+                                        id="foto_sim" name="foto_sim" accept="image/jpeg,image/png,image/jpg">
+                                    @error('foto_sim') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <small class="text-muted">Upload ulang untuk mengganti. Max: 2MB.</small>
                                 </div>
 
                                 <div class="col-12">

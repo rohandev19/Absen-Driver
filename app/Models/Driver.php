@@ -23,6 +23,8 @@ class Driver extends Authenticatable
         'sim_type',         // <--- SUDAH BENAR
         'password',
         'project_id',       // <--- SUDAH BENAR
+        'foto_sim',
+        'foto_ktp',
     ];
 
     protected $hidden = [
@@ -36,6 +38,24 @@ class Driver extends Authenticatable
     ];
 
     /* =========================================================================
+     * ACCESSORS
+     * ========================================================================= */
+
+    /**
+     * Role accessor — selalu mengembalikan 'driver'.
+     *
+     * Tabel `drivers` tidak memiliki kolom `role`, tetapi middleware
+     * `EnsureUserRole` (alias 'role') memeriksa `Auth::user()->role`.
+     * Tanpa accessor ini, `$driver->role` bernilai null dan middleware
+     * langsung menolak request dengan 403, menyebabkan error NET-003
+     * di aplikasi mobile.
+     */
+    public function getRoleAttribute(): string
+    {
+        return 'driver';
+    }
+
+    /* =========================================================================
      * RELASI (RELATIONSHIPS)
      * ========================================================================= */
 
@@ -47,6 +67,11 @@ class Driver extends Authenticatable
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function transportCosts()
+    {
+        return $this->hasMany(TransportCost::class);
     }
 
     /* =========================================================================

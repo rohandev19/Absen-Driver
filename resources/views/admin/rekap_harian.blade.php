@@ -18,14 +18,19 @@
                         <small class="text-muted">Laporan aktivitas driver per tanggal</small>
                     </div>
 
-                    <form action="{{ route('admin.rekap_harian') }}" method="GET"
-                        class="d-flex gap-2 align-items-center bg-light p-2 rounded border">
-                        <label for="tanggal"
-                            class="form-label mb-0 text-muted small me-1 fw-bold text-uppercase">Tanggal:</label>
-                        <input type="date" class="form-control border-0 bg-transparent py-0" id="tanggal" name="tanggal"
-                            value="{{ $selectedDate }}">
-                        <button type="submit" class="btn btn-sm btn-success px-3 rounded-pill">Tampilkan</button>
-                    </form>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <form action="{{ route('admin.rekap_harian') }}" method="GET"
+                            class="d-flex gap-2 align-items-center bg-light p-2 rounded border mb-0">
+                            <label for="tanggal"
+                                class="form-label mb-0 text-muted small me-1 fw-bold text-uppercase">Tanggal:</label>
+                            <input type="date" class="form-control border-0 bg-transparent py-0" id="tanggal" name="tanggal"
+                                value="{{ $selectedDate }}">
+                            <button type="submit" class="btn btn-sm btn-success px-3 rounded-pill">Tampilkan</button>
+                        </form>
+                        <button onclick="window.print()" class="btn btn-primary btn-sm px-3 rounded-pill d-print-none shadow-sm">
+                            <i class="bi bi-printer me-1"></i> Cetak
+                        </button>
+                    </div>
                 </div>
             </div>
 

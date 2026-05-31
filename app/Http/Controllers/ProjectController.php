@@ -19,15 +19,29 @@ class ProjectController extends Controller
 
     public function index()
     {
-        $projects = Project::latest()->get();
-        return view('admin.project.index', compact('projects'));
+        $projects = Project::with('customer')->latest()->get();
+        $customers = \App\Models\Customer::orderBy('name')->get();
+        return view('admin.project.index', compact('projects', 'customers'));
     }
 
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required']);
+        $request->validate([
+            'name' => 'required',
+            'customer_id' => 'nullable|exists:customers,id',
+        ]);
         Project::create($request->all());
         return back()->with('success', 'Project berhasil ditambahkan.');
+    }
+
+    public function update(Request $request, Project $project)
+    {
+        $request->validate([
+            'name' => 'required',
+            'customer_id' => 'nullable|exists:customers,id',
+        ]);
+        $project->update($request->all());
+        return back()->with('success', 'Project berhasil diupdate.');
     }
 
     public function destroy(Project $project)

@@ -18,6 +18,20 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
+        // PERFORMANCE MONITORING: Track API request performance
+        $middleware->api(append: [
+            \App\Http\Middleware\PerformanceMonitor::class,
+            \App\Http\Middleware\SlowQueryLogger::class,
+        ]);
+
+        // Register middleware aliases
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureUserRole::class,
+            'customer.vehicle' => \App\Http\Middleware\EnsureCustomerOwnsVehicle::class,
+            'performance' => \App\Http\Middleware\PerformanceMonitor::class,
+            'slow-query' => \App\Http\Middleware\SlowQueryLogger::class,
+        ]);
+
         // --- TAMBAHKAN BLOK INI ---
         // Ini akan mengarahkan user yang BELUM login
         // ke halaman login admin yang sudah kita buat.

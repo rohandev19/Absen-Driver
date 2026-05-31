@@ -38,6 +38,10 @@ class StoreDriverRequest extends FormRequest
 
             // Password wajib, harus dikonfirmasi (ketik ulang), dan memenuhi standar keamanan default Laravel
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+
+            // Foto KTP & SIM (Opsional)
+            'foto_sim' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'foto_ktp' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ];
     }
 

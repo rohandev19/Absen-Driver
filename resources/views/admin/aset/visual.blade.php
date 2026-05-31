@@ -291,8 +291,25 @@
                                     @endif
                                 </p>
                             </div>
-                            <div class="text-end mt-2 small text-muted">
+                            <div class="text-end mt-2 small text-muted mb-3">
                                 Driver: <strong>{{ $lastLog->driver->full_name ?? '-' }}</strong>
+                            </div>
+
+                            {{-- TOMBOL AKSI --}}
+                            <label class="small text-muted fw-bold mb-2 text-uppercase">Tindakan Lanjutan:</label>
+                            <div class="d-grid gap-2">
+                                @if(in_array('danger', $operationalStatus))
+                                <form action="{{ route('admin.aset.resolveIssue', $vehicle->id) }}" method="POST" class="w-100">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Tandai bahwa keluhan fisik kendaraan dari driver telah diperbaiki?')">
+                                        <i class="bi bi-check-circle-fill me-2"></i>Tandai Keluhan Driver Diperbaiki
+                                    </button>
+                                </form>
+                                @endif
+                                
+                                <a href="{{ route('admin.aset.riwayat', $vehicle->id) }}" class="btn btn-primary">
+                                    <i class="bi bi-tools me-2"></i>Buka Buku Riwayat / Buat Jadwal Servis
+                                </a>
                             </div>
                         </div>
                     </div>

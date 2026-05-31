@@ -94,10 +94,10 @@ class AttendanceController extends Controller
             'gps_location' => ['required', 'string', 'regex:/^[-]?\d+(\.\d+)?,\s*[-]?\d+(\.\d+)?$/'],
             'timestamp' => 'required|date_format:Y-m-d H:i:s',
             'speedometer_manual' => 'required|integer',
-            'selfie_photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
-            'speedometer_photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
-            'car_condition_photo_1' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
-            'car_condition_photo_2' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'selfie_photo' => 'required|image|mimes:jpeg,jpg,png|max:2048',  // Reduced from 5MB to 2MB
+            'speedometer_photo' => 'required|image|mimes:jpeg,jpg,png|max:2048',  // Reduced from 5MB to 2MB
+            'car_condition_photo_1' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',  // Reduced from 5MB to 2MB
+            'car_condition_photo_2' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',  // Reduced from 5MB to 2MB
         ]);
 
         try {
@@ -144,8 +144,14 @@ class AttendanceController extends Controller
 
             return response()->json(['status' => 'success', 'message' => 'Absensi masuk berhasil.']);
 
-        } catch (\Exception $e) {
-            Log::error("SubmitAttendance Error: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('SubmitAttendance Error', [
+                'message'  => $e->getMessage(),
+                'file'     => $e->getFile(),
+                'line'     => $e->getLine(),
+                'driver'   => Auth::id(),
+                'trace'    => $e->getTraceAsString(),
+            ]);
             return response()->json(['status' => 'error', 'message' => 'Gagal menyimpan absensi.'], 500);
         }
     }
@@ -163,7 +169,7 @@ class AttendanceController extends Controller
             'check_rem' => 'required|string',
             'catatan' => 'nullable|string',
             'timestamp' => 'required|date_format:Y-m-d H:i:s',
-            'speedometer_photo_akhir' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+            'speedometer_photo_akhir' => 'required|image|mimes:jpeg,jpg,png|max:2048',  // Reduced from 5MB to 2MB
         ]);
 
         try {
@@ -229,8 +235,14 @@ class AttendanceController extends Controller
                 ],
             ]);
 
-        } catch (\Exception $e) {
-            Log::error("SubmitEndOfDuty Error: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('SubmitEndOfDuty Error', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'driver'  => Auth::id(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
             return response()->json(['status' => 'error', 'message' => 'Gagal mengakhiri tugas.'], 500);
         }
     }
@@ -242,7 +254,7 @@ class AttendanceController extends Controller
             'gps_location' => ['required', 'string', 'regex:/^[-]?\d+(\.\d+)?,\s*[-]?\d+(\.\d+)?$/'],
             'description' => 'required|string',
             'timestamp' => 'required|date_format:Y-m-d H:i:s',
-            'proof_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'proof_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',  // Reduced from 5MB to 2MB
         ]);
 
         try {
@@ -306,8 +318,13 @@ class AttendanceController extends Controller
                 'data' => $cachedData,
             ]);
 
-        } catch (\Exception $e) {
-            Log::error("GetAttendanceHistory Error: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('GetAttendanceHistory Error', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'driver'  => Auth::id(),
+            ]);
             return response()->json(['status' => 'error', 'message' => 'Gagal memuat riwayat.'], 500);
         }
     }
@@ -319,6 +336,25 @@ class AttendanceController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Cache cleared']);
     }
 
+    public function getLastOdometer($plate_number)
+    {
+        try {
+            $vehicle = Vehicle::where('plate_number', strtoupper($plate_number))->first();
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'last_odometer' => $vehicle ? $vehicle->current_km : 0
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data kendaraan'
+            ], 500);
+        }
+    }
+
     private function clearDriverCacheLogic($driverId)
     {
         Cache::forget(self::CACHE_DRIVER_STATUS . $driverId);
@@ -327,11 +363,21 @@ class AttendanceController extends Controller
 
     private function optimizedImageProcessing($file)
     {
-        $manager = new ImageManager(new GdDriver());
-        $image = $manager->read($file);
-        $image->scaleDown(width: 1200);
         $fileName = 'photos/' . Str::uuid() . '.jpg';
-        Storage::disk('public')->put($fileName, $image->encodeByMediaType('image/jpeg', 70));
+
+        try {
+            $manager = new \Intervention\Image\ImageManager(
+                new \Intervention\Image\Drivers\Gd\Driver()
+            );
+            $image = $manager->read($file);
+            $image->scaleDown(width: 1200);
+            Storage::disk('public')->put($fileName, $image->encodeByMediaType('image/jpeg', 70));
+        } catch (\Throwable $e) {
+            \Log::error('Attendance Image Processing Failed: ' . $e->getMessage());
+            // Fallback: simpan file asli jika terjadi error pada Intervention Image
+            Storage::disk('public')->put($fileName, file_get_contents($file->getRealPath()));
+        }
+
         return $fileName;
     }
 }

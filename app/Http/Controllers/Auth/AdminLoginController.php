@@ -49,8 +49,16 @@ class AdminLoginController extends Controller
             // Ini wajib untuk mencegah Session Fixation attacks.
             $request->session()->regenerate();
 
-            // 3. Redirect ke halaman dashboard (atau halaman yang ingin diakses sebelumnya)
-            return redirect()->intended(route('admin.dashboard'));
+            // 3. Redirect based on user role
+            $user = Auth::user();
+            $redirectRoute = match ($user->role) {
+                'master' => route('admin.dashboard'),
+                'service_admin' => route('admin.service.index'),
+                'customer' => route('customer.dashboard'),
+                default => route('admin.dashboard'),
+            };
+
+            return redirect()->intended($redirectRoute);
         }
 
         // 4. Jika gagal, kembalikan ke form dengan pesan error

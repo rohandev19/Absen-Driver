@@ -30,6 +30,30 @@
                                     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
+                                <div class="col-md-6 col-12">
+                                    <label for="role" class="form-label fw-bold">Role</label>
+                                    <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
+                                        <option value="">Pilih Role</option>
+                                        <option value="master" {{ old('role', $pengguna->role) == 'master' ? 'selected' : '' }}>Master (Full Access)</option>
+                                        <option value="service_admin" {{ old('role', $pengguna->role) == 'service_admin' ? 'selected' : '' }}>Service Admin</option>
+                                        <option value="customer" {{ old('role', $pengguna->role) == 'customer' ? 'selected' : '' }}>Customer</option>
+                                    </select>
+                                    @error('role') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+
+                                <div class="col-md-6 col-12" id="customer-field" style="display: none;">
+                                    <label for="customer_id" class="form-label fw-bold">Customer</label>
+                                    <select class="form-select @error('customer_id') is-invalid @enderror" id="customer_id" name="customer_id">
+                                        <option value="">Pilih Customer</option>
+                                        @foreach($customers as $customer)
+                                            <option value="{{ $customer->id }}" {{ old('customer_id', $pengguna->customer_id) == $customer->id ? 'selected' : '' }}>
+                                                {{ $customer->name }} ({{ $customer->code }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('customer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+
                                 <div class="col-12">
                                     <hr class="my-3 text-muted">
                                 </div>
@@ -65,3 +89,30 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.getElementById('role');
+        const customerField = document.getElementById('customer-field');
+        const customerSelect = document.getElementById('customer_id');
+
+        roleSelect.addEventListener('change', function() {
+            if (this.value === 'customer') {
+                customerField.style.display = 'block';
+                customerSelect.required = true;
+            } else {
+                customerField.style.display = 'none';
+                customerSelect.required = false;
+                customerSelect.value = '';
+            }
+        });
+
+        // Trigger on page load if old value exists
+        if (roleSelect.value === 'customer') {
+            customerField.style.display = 'block';
+            customerSelect.required = true;
+        }
+    });
+</script>
+@endpush

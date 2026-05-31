@@ -174,45 +174,45 @@ class VehicleHealthService
     {
         if ($score >= 90) {
             return [
-                'label' => 'Excellent',
+                'label' => 'Sangat Baik',
                 'color' => 'green',
                 'icon' => '🟢',
-                'action' => 'Continue monitoring'
+                'action' => 'Kondisi prima, aman beroperasi'
             ];
         }
 
         if ($score >= 75) {
             return [
-                'label' => 'Good',
+                'label' => 'Baik',
                 'color' => 'green',
                 'icon' => '🟢',
-                'action' => 'Schedule routine maintenance'
+                'action' => 'Aman untuk beroperasi'
             ];
         }
 
         if ($score >= 60) {
             return [
-                'label' => 'Fair',
+                'label' => 'Cukup',
                 'color' => 'yellow',
                 'icon' => '🟡',
-                'action' => 'Review maintenance schedule'
+                'action' => 'Dalam pantauan servis rutin'
             ];
         }
 
         if ($score >= 40) {
             return [
-                'label' => 'Poor',
+                'label' => 'Buruk',
                 'color' => 'orange',
                 'icon' => '🟠',
-                'action' => 'Immediate attention needed'
+                'action' => 'Butuh penanganan segera'
             ];
         }
 
         return [
-            'label' => 'Critical',
+            'label' => 'Kritis',
             'color' => 'red',
             'icon' => '🔴',
-            'action' => 'Stop operations, urgent repair'
+            'action' => 'Hentikan operasi, perbaikan darurat'
         ];
     }
 

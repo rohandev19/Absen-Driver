@@ -623,6 +623,12 @@ class MaintenanceController extends Controller
         return view('admin.maintenance.alerts', compact('alerts', 'summary'));
     }
 
+    public function generateAlerts()
+    {
+        $this->alertService->generateAlerts();
+        return back()->with('success', 'Alert pemeliharaan berhasil diperbarui dari data terbaru.');
+    }
+
     public function acknowledgeAlert($alertId)
     {
         $alert = MaintenanceAlert::findOrFail($alertId);

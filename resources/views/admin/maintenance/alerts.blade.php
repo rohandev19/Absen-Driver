@@ -8,20 +8,24 @@
 
 <div class="container-fluid">
     {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
         <div>
             <h3 class="fw-bold mb-1">Maintenance Alerts</h3>
             <p class="text-muted mb-0">Notifikasi otomatis untuk komponen yang perlu perhatian</p>
         </div>
-        <div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('admin.maintenance.export.alerts', request()->all()) }}" class="btn btn-success">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
-                </a>
-                <span class="badge bg-light text-dark border px-3 py-2">
-                    <i class="bi bi-calendar3 me-2"></i>{{ now()->format('d F Y') }}
-                </span>
-            </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <form action="{{ route('admin.maintenance.alerts.generate') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-arrow-repeat me-1"></i> Perbarui Alert
+                </button>
+            </form>
+            <a href="{{ route('admin.maintenance.export.alerts', request()->all()) }}" class="btn btn-sm btn-success">
+                <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
+            </a>
+            <span class="badge bg-light text-dark border px-3 py-2">
+                <i class="bi bi-calendar3 me-2"></i>{{ now()->format('d F Y') }}
+            </span>
         </div>
     </div>
 
