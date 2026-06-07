@@ -48,11 +48,12 @@ class MaintenanceUIConsistencyBugConditionTest extends TestCase
         Gate::define('is-master-admin', fn() => true);
 
         // Create test data
-        $this->admin = User::factory()->create();
+        $this->admin = User::factory()->create([
+            'role' => 'master',
+        ]);
         
-        $this->project = Project::create([
+        $this->project = Project::factory()->create([
             'name' => 'Test Project',
-            'description' => 'Test Description',
         ]);
 
         $this->vehicle = Vehicle::create([

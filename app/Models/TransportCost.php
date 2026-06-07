@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TransportCost extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'driver_id',
         'vehicle_id',
@@ -108,15 +111,20 @@ class TransportCost extends Model
         return $this->belongsTo(User::class, 'submitted_to_finance_by');
     }
 
+    // Status Constants
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+
     // Scopes
     public function scopePending($query)
     {
-        return $query->where('approval_status', 'pending');
+        return $query->where('approval_status', self::STATUS_PENDING);
     }
 
     public function scopeApproved($query)
     {
-        return $query->where('approval_status', 'approved');
+        return $query->where('approval_status', self::STATUS_APPROVED);
     }
 
     public function scopeForMonth($query, $year, $month)
@@ -158,11 +166,11 @@ class TransportCost extends Model
 
     public function getIsEditableAttribute(): bool
     {
-        return $this->approval_status === 'pending';
+        return $this->approval_status === self::STATUS_PENDING;
     }
 
     public function getIsApprovedAttribute(): bool
     {
-        return $this->approval_status === 'approved';
+        return $this->approval_status === self::STATUS_APPROVED;
     }
 }

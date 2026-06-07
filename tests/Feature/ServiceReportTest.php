@@ -129,6 +129,11 @@ class ServiceReportTest extends TestCase
             'signature' => $dummySignature,
             'signer_name' => 'Alex Admin',
             'signer_role' => 'Service Supervisor',
+            'workshop_name' => 'Bengkel Test',
+            'invoice_number' => 'INV-123',
+            'service_cost' => 150000,
+            'sparepart_cost' => 350000,
+            'total_cost' => 500000,
         ]);
 
         $response->assertRedirect(route('admin.service.index'));
@@ -181,6 +186,11 @@ class ServiceReportTest extends TestCase
             'signature' => $dummySignature,
             'signer_name' => 'Alex Admin',
             'signer_role' => 'Service Supervisor',
+            'workshop_name' => 'Bengkel Test',
+            'invoice_number' => 'INV-123',
+            'service_cost' => 150000,
+            'sparepart_cost' => 350000,
+            'total_cost' => 500000,
         ]);
 
         $response->assertStatus(302);
@@ -233,7 +243,7 @@ class ServiceReportTest extends TestCase
             'signer_role' => 'Fleet Manager',
         ]);
 
-        $response->assertRedirect(route('customer.approve.index'));
+        $response->assertRedirect(route('customer.approve.success', $this->report->id));
         $response->assertSessionHas('success');
 
         $this->report->refresh();

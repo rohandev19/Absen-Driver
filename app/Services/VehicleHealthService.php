@@ -88,9 +88,11 @@ class VehicleHealthService
      */
     private function getMaintenanceCompliance(Vehicle $vehicle): float
     {
-        $schedules = $vehicle->maintenanceSchedules()
-            ->where('created_at', '>=', Carbon::now()->subMonths(6))
-            ->get();
+        $schedules = $vehicle->relationLoaded('maintenanceSchedules') 
+            ? $vehicle->maintenanceSchedules 
+            : $vehicle->maintenanceSchedules()
+                ->where('created_at', '>=', Carbon::now()->subMonths(6))
+                ->get();
 
         if ($schedules->isEmpty()) {
             return 1.0; // No schedules = assume compliant
@@ -109,10 +111,12 @@ class VehicleHealthService
      */
     private function getDailyCheckScore(Vehicle $vehicle): float
     {
-        $recentChecks = $vehicle->attendances()
-            ->where('time_in', '>=', Carbon::now()->subDays(30))
-            ->whereNotNull('check_ban')
-            ->get();
+        $recentChecks = $vehicle->relationLoaded('attendances')
+            ? $vehicle->attendances
+            : $vehicle->attendances()
+                ->where('time_in', '>=', Carbon::now()->subDays(30))
+                ->whereNotNull('check_ban')
+                ->get();
 
         if ($recentChecks->isEmpty()) {
             return 0.8; // No recent checks = assume okay but not perfect
@@ -152,12 +156,17 @@ class VehicleHealthService
         // Assuming expected lifespan is 10 years
         $expectedLifespanYears = 10;
 
-        // Try to get vehicle age from pajak_stnk_berlaku_sampai
-        // This is an approximation - ideally you'd have a purchase_date field
-        if ($vehicle->pajak_stnk_berlaku_sampai) {
+        // 1. Prioritaskan tahun_pembuatan asli jika ada
+        if ($vehicle->tahun_pembuatan) {
+            $vehicleAgeYears = Carbon::now()->year - $vehicle->tahun_pembuatan;
+        } 
+        // 2. Fallback: perkiraan dari pajak STNK
+        elseif ($vehicle->pajak_stnk_berlaku_sampai) {
             $estimatedPurchaseYear = Carbon::parse($vehicle->pajak_stnk_berlaku_sampai)->year - 1;
             $vehicleAgeYears = Carbon::now()->year - $estimatedPurchaseYear;
-        } else {
+        } 
+        // 3. Fallback: perkiraan dari KM
+        else {
             // If no date available, use KM as proxy (assuming 20,000 KM per year)
             $vehicleAgeYears = $vehicle->current_km / 20000;
         }

@@ -134,6 +134,18 @@ class WhatsAppNotificationService
         } catch (\Exception $e) {
             Log::error('WhatsApp approval notification failed: ' . $e->getMessage());
         }
+
+        // --- FCM NOTIFICATION ---
+        try {
+            if (!empty($driver->fcm_token)) {
+                $fcmService = app(\App\Services\FcmNotificationService::class);
+                $title = "Uang Jalan Disetujui ✅";
+                $body = "Laporan uang jalan tanggal " . $tripEntry->trip_date->format('d/m/Y') . " sebesar Rp " . number_format($tripEntry->total_cost + $tripEntry->overtime_payment + $tripEntry->bonus_driver, 0, ',', '.') . " telah disetujui.";
+                $fcmService->sendToDevice($driver->fcm_token, $title, $body);
+            }
+        } catch (\Exception $e) {
+            Log::error('FCM approval notification failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -165,6 +177,18 @@ class WhatsAppNotificationService
             ]);
         } catch (\Exception $e) {
             Log::error('WhatsApp rejection notification failed: ' . $e->getMessage());
+        }
+
+        // --- FCM NOTIFICATION ---
+        try {
+            if (!empty($driver->fcm_token)) {
+                $fcmService = app(\App\Services\FcmNotificationService::class);
+                $title = "Uang Jalan Ditolak ❌";
+                $body = "Laporan uang jalan tanggal " . $tripEntry->trip_date->format('d/m/Y') . " ditolak. Alasan: " . $tripEntry->rejection_reason;
+                $fcmService->sendToDevice($driver->fcm_token, $title, $body);
+            }
+        } catch (\Exception $e) {
+            Log::error('FCM rejection notification failed: ' . $e->getMessage());
         }
     }
 }

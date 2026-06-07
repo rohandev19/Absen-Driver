@@ -24,6 +24,9 @@ return new class extends Migration {
             // 'nullable' berarti boleh dikosongkan.
             $table->string('type')->nullable();
 
+            // Status kendaraan (e.g., Aktif, Servis, Rusak)
+            $table->string('status')->default('Aktif');
+
             // Kolom standar Laravel
             $table->timestamps();
         });

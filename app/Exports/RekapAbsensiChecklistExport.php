@@ -46,8 +46,11 @@ class RekapAbsensiChecklistExport implements FromView, ShouldAutoSize, WithTitle
         $drivers = $query->get();
 
         // 3. Ambil data absensi bulan ini
-        $attendances = Attendance::whereMonth('time_out', $this->bulan)
-            ->whereYear('time_out', $this->tahun)
+        // FIX: Group by time_in (check-in date) instead of time_out for accurate
+        // multi-day shift reporting. A shift that starts on Jan 26 and ends on
+        // Jan 27 should be counted as "worked on Jan 26", not Jan 27.
+        $attendances = Attendance::whereMonth('time_in', $this->bulan)
+            ->whereYear('time_in', $this->tahun)
             ->whereNotNull('time_out')
             ->get()
             ->groupBy('driver_id');
@@ -63,8 +66,9 @@ class RekapAbsensiChecklistExport implements FromView, ShouldAutoSize, WithTitle
                 $isPresent = false;
 
                 if ($driverAtt) {
+                    // FIX: Check by time_in (check-in date) for accurate multi-day shift reporting
                     $check = $driverAtt->filter(function ($item) use ($day) {
-                        return Carbon::parse($item->time_out)->day == $day;
+                        return Carbon::parse($item->time_in)->day == $day;
                     })->first();
 
                     if ($check)

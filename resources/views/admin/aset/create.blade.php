@@ -7,8 +7,11 @@
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle text-primary me-2"></i> Tambah Aset Mobil</h5>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm rounded-pill shadow-sm">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
                 </div>
                 <div class="card-body p-4">
                     <form action="{{ route('admin.aset.store') }}" method="POST">
@@ -38,6 +41,18 @@
                             @enderror
                         </div>
 
+                        {{-- TAMBAHAN BARU: Input Tahun Pembuatan --}}
+                        <div class="mb-3">
+                            <label for="tahun_pembuatan" class="form-label fw-bold">Tahun Pembuatan (Opsional)</label>
+                            <input type="number" class="form-control @error('tahun_pembuatan') is-invalid @enderror" 
+                                id="tahun_pembuatan" name="tahun_pembuatan" placeholder="Contoh: 2018" 
+                                value="{{ old('tahun_pembuatan') }}" min="1900" max="{{ date('Y') }}">
+                            @error('tahun_pembuatan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">Digunakan untuk akurasi perhitungan Health Score kendaraan.</div>
+                        </div>
+
                         {{-- TAMBAHAN BARU: Input Odometer Awal --}}
                         <div class="mb-3">
                             <label for="current_km" class="form-label fw-bold">Odometer Awal (KM Saat Ini)</label>
@@ -62,6 +77,29 @@
                                 @endforeach
                             </select>
                             <div class="form-text">Pilih project jika mobil ini didedikasikan khusus.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="status" class="form-label fw-bold">Status Operasional</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="Aktif" {{ old('status', 'Aktif') === 'Aktif' ? 'selected' : '' }}>Aktif</option>
+                                <option value="Pending Verifikasi" {{ old('status') === 'Pending Verifikasi' ? 'selected' : '' }}>Pending Verifikasi</option>
+                                <option value="Servis" {{ old('status') === 'Servis' ? 'selected' : '' }}>Servis</option>
+                                <option value="Rusak" {{ old('status') === 'Rusak' ? 'selected' : '' }}>Rusak</option>
+                                <option value="Tidak Aktif" {{ old('status') === 'Tidak Aktif' ? 'selected' : '' }}>Tidak Aktif</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="is_temporary" name="is_temporary" {{ old('is_temporary') ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold" for="is_temporary">
+                                Unit pengganti / sementara
+                            </label>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="notes" class="form-label fw-bold">Catatan Unit (Opsional)</label>
+                            <textarea name="notes" id="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
                         </div>
 
                         {{-- Tombol Aksi --}}

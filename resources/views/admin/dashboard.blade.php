@@ -129,6 +129,65 @@
         .driver-item-new {
             animation: driver-new-flash 1.2s ease-out;
         }
+
+        /* =============================================
+           STAT CARDS (dari _design-system)
+        ============================================= */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 1px solid #f8f9fa;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none !important;
+            color: inherit !important;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            border-color: #e9ecef;
+            color: inherit !important;
+        }
+
+        .stat-card-danger:hover .stat-icon { box-shadow: 0 8px 24px rgba(220, 53, 69, 0.3); transform: scale(1.05); }
+        .stat-card-warning:hover .stat-icon { box-shadow: 0 8px 24px rgba(255, 193, 7, 0.3); transform: scale(1.05); }
+        .stat-card-primary:hover .stat-icon { box-shadow: 0 8px 24px rgba(13, 110, 253, 0.3); transform: scale(1.05); }
+        .stat-card-success:hover .stat-icon { box-shadow: 0 8px 24px rgba(25, 135, 84, 0.3); transform: scale(1.05); }
+        .stat-card-info:hover .stat-icon { box-shadow: 0 8px 24px rgba(13, 202, 240, 0.3); transform: scale(1.05); }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .stat-card-danger .stat-icon { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
+        .stat-card-warning .stat-icon { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: white; }
+        .stat-card-primary .stat-icon { background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: white; }
+        .stat-card-success .stat-icon { background: linear-gradient(135deg, #198754 0%, #157347 100%); color: white; }
+        .stat-card-info .stat-icon { background: linear-gradient(135deg, #0dcaf0 0%, #0bacce 100%); color: white; }
+
+        .stat-content { flex: 1; }
+        .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 0.25rem; color: #2c3e50; }
+        .stat-label { font-size: 0.875rem; color: #6c757d; font-weight: 500; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 
     <div class="container-fluid p-0">
@@ -145,59 +204,55 @@
         ============================================= --}}
         <div class="row g-3 mb-4">
             <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.riwayat_driver') }}"
-                    class="card shadow-sm card-hover text-decoration-none text-reset h-100">
-                    <div class="card-body d-flex flex-column flex-sm-row justify-content-sm-between align-items-center">
-                        <div class="text-center text-sm-start" id="kpi-card-driver">
-                            <h2 class="h3 fw-bold mb-0" id="kpi-driver-bertugas">{{ count($onDutyDrivers) }}</h2>
-                            <span class="text-muted">Driver Bertugas</span>
-                        </div>
-                        <i class="bi bi-broadcast fs-1 text-danger opacity-50 mt-2 mt-sm-0"></i>
+                <a href="{{ route('admin.riwayat_driver') }}" class="stat-card stat-card-danger animate-fade-in h-100" style="animation-delay: 0.1s" id="kpi-card-driver">
+                    <div class="stat-icon">
+                        <i class="bi bi-broadcast"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="kpi-driver-bertugas">{{ count($onDutyDrivers) }}</div>
+                        <div class="stat-label">Driver Bertugas</div>
                     </div>
                 </a>
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.daftar_aset') }}"
-                    class="card shadow-sm card-hover text-decoration-none text-reset h-100">
-                    <div class="card-body d-flex flex-column flex-sm-row justify-content-sm-between align-items-center">
-                        <div class="text-center text-sm-start" id="kpi-card-aset">
-                            <h2 class="h3 fw-bold mb-0">
-                                <span id="kpi-aset-tersedia">{{ $totalAsetTersedia }}</span>
-                                <span class="h5 text-muted">/ <span id="kpi-total-aset">{{ $totalAset }}</span></span>
-                            </h2>
-                            <span class="text-muted">Aset Tersedia / Total</span>
+                <a href="{{ route('admin.daftar_aset') }}" class="stat-card stat-card-success animate-fade-in h-100" style="animation-delay: 0.2s" id="kpi-card-aset">
+                    <div class="stat-icon">
+                        <i class="bi bi-p-circle-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">
+                            <span id="kpi-aset-tersedia">{{ $totalAsetTersedia }}</span>
+                            <span style="font-size:1rem;color:#6c757d">/ <span id="kpi-total-aset">{{ $totalAset }}</span></span>
                         </div>
-                        <i class="bi bi-p-circle-fill fs-1 text-success opacity-50 mt-2 mt-sm-0"></i>
+                        <div class="stat-label">Aset Tersedia</div>
                     </div>
                 </a>
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.riwayat_unit') }}"
-                    class="card shadow-sm card-hover text-decoration-none text-reset h-100">
-                    <div class="card-body d-flex flex-column flex-sm-row justify-content-sm-between align-items-center">
-                        <div class="text-center text-sm-start" id="kpi-card-jarak">
-                            <h2 class="h3 fw-bold mb-0">
-                                <span id="kpi-jarak-bulanan">{{ number_format($totalJarakBulanIni) }}</span>
-                                <span class="h5 text-muted">Km</span>
-                            </h2>
-                            <span class="text-muted">Jarak Bulan Ini</span>
+                <a href="{{ route('admin.riwayat_unit') }}" class="stat-card stat-card-info animate-fade-in h-100" style="animation-delay: 0.3s" id="kpi-card-jarak">
+                    <div class="stat-icon">
+                        <i class="bi bi-sign-turn-right-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">
+                            <span id="kpi-jarak-bulanan">{{ number_format($totalJarakBulanIni) }}</span>
+                            <span style="font-size:1rem;color:#6c757d">Km</span>
                         </div>
-                        <i class="bi bi-sign-turn-right-fill fs-1 text-info opacity-50 mt-2 mt-sm-0"></i>
+                        <div class="stat-label">Jarak Bulan Ini</div>
                     </div>
                 </a>
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="{{ route('admin.laporan_darurat') }}"
-                    class="card shadow-sm card-hover text-decoration-none text-reset h-100">
-                    <div class="card-body d-flex flex-column flex-sm-row justify-content-sm-between align-items-center">
-                        <div class="text-center text-sm-start" id="kpi-card-laporan">
-                            <h2 class="h3 fw-bold mb-0" id="kpi-laporan-hari-ini">{{ $totalLaporan }}</h2>
-                            <span class="text-muted">Laporan Hari Ini</span>
-                        </div>
-                        <i class="bi bi-exclamation-triangle-fill fs-1 text-warning opacity-50 mt-2 mt-sm-0"></i>
+                <a href="{{ route('admin.laporan_darurat') }}" class="stat-card stat-card-warning animate-fade-in h-100" style="animation-delay: 0.4s" id="kpi-card-laporan">
+                    <div class="stat-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="kpi-laporan-hari-ini">{{ $totalLaporan }}</div>
+                        <div class="stat-label">Laporan Hari Ini</div>
                     </div>
                 </a>
             </div>

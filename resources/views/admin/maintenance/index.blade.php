@@ -43,44 +43,58 @@
         {{-- BAGIAN 1: METRIC CARDS --}}
         <div class="row mb-4 g-3">
             <div class="col-xl-3 col-md-6">
-                <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'danger']) }}" class="stat-link">
-                    <div class="card-metric border-left-danger {{ request('status_filter') == 'danger' ? 'active' : '' }}">
-                        <div class="metric-label text-danger">Perlu Perhatian</div>
-                        <div class="metric-value">{{ $stats['danger'] }}</div>
-                        <div class="metric-desc">Unit Rusak / Telat Servis</div>
-                        <div class="card-icon"><i class="bi bi-exclamation-octagon-fill text-danger"></i></div>
+                <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'danger']) }}" style="text-decoration:none;">
+                    <div class="stat-card card-metric stat-card-danger border-left-danger animate-fade-in {{ request('status_filter') == 'danger' ? 'active-filter active' : '' }}" style="animation-delay: 0.1s">
+                        <div class="stat-icon card-icon">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <div class="stat-content metric-content">
+                            <div class="stat-value metric-value">{{ $stats['danger'] }}</div>
+                            <div class="stat-label metric-label">Perlu Perhatian</div>
+                            <div class="stat-desc metric-desc">Unit Rusak / Telat Servis</div>
+                        </div>
                     </div>
                 </a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'warning']) }}" class="stat-link">
-                    <div
-                        class="card-metric border-left-warning {{ request('status_filter') == 'warning' ? 'active' : '' }}">
-                        <div class="metric-label text-warning">Segera Servis</div>
-                        <div class="metric-value">{{ $stats['warning'] }}</div>
-                        <div class="metric-desc">Sisa KM &lt; 1.000</div>
-                        <div class="card-icon"><i class="bi bi-cone-striped text-warning"></i></div>
+                <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'warning']) }}" style="text-decoration:none;">
+                    <div class="stat-card card-metric stat-card-warning border-left-warning animate-fade-in {{ request('status_filter') == 'warning' ? 'active-filter active' : '' }}" style="animation-delay: 0.2s">
+                        <div class="stat-icon card-icon">
+                            <i class="bi bi-cone-striped"></i>
+                        </div>
+                        <div class="stat-content metric-content">
+                            <div class="stat-value metric-value">{{ $stats['warning'] }}</div>
+                            <div class="stat-label metric-label">Segera Servis</div>
+                            <div class="stat-desc metric-desc">Sisa KM &lt; 1.000</div>
+                        </div>
                     </div>
                 </a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'safe']) }}" class="stat-link">
-                    <div class="card-metric border-left-success {{ request('status_filter') == 'safe' ? 'active' : '' }}">
-                        <div class="metric-label text-success">Kondisi Prima</div>
-                        <div class="metric-value">{{ $stats['sehat'] }}</div>
-                        <div class="metric-desc">Siap Operasi</div>
-                        <div class="card-icon"><i class="bi bi-check-circle-fill text-success"></i></div>
+                <a href="{{ route('admin.maintenance.dashboard', ['status_filter' => 'safe']) }}" style="text-decoration:none;">
+                    <div class="stat-card card-metric stat-card-success border-left-success animate-fade-in {{ request('status_filter') == 'safe' ? 'active-filter active' : '' }}" style="animation-delay: 0.3s">
+                        <div class="stat-icon card-icon">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="stat-content metric-content">
+                            <div class="stat-value metric-value">{{ $stats['sehat'] }}</div>
+                            <div class="stat-label metric-label">Kondisi Prima</div>
+                            <div class="stat-desc metric-desc">Siap Operasi</div>
+                        </div>
                     </div>
                 </a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <a href="{{ route('admin.maintenance.dashboard', request()->except(['status_filter'])) }}"
-                    class="stat-link">
-                    <div class="card-metric border-left-primary">
-                        <div class="metric-label text-primary">Total Armada</div>
-                        <div class="metric-value">{{ $stats['total'] }}</div>
-                        <div class="metric-desc">Unit Terdaftar</div>
-                        <div class="card-icon"><i class="bi bi-truck text-primary"></i></div>
+                <a href="{{ route('admin.maintenance.dashboard', request()->except(['status_filter'])) }}" style="text-decoration:none;">
+                    <div class="stat-card card-metric stat-card-primary border-left-primary animate-fade-in" style="animation-delay: 0.4s">
+                        <div class="stat-icon card-icon">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                        <div class="stat-content metric-content">
+                            <div class="stat-value metric-value">{{ $stats['total'] }}</div>
+                            <div class="stat-label metric-label">Total Armada</div>
+                            <div class="stat-desc metric-desc">Unit Terdaftar</div>
+                        </div>
                     </div>
                 </a>
             </div>
@@ -143,7 +157,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
             
-                <div class="table-responsive-lg" style="padding-bottom: 120px;">
+                <div class="table-responsive table-responsive-cards" style="padding-bottom: 120px;">
                     <table class="table-corporate">
                         <thead>
                             <tr>
@@ -178,9 +192,9 @@
                                         $statusText = 'Telat Servis';
                                     }
                                 @endphp
-                                <tr>
+                                <tr class="aset-row">
                                     {{-- IDENTITAS --}}
-                                    <td class="ps-4">
+                                    <td class="ps-4" data-label="">
                                         <div class="d-flex align-items-center">
                                             <div class="bg-light border rounded d-flex align-items-center justify-content-center me-3"
                                                 style="width: 40px; height: 40px; color: #555;">
@@ -199,7 +213,7 @@
                                     </td>
 
                                     {{-- STATUS --}}
-                                    <td>
+                                    <td data-label="Status">
                                         @if($vehicle->health_status_code === 'physical_issue')
                                             <span class="badge-corp badge-corp-danger"><i class="bi bi-wrench"></i> Isu Fisik</span>
                                         @else
@@ -210,7 +224,7 @@
                                     </td>
 
                                     {{-- PROGRESS KESEHATAN --}}
-                                    <td>
+                                    <td data-label="Health Score">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="progress-corp-bg">
                                                 <div class="progress-corp-fill"
@@ -226,12 +240,12 @@
                                     </td>
 
                                     {{-- WAKTU --}}
-                                    <td class="text-muted" style="font-size: 0.85rem;">
+                                    <td class="text-muted" data-label="Update" style="font-size: 0.85rem;">
                                         {{ $vehicle->latestAttendance ? $vehicle->latestAttendance->updated_at->format('d/m/y H:i') : '-' }}
                                     </td>
 
                                     {{-- AKSI --}}
-                                    <td class="text-end pe-4">
+                                    <td class="text-end pe-4" data-label="Tindakan">
                                         <div class="d-flex justify-content-end gap-2">
                                             {{-- Primary Action: Komponen --}}
                                             <a href="{{ route('admin.maintenance.components', $vehicle->id) }}"

@@ -17,6 +17,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+    {{-- Page-specific styles --}}
+    @stack('styles')
+
+    {{-- Anti-FOUC (Flash of Unstyled Content) for Dark Mode --}}
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem('theme');
+            var systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        })();
+    </script>
+
     <style>
         :root {
             --sidebar-width: 255px;
@@ -31,6 +47,241 @@
             --topbar-bg: #ffffff;
             --body-bg: #f4f6fb;
             --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        [data-bs-theme="dark"] {
+            --body-bg: #0f172a;
+            --topbar-bg: #1e293b;
+            --sidebar-bg: #1e293b; /* Changed from #0b0f19 to match topbar-bg so it visually reacts to dark mode */
+            --sidebar-border: rgba(255, 255, 255, 0.08); /* Match border in dark mode */
+            --bs-body-bg: #0f172a;
+            --bs-body-color: #f8fafc;
+        }
+
+        [data-bs-theme="dark"] .card, 
+        [data-bs-theme="dark"] .stat-card,
+        [data-bs-theme="dark"] .stat-list-panel,
+        [data-bs-theme="dark"] .stats-card,
+        [data-bs-theme="dark"] .filter-card,
+        [data-bs-theme="dark"] .filter-container,
+        [data-bs-theme="dark"] .mc,
+        [data-bs-theme="dark"] .bg-white,
+        [data-bs-theme="dark"] .card-metric {
+            background-color: var(--topbar-bg) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .stat-value { color: #f8fafc !important; }
+        [data-bs-theme="dark"] .stat-label { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .stat-desc { color: #cbd5e1 !important; }
+
+        [data-bs-theme="dark"] .bg-light {
+            background-color: rgba(255, 255, 255, 0.04) !important;
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .stats-card-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Leaflet Map Dark Mode */
+        [data-bs-theme="dark"] .leaflet-layer,
+        [data-bs-theme="dark"] .leaflet-control-zoom-in,
+        [data-bs-theme="dark"] .leaflet-control-zoom-out,
+        [data-bs-theme="dark"] .leaflet-control-attribution {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
+        [data-bs-theme="dark"] .topbar {
+            background-color: var(--topbar-bg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+        }
+
+        [data-bs-theme="dark"] body,
+        [data-bs-theme="dark"] .text-dark,
+        [data-bs-theme="dark"] .text-muted,
+        [data-bs-theme="dark"] .form-label,
+        [data-bs-theme="dark"] .stat-label,
+        [data-bs-theme="dark"] .mc-label,
+        [data-bs-theme="dark"] .mc-value,
+        [data-bs-theme="dark"] h1,
+        [data-bs-theme="dark"] h2,
+        [data-bs-theme="dark"] h3,
+        [data-bs-theme="dark"] h4,
+        [data-bs-theme="dark"] h5,
+        [data-bs-theme="dark"] h6,
+        [data-bs-theme="dark"] p,
+        [data-bs-theme="dark"] li,
+        [data-bs-theme="dark"] .stat-value,
+        [data-bs-theme="dark"] th,
+        [data-bs-theme="dark"] td {
+            color: #e2e8f0 !important;
+        }
+        
+        [data-bs-theme="dark"] .table {
+            --bs-table-color: #f8fafc;
+            --bs-table-bg: transparent;
+            --bs-table-border-color: rgba(255,255,255,0.08);
+            --bs-table-striped-bg: rgba(255,255,255,0.02);
+            --bs-table-hover-bg: rgba(255,255,255,0.04);
+        }
+        
+        [data-bs-theme="dark"] .table-light {
+            --bs-table-bg: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+        }
+
+        /* Custom Table Overrides */
+        [data-bs-theme="dark"] .table-corporate { background: transparent; }
+        [data-bs-theme="dark"] .table-corporate thead th {
+            background-color: rgba(255, 255, 255, 0.04) !important;
+            color: #94a3b8 !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        [data-bs-theme="dark"] .table-corporate tbody td { border-color: rgba(255, 255, 255, 0.05) !important; background-color: transparent !important; }
+        [data-bs-theme="dark"] .table-corporate tbody tr { border-color: rgba(255, 255, 255, 0.05) !important; background-color: transparent; }
+        [data-bs-theme="dark"] .table-corporate tbody tr:hover { background-color: rgba(255, 255, 255, 0.04) !important; }
+        [data-bs-theme="dark"] .table-corporate tbody tr:hover td { background-color: transparent !important; }
+        [data-bs-theme="dark"] .table-responsive-cards tr.aset-detail-row,
+        [data-bs-theme="dark"] .table-responsive-cards tr.aset-row {
+            background-color: var(--topbar-bg) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        [data-bs-theme="dark"] .btn-action-map,
+        [data-bs-theme="dark"] .btn-action-photo,
+        [data-bs-theme="dark"] .btn-corp-outline,
+        [data-bs-theme="dark"] .btn-action-corp {
+            background-color: transparent !important;
+            color: #e2e8f0 !important;
+            border-color: rgba(255,255,255,0.2) !important;
+        }
+        [data-bs-theme="dark"] .btn-action-map:hover,
+        [data-bs-theme="dark"] .btn-action-corp:hover { background-color: rgba(255, 255, 255, 0.1) !important; color: #fff !important; border-color: rgba(255, 255, 255, 0.3) !important; }
+        [data-bs-theme="dark"] .btn-action-photo:hover { background-color: #64748b !important; color: white !important; }
+
+        /* Accordion Overrides (Panduan) */
+        [data-bs-theme="dark"] .accordion-item,
+        [data-bs-theme="dark"] .accordion-button,
+        [data-bs-theme="dark"] .accordion-body {
+            background-color: var(--topbar-bg) !important;
+            color: #e2e8f0 !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        [data-bs-theme="dark"] .accordion-button:not(.collapsed) {
+            background-color: rgba(255,255,255, 0.05) !important;
+            color: #f8fafc !important;
+        }
+        [data-bs-theme="dark"] .accordion-button::after {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        
+        [data-bs-theme="dark"] [style*="background-color: white"],
+        [data-bs-theme="dark"] [style*="background-color:white"],
+        [data-bs-theme="dark"] [style*="background: white"],
+        [data-bs-theme="dark"] [style*="background:white"] {
+            background-color: var(--topbar-bg) !important;
+            color: #f8fafc !important;
+        }
+
+        /* Badge Corp Overrides */
+        [data-bs-theme="dark"] {
+            --color-danger-light: rgba(220, 53, 69, 0.15) !important;
+            --color-danger-border: rgba(220, 53, 69, 0.3) !important;
+            --color-danger-text: #fca5a5 !important;
+
+            --color-warning-light: rgba(255, 193, 7, 0.15) !important;
+            --color-warning-border: rgba(255, 193, 7, 0.3) !important;
+            --color-warning-text: #fde047 !important;
+
+            --color-success-light: rgba(25, 135, 84, 0.15) !important;
+            --color-success-border: rgba(25, 135, 84, 0.3) !important;
+            --color-success-text: #86efac !important;
+
+            --color-info-light: rgba(13, 202, 240, 0.15) !important;
+            --color-info-border: rgba(13, 202, 240, 0.3) !important;
+            --color-info-text: #67e8f9 !important;
+
+            --color-primary-light: rgba(13, 110, 253, 0.15) !important;
+            --color-primary-hover: rgba(13, 110, 253, 0.3) !important;
+            --color-primary-active: #93c5fd !important;
+        }
+
+        /* FullCalendar Dark Mode */
+        [data-bs-theme="dark"] .fc {
+            --fc-page-bg-color: transparent;
+            --fc-neutral-bg-color: rgba(255, 255, 255, 0.05);
+            --fc-neutral-text-color: #f8fafc;
+            --fc-border-color: rgba(255, 255, 255, 0.1);
+            --fc-button-text-color: #f8fafc;
+            --fc-button-bg-color: rgba(255, 255, 255, 0.05);
+            --fc-button-border-color: rgba(255, 255, 255, 0.1);
+            --fc-button-hover-bg-color: rgba(255, 255, 255, 0.1);
+            --fc-button-hover-border-color: rgba(255, 255, 255, 0.2);
+            --fc-button-active-bg-color: rgba(255, 255, 255, 0.2);
+            --fc-button-active-border-color: rgba(255, 255, 255, 0.3);
+            --fc-today-bg-color: rgba(255, 255, 255, 0.03);
+            --fc-list-event-hover-bg-color: rgba(255, 255, 255, 0.02);
+            --fc-highlight-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        [data-bs-theme="dark"] .fc-theme-standard td, 
+        [data-bs-theme="dark"] .fc-theme-standard th,
+        [data-bs-theme="dark"] .fc-theme-bootstrap5 td,
+        [data-bs-theme="dark"] .fc-theme-bootstrap5 th {
+            border-color: var(--fc-border-color);
+        }
+
+        [data-bs-theme="dark"] .fc .fc-day-today {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        [data-bs-theme="dark"] .fc .btn:not(.btn-primary) {
+            background-color: transparent !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        [data-bs-theme="dark"] .fc .btn:not(.btn-primary):hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-bs-theme="dark"] .modal-content {
+            background-color: var(--topbar-bg);
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-bs-theme="dark"] .modal-header,
+        [data-bs-theme="dark"] .modal-footer {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* SweetAlert2 Dark Mode */
+        [data-bs-theme="dark"] .swal2-popup {
+            background-color: var(--topbar-bg) !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        
+        [data-bs-theme="dark"] .swal2-title,
+        [data-bs-theme="dark"] .swal2-html-container {
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: #0f172a;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+        }
+        
+        [data-bs-theme="dark"] .form-control:focus,
+        [data-bs-theme="dark"] .form-select:focus {
+            background-color: #0f172a;
+            color: #f8fafc;
+            border-color: var(--accent);
         }
 
         * { box-sizing: border-box; }
@@ -751,6 +1002,18 @@
                 </li>
                 @endif
 
+                <hr class="sidebar-hr">
+                <div class="sidebar-section-label">Bantuan</div>
+
+                {{-- 11. PANDUAN PENGGUNAAN --}}
+                <li class="nav-item">
+                    <a href="{{ route('admin.panduan') }}"
+                        class="nav-link {{ request()->routeIs('admin.panduan') ? 'active' : '' }}">
+                        <i class="bi bi-book"></i>
+                        <span>Panduan Penggunaan</span>
+                    </a>
+                </li>
+
             </ul>
         </div>{{-- end sidebar-scroll-area --}}
 
@@ -775,7 +1038,12 @@
             <div class="d-flex align-items-center gap-3">
                 <i class="bi bi-list" id="sidebar-toggle"></i>
             </div>
-            <div class="topbar-right">
+            <div class="topbar-right d-flex align-items-center gap-3">
+                {{-- DARK MODE TOGGLE --}}
+                <button id="theme-toggle" class="btn btn-sm btn-outline-secondary border-0 rounded-circle" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;" data-bs-toggle="tooltip" title="Toggle Dark Mode">
+                    <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+                </button>
+                
                 <div class="topbar-user">
                     <div class="topbar-avatar">
                         {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
@@ -842,6 +1110,41 @@
         if (overlay) {
             overlay.addEventListener('click', function () {
                 sidebar.classList.remove('active');
+            });
+        }
+
+        // DARK MODE TOGGLE LOGIC
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const htmlElement = document.documentElement;
+
+        // Check local storage or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+        // Apply initial theme icon
+        if (initialTheme === 'dark') {
+            themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+            themeIcon.classList.add('text-warning');
+        }
+
+        // Toggle on click
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                
+                if (newTheme === 'dark') {
+                    themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                    themeIcon.classList.add('text-warning');
+                } else {
+                    themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                    themeIcon.classList.remove('text-warning');
+                }
             });
         }
     });

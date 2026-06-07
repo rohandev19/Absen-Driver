@@ -40,37 +40,22 @@ class TransportCostLoadTest extends TestCase
         // Create project
         $this->project = Project::create([
             'name' => 'Test Project Load',
-            'description' => 'Project for load testing',
+            'code' => 'TPL',
         ]);
 
         // Create 70 drivers with vehicles and attendance
         for ($i = 1; $i <= 70; $i++) {
-            // Create user
-            $user = User::create([
-                'name' => "Driver Test $i",
-                'email' => "driver$i@test.com",
-                'password' => bcrypt('password'),
-                'role' => 'driver',
-            ]);
-
-            // Create driver
-            $driver = Driver::create([
-                'user_id' => $user->id,
+            // Create driver using factory
+            $driver = Driver::factory()->create([
+                'driver_id_nik' => "DRV-" . str_pad($i, 6, '0', STR_PAD_LEFT),
                 'full_name' => "Driver Test $i",
-                'phone' => "08123456" . str_pad($i, 4, '0', STR_PAD_LEFT),
-                'address' => "Address $i",
-                'license_number' => "SIM-" . str_pad($i, 6, '0', STR_PAD_LEFT),
-                'license_expiry' => now()->addYears(2),
                 'project_id' => $this->project->id,
             ]);
 
             // Create vehicle
             $vehicle = Vehicle::create([
                 'plate_number' => "B " . (1000 + $i) . " XYZ",
-                'brand' => 'Toyota',
-                'model' => 'Avanza',
-                'year' => 2020,
-                'color' => 'Silver',
+                'type' => 'Truck',
                 'project_id' => $this->project->id,
             ]);
 
@@ -78,21 +63,18 @@ class TransportCostLoadTest extends TestCase
             $attendance = Attendance::create([
                 'driver_id' => $driver->id,
                 'vehicle_id' => $vehicle->id,
-                'project_id' => $this->project->id,
-                'tanggal_absen' => now()->format('Y-m-d'),
-                'waktu_masuk' => now()->subHours(10),
-                'lokasi_masuk' => 'Test Location',
-                'foto_masuk' => 'test.jpg',
+                'time_in' => now()->startOfDay()->addHours(8),
+                'gps_location_in' => '-6.200000, 106.816666',
+                'selfie_photo_path' => 'photos/test_selfie.jpg',
+                'speedo_photo_awal_path' => 'photos/test_speedo.jpg',
                 'speedo_awal' => 10000 + ($i * 100),
-                'waktu_keluar' => now()->subHours(2),
-                'lokasi_keluar' => 'Test Location',
-                'foto_keluar' => 'test.jpg',
+                'time_out' => now()->startOfDay()->addHours(16),
+                'speedo_photo_akhir_path' => 'photos/test_speedo_akhir.jpg',
                 'speedo_akhir' => 10250 + ($i * 100),
-                'status' => 'hadir',
             ]);
 
             $this->drivers[] = [
-                'user' => $user,
+                'user' => $driver, // Set 'user' to $driver to avoid changing test case lines
                 'driver' => $driver,
                 'vehicle' => $vehicle,
                 'attendance' => $attendance,
@@ -179,7 +161,7 @@ class TransportCostLoadTest extends TestCase
                 'success' => $response->status() === 201,
             ];
 
-            $this->assertEquals(201, $response->status());
+            $this->assertEquals(201, $response->status(), $response->getContent());
         }
 
         $endTime = microtime(true);

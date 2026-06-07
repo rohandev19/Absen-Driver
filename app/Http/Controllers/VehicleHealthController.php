@@ -43,18 +43,18 @@ class VehicleHealthController extends Controller
             $query->where('status', $request->status);
         }
 
-        $vehicles = $query->get();
+        $vehicles = $query->paginate(15);
 
-        $healthReports = $vehicles->map(function ($vehicle) {
+        $healthReports = collect($vehicles->items())->map(function ($vehicle) {
             return $this->healthService->getHealthReport($vehicle);
         });
 
         // Sort by health score (lowest first - most critical)
         $healthReports = $healthReports->sortBy('health_score')->values();
 
-        // Calculate fleet statistics
+        // Calculate fleet statistics for current page
         $fleetStats = [
-            'total_vehicles' => $vehicles->count(),
+            'total_vehicles_on_page' => $healthReports->count(),
             'average_health_score' => round($healthReports->avg('health_score'), 2),
             'by_status' => [
                 'excellent' => $healthReports->filter(fn($r) => $r['health_score'] >= 90)->count(),
@@ -72,6 +72,12 @@ class VehicleHealthController extends Controller
             'data' => [
                 'fleet_stats' => $fleetStats,
                 'vehicles' => $healthReports,
+                'pagination' => [
+                    'current_page' => $vehicles->currentPage(),
+                    'last_page' => $vehicles->lastPage(),
+                    'per_page' => $vehicles->perPage(),
+                    'total' => $vehicles->total(),
+                ],
             ],
         ]);
     }

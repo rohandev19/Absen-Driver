@@ -247,6 +247,9 @@
                 <a href="{{ route('admin.absensi.export_rekap', request()->all()) }}" class="btn-corp btn-corp-outline">
                     <i class="bi bi-grid-3x3"></i> Export Rekap
                 </a>
+                <a href="javascript:history.back()" class="btn-corp btn-corp-outline">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
             </div>
         </div>
 
@@ -359,6 +362,12 @@
                                                 <div class="small text-muted d-flex align-items-center gap-2">
                                                     <span
                                                         class="badge bg-light text-dark border">{{ $item['plate_number'] }}</span>
+                                                    @if(($item['vehicle_entry_method'] ?? 'qr') === 'manual')
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">Manual</span>
+                                                    @endif
+                                                    @if(($item['vehicle_verification_status'] ?? 'verified') === 'pending')
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Pending Unit</span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -395,6 +404,12 @@
                                                 title="Selfie">
                                                 <i class="bi bi-person-bounding-box"></i>
                                             </a>
+                                            @if(($item['vehicle_entry_method'] ?? 'qr') === 'manual')
+                                                <a href="{{ $item['link_manual_vehicle_photo'] }}" target="_blank" class="btn-icon-corp"
+                                                    title="Foto Plat/Unit Manual">
+                                                    <i class="bi bi-truck-front"></i>
+                                                </a>
+                                            @endif
                                         </div>
                                     </td>
 

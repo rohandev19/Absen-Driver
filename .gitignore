@@ -17,6 +17,7 @@
 /public/hot
 /public/storage
 /storage/*.key
+storage/app/qrcodes
 /storage/pail
 /vendor
 Homestead.json

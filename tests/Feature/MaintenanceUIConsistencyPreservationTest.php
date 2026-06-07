@@ -54,16 +54,16 @@ class MaintenanceUIConsistencyPreservationTest extends TestCase
         Gate::define('is-master-admin', fn() => true);
 
         // Create test data
-        $this->admin = User::factory()->create();
+        $this->admin = User::factory()->create([
+            'role' => 'master',
+        ]);
         
-        $this->project1 = Project::create([
+        $this->project1 = Project::factory()->create([
             'name' => 'Project Alpha',
-            'description' => 'Test Project Alpha',
         ]);
 
-        $this->project2 = Project::create([
+        $this->project2 = Project::factory()->create([
             'name' => 'Project Beta',
-            'description' => 'Test Project Beta',
         ]);
 
         $this->vehicle1 = Vehicle::create([
@@ -465,7 +465,7 @@ class MaintenanceUIConsistencyPreservationTest extends TestCase
         $this->assertArrayHasKey('color', $healthStatus);
         
         // Verify status label is valid
-        $validLabels = ['Excellent', 'Good', 'Fair', 'Poor', 'Critical'];
+        $validLabels = ['Sangat Baik', 'Baik', 'Cukup', 'Buruk', 'Kritis'];
         $this->assertContains($healthStatus['label'], $validLabels);
         
         // Test that the same vehicle produces the same score

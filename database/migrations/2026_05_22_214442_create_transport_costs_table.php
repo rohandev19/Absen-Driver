@@ -61,7 +61,7 @@ return new class extends Migration
             $table->text('rejection_reason')->nullable();
             
             // Audit Trail
-            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
             

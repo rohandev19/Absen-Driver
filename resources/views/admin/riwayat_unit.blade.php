@@ -14,40 +14,43 @@
         body { font-size: var(--font-size-base); }
 
         /* === 1. METRIC CARDS === */
-        .card-metric {
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: var(--border-radius-comfort);
-            padding: 20px 24px;
-            transition: all var(--transition-smooth);
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
             height: 100%;
-            border-left: 5px solid transparent; 
         }
-        .card-metric:hover {
-            border-color: #b0b0b0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px);
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            border-color: #cbd5e1;
         }
-        .metric-label {
-            font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.8px; color: #6c757d; margin-bottom: 5px;
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
         }
-        .metric-value {
-            font-size: 2rem; font-weight: 700; color: #212529; line-height: 1.2;
-        }
-        .metric-desc {
-            font-size: 0.85rem; color: #888; margin-top: 4px;
-        }
-        .card-icon-bg {
-            position: absolute; top: 15px; right: 15px;
-            font-size: 2.5rem; opacity: 0.1;
-        }
-
-        .border-left-primary { border-left-color: #0d6efd; }
-        .border-left-success { border-left-color: #198754; }
-        .border-left-warning { border-left-color: #ffc107; }
+        .stat-card-primary .stat-icon { background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: white; }
+        .stat-card-success .stat-icon { background: linear-gradient(135deg, #198754 0%, #157347 100%); color: white; }
+        .stat-card-warning .stat-icon { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: white; }
+        
+        .stat-content { flex: 1; }
+        .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 0.25rem; color: #2c3e50; }
+        .stat-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6c757d; margin-bottom: 5px; }
+        .stat-desc { font-size: 0.85rem; color: #888; margin-top: 4px; }
 
         /* === 2. FILTER SECTION === */
         .filter-container {
@@ -132,6 +135,15 @@
 
     <div class="container-fluid p-0">
 
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <div></div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a href="javascript:history.back()" class="btn-corp btn-corp-outline" style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; text-decoration: none; border: 1px solid #cbd5e1; color: #475569; background-color: white;">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            </div>
+        </div>
+
         @if (session('error'))
             <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center mb-4">
                 <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
@@ -142,31 +154,37 @@
         {{-- === BAGIAN 1: STATISTIK CARDS === --}}
         <div class="row mb-4 g-3">
             <div class="col-md-4">
-                <div class="card-metric border-left-primary">
-                    <div class="metric-label">Unit Terajin</div>
-                    <div class="metric-value">{{ $topUnitPlate }}</div>
-                    <div class="metric-desc text-primary fw-bold">
-                        <i class="bi bi-speedometer2 me-1"></i> Total {{ number_format($topUnitKm) }} Km
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-icon"><i class="bi bi-trophy-fill"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ $topUnitPlate ?? '-' }}</div>
+                        <div class="stat-label">Unit Terajin</div>
+                        <div class="stat-desc text-primary fw-bold">
+                            <i class="bi bi-speedometer2 me-1"></i> Total {{ number_format($topUnitKm) }} Km
+                        </div>
                     </div>
-                    <i class="bi bi-trophy-fill card-icon-bg text-primary"></i>
                 </div>
             </div>
 
             <div class="col-md-4">
-                <div class="card-metric border-left-success">
-                    <div class="metric-label">Total Jelajah</div>
-                    <div class="metric-value">{{ number_format($totalJarakPeriode) }} <small class="fs-6 text-muted">Km</small></div>
-                    <div class="metric-desc">Akumulasi sesuai filter</div>
-                    <i class="bi bi-globe-asia-australia card-icon-bg text-success"></i>
+                <div class="stat-card stat-card-success">
+                    <div class="stat-icon"><i class="bi bi-globe-asia-australia"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ number_format($totalJarakPeriode) }} <small class="fs-6 text-muted">Km</small></div>
+                        <div class="stat-label">Total Jelajah</div>
+                        <div class="stat-desc">Akumulasi sesuai filter</div>
+                    </div>
                 </div>
             </div>
 
             <div class="col-md-4">
-                <div class="card-metric border-left-warning">
-                    <div class="metric-label">Total Penugasan</div>
-                    <div class="metric-value">{{ number_format($totalTrip) }} <small class="fs-6 text-muted">Trip</small></div>
-                    <div class="metric-desc">Form checklist masuk</div>
-                    <i class="bi bi-clipboard-check-fill card-icon-bg text-warning"></i>
+                <div class="stat-card stat-card-warning">
+                    <div class="stat-icon"><i class="bi bi-clipboard-check-fill"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ number_format($totalTrip) }} <small class="fs-6 text-muted">Trip</small></div>
+                        <div class="stat-label">Total Penugasan</div>
+                        <div class="stat-desc">Form checklist masuk</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -245,7 +263,7 @@
             </div>
 
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive table-responsive-cards">
                     <table class="table-corporate">
                         <thead>
                             <tr>
@@ -259,7 +277,7 @@
                         </thead>
                         <tbody>
                             @forelse ($checklistPaginator as $item)
-                                <tr>
+                                <tr class="aset-row">
                                     {{-- 1. Waktu --}}
                                     <td class="ps-4" data-label="Waktu">
                                         <div class="d-flex flex-column">

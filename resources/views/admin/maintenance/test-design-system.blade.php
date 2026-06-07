@@ -14,38 +14,54 @@
     </div>
 
     <!-- Test Card Metric Components -->
-    <h4 class="mt-4 mb-3">Card Metric Components</h4>
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card-metric border-left-danger">
-                <div class="metric-label">DANGER STATUS</div>
-                <div class="metric-value">25</div>
-                <div class="metric-desc">Critical items</div>
-                <i class="bi bi-exclamation-triangle card-icon"></i>
+    {{-- BAGIAN 1: METRIC CARDS --}}
+    <div class="row mb-4 g-3">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card card-metric stat-card-danger border-left-danger animate-fade-in" style="animation-delay: 0.1s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-exclamation-octagon-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">12</div>
+                    <div class="stat-label metric-label">Perlu Perhatian</div>
+                    <div class="stat-desc metric-desc">Unit Rusak / Telat Servis</div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card-metric border-left-warning">
-                <div class="metric-label">WARNING STATUS</div>
-                <div class="metric-value">42</div>
-                <div class="metric-desc">Needs attention</div>
-                <i class="bi bi-exclamation-circle card-icon"></i>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card card-metric stat-card-warning border-left-warning animate-fade-in" style="animation-delay: 0.2s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-cone-striped"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">5</div>
+                    <div class="stat-label metric-label">Segera Servis</div>
+                    <div class="stat-desc metric-desc">Sisa KM &lt; 1.000</div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card-metric border-left-success">
-                <div class="metric-label">SUCCESS STATUS</div>
-                <div class="metric-value">158</div>
-                <div class="metric-desc">All good</div>
-                <i class="bi bi-check-circle card-icon"></i>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card card-metric stat-card-success border-left-success animate-fade-in" style="animation-delay: 0.3s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">45</div>
+                    <div class="stat-label metric-label">Kondisi Prima</div>
+                    <div class="stat-desc metric-desc">Siap Operasi</div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card-metric border-left-primary">
-                <div class="metric-label">PRIMARY STATUS</div>
-                <div class="metric-value">200</div>
-                <div class="metric-desc">Total items</div>
-                <i class="bi bi-info-circle card-icon"></i>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card card-metric stat-card-primary border-left-primary animate-fade-in" style="animation-delay: 0.4s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">62</div>
+                    <div class="stat-label metric-label">Total Armada</div>
+                    <div class="stat-desc metric-desc">Unit Terdaftar</div>
+                </div>
             </div>
         </div>
     </div>

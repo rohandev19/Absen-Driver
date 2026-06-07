@@ -27,7 +27,9 @@ class MaintenanceLogicTest extends TestCase
         Gate::define('is-master-admin', fn() => true);
 
         // 2. Buat User Admin palsu
-        $this->admin = User::factory()->create();
+        $this->admin = User::factory()->create([
+            'role' => 'master',
+        ]);
 
         // 3. Buat Kendaraan Dummy
         $this->vehicle = Vehicle::create([

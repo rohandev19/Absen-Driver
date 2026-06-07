@@ -51,7 +51,7 @@
                                 <thead class="bg-light">
                                     <tr>
                                         <th class="ps-4">Nama Project</th>
-                                        <th>Kode</th>
+                                        <th class="d-none d-md-table-cell">Kode</th>
                                         <th>Customer</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
@@ -60,7 +60,7 @@
                                     @foreach($projects as $project)
                                         <tr>
                                             <td class="ps-4 fw-bold">{{ $project->name }}</td>
-                                            <td><span class="badge bg-secondary">{{ $project->code ?? '-' }}</span></td>
+                                            <td class="d-none d-md-table-cell"><span class="badge bg-secondary">{{ $project->code ?? '-' }}</span></td>
                                             <td>
                                                 @if($project->customer)
                                                     <span class="badge bg-success">{{ $project->customer->name }}</span>
@@ -69,30 +69,31 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                {{-- Tombol Edit --}}
-                                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" 
-                                                    data-bs-target="#editModal{{ $project->id }}" title="Edit Project">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-
-                                                {{-- LOGIKA PROTEKSI TOMBOL HAPUS --}}
-                                                @can('is-master-admin')
-                                                    {{-- Jika Master Admin: Tampilkan Tombol Hapus Merah --}}
-                                                    <form action="{{ route('admin.project.destroy', $project->id) }}" method="POST"
-                                                        class="d-inline" onsubmit="return confirm('Yakin hapus project ini?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button class="btn btn-danger btn-sm" title="Hapus Project">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @else
-                                                    {{-- Jika Admin Biasa: Tampilkan Gembok (Disabled) --}}
-                                                    <button class="btn btn-secondary btn-sm" disabled title="Hanya Master Admin">
-                                                        <i class="bi bi-lock-fill"></i>
+                                                <div class="d-inline-flex flex-nowrap gap-1">
+                                                    {{-- Tombol Edit --}}
+                                                    <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" 
+                                                        data-bs-target="#editModal{{ $project->id }}" data-bs-toggle="tooltip" title="Edit Project">
+                                                        <i class="bi bi-pencil-fill"></i>
                                                     </button>
-                                                @endcan
 
+                                                    {{-- LOGIKA PROTEKSI TOMBOL HAPUS --}}
+                                                    @can('is-master-admin')
+                                                        {{-- Jika Master Admin: Tampilkan Tombol Hapus Merah --}}
+                                                        <form action="{{ route('admin.project.destroy', $project->id) }}" method="POST"
+                                                            class="d-inline" onsubmit="return confirm('Yakin hapus project ini?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" title="Hapus Project">
+                                                                <i class="bi bi-trash-fill"></i>
+                                                            </button>
+                                                        </form>
+                                                    @else
+                                                        {{-- Jika Admin Biasa: Tampilkan Gembok (Disabled) --}}
+                                                        <button class="btn btn-outline-secondary btn-sm" disabled data-bs-toggle="tooltip" title="Hanya Master Admin">
+                                                            <i class="bi bi-lock-fill"></i>
+                                                        </button>
+                                                    @endcan
+                                                </div>
                                             </td>
                                         </tr>
 

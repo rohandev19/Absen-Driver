@@ -22,9 +22,8 @@ class OvertimeService
         // Calculate actual delivery hours
         $actualHours = round($start->diffInMinutes($end) / 60, 2);
         
-        // Use default values since bonus configuration was removed
-        $deliveryTarget = 8.00; // Default 8 hours
-        $overtimeRate = 0.00; // Default no overtime rate
+        $deliveryTarget = 8.00;
+        $overtimeRate = 25000.00;
         
         // Calculate overtime
         $overtimeHours = max(0, $actualHours - $deliveryTarget);

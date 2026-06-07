@@ -55,8 +55,8 @@
                                 <th style="width: 5%;">No</th>
                                 <th style="width: 25%;">Nama Lengkap</th>
                                 <th style="width: 25%;">Email</th>
-                                <th style="width: 15%;">Role</th>
-                                <th style="width: 15%;">Tgl Dibuat</th>
+                                <th class="d-none d-md-table-cell" style="width: 15%;">Role</th>
+                                <th class="d-none d-lg-table-cell" style="width: 15%;">Tgl Dibuat</th>
                                 @can('is-master-admin')
                                     <th class="text-center" style="width: 15%;">Aksi</th>
                                 @endcan
@@ -68,39 +68,38 @@
                                     <td>{{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}</td>
                                     <td class="fw-bold">{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         @if($user->role === 'master')
-                                            <span class="badge bg-danger"><i class="bi bi-shield-lock-fill me-1"></i> Master</span>
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger"><i class="bi bi-shield-lock-fill me-1"></i> Master</span>
                                         @else
-                                            <span class="badge bg-info text-dark"><i class="bi bi-person-badge me-1"></i>
-                                                Admin</span>
+                                            <span class="badge bg-info bg-opacity-10 text-dark border border-info"><i class="bi bi-person-badge me-1"></i> Admin</span>
                                         @endif
                                     </td>
-                                    <td class="small text-muted">{{ $user->created_at->format('d M Y') }}</td>
+                                    <td class="d-none d-lg-table-cell small text-muted">{{ $user->created_at->format('d M Y') }}</td>
 
                                     @can('is-master-admin')
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-1">
+                                            <div class="d-inline-flex flex-nowrap gap-1">
                                                 {{-- Tombol Edit --}}
                                                 <a href="{{ route('admin.pengguna.edit', $user->id) }}"
-                                                    class="btn btn-warning btn-sm" title="Edit Pengguna">
+                                                    class="btn btn-outline-warning btn-sm" data-bs-toggle="tooltip" title="Edit Pengguna">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </a>
 
                                                 {{-- Tombol Hapus --}}
                                                 @if($user->id !== Auth::id())
                                                     <form action="{{ route('admin.pengguna.destroy', $user->id) }}" method="POST"
-                                                        class="form-delete-global"
+                                                        class="d-inline form-delete-global"
                                                         data-message="Hapus pengguna <strong>{{ $user->name }}</strong>? Data tidak bisa dikembalikan.">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus Pengguna">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" title="Hapus Pengguna">
                                                             <i class="bi bi-trash-fill"></i>
                                                         </button>
                                                     </form>
                                                 @else
-                                                    <button class="btn btn-secondary btn-sm" disabled
-                                                        title="Tidak bisa menghapus diri sendiri">
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled
+                                                        data-bs-toggle="tooltip" title="Tidak bisa menghapus diri sendiri">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 @endif

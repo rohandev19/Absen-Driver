@@ -8,9 +8,11 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-person-plus-fill me-2"></i> Tambah Admin Baru
-                        </h5>
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-person-plus-fill me-2"></i> Tambah Admin Baru</h5>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm rounded-pill shadow-sm">
+                            <i class="bi bi-arrow-left"></i> Kembali
+                        </a>
                     </div>
                     <form action="{{ route('admin.pengguna.store') }}" method="POST">
                         @csrf

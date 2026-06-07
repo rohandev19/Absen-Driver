@@ -22,7 +22,7 @@
         {{-- Quick Stats Cards --}}
         <div class="row g-3 mb-4">
             <div class="col-md-3 col-sm-6">
-                <div class="stat-card stat-card-danger animate-fade-in" style="animation-delay: 0.1s">
+                <div class="stat-card stat-card-danger stat-card-clickable animate-fade-in" style="animation-delay: 0.1s" id="card-overdue" onclick="toggleStatList('overdue')">
                     <div class="stat-icon">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                     </div>
@@ -30,10 +30,14 @@
                         <div class="stat-value" id="stat-overdue">0</div>
                         <div class="stat-label">Lewat Jatuh Tempo</div>
                     </div>
+                    <div class="stat-chevron">
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
                 </div>
+                <div class="stat-list-panel" id="list-overdue"></div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="stat-card stat-card-warning animate-fade-in" style="animation-delay: 0.2s">
+                <div class="stat-card stat-card-warning stat-card-clickable animate-fade-in" style="animation-delay: 0.2s" id="card-warning" onclick="toggleStatList('warning')">
                     <div class="stat-icon">
                         <i class="bi bi-bell-fill"></i>
                     </div>
@@ -41,7 +45,11 @@
                         <div class="stat-value" id="stat-warning">0</div>
                         <div class="stat-label">Segera (H-30)</div>
                     </div>
+                    <div class="stat-chevron">
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
                 </div>
+                <div class="stat-list-panel" id="list-warning"></div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="stat-card stat-card-primary animate-fade-in" style="animation-delay: 0.3s">
@@ -250,31 +258,160 @@
                 calendar.addEventSource(filteredEvents);
             }
 
+            // Store categorized events globally for card click
+            var overdueEvents = [];
+            var warningEvents = [];
+
             function updateStats(events) {
                 const today = new Date();
+                today.setHours(0, 0, 0, 0);
                 const warningDate = new Date();
                 warningDate.setDate(today.getDate() + 30);
 
                 let overdue = 0, warning = 0, stnk = 0, kir = 0;
+                overdueEvents = [];
+                warningEvents = [];
 
                 events.forEach(event => {
                     const eventDate = new Date(event.start);
+                    eventDate.setHours(0, 0, 0, 0);
                     
                     if (event.id.startsWith('stnk_')) stnk++;
                     if (event.id.startsWith('kir_')) kir++;
                     
                     if (eventDate < today) {
                         overdue++;
+                        overdueEvents.push(event);
                     } else if (eventDate <= warningDate) {
                         warning++;
+                        warningEvents.push(event);
                     }
                 });
+
+                // Sort by date ascending
+                overdueEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
+                warningEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
 
                 animateValue('stat-overdue', overdue);
                 animateValue('stat-warning', warning);
                 animateValue('stat-stnk', stnk);
                 animateValue('stat-kir', kir);
+
+                // Add pulse if overdue > 0
+                const cardOverdue = document.getElementById('card-overdue');
+                if (overdue > 0) {
+                    cardOverdue.classList.add('stat-card-pulse');
+                } else {
+                    cardOverdue.classList.remove('stat-card-pulse');
+                }
+
+                // Build list panels
+                buildListPanel('list-overdue', overdueEvents, 'danger');
+                buildListPanel('list-warning', warningEvents, 'warning');
             }
+
+            function buildListPanel(panelId, events, type) {
+                const panel = document.getElementById(panelId);
+                if (events.length === 0) {
+                    panel.innerHTML = `<div class="stat-list-empty"><i class="bi bi-check-circle text-success me-2"></i>Tidak ada item</div>`;
+                    return;
+                }
+
+                let html = '<ul class="stat-list-items">';
+                events.forEach(event => {
+                    const eventDate = new Date(event.start);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const diffDays = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+                    const diffText = diffDays < 0 
+                        ? `<span class="text-danger fw-bold">${Math.abs(diffDays)} hari lalu</span>` 
+                        : `<span class="text-warning fw-bold">${diffDays} hari lagi</span>`;
+                    const icon = event.id.startsWith('stnk_') ? 'bi-file-earmark-text' : 'bi-truck';
+                    const badgeColor = event.id.startsWith('stnk_') ? 'primary' : 'success';
+                    const dateStr = eventDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                    html += `
+                        <li class="stat-list-item" onclick="navigateToEvent('${event.start}', '${event.id}')">
+                            <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                <i class="bi ${icon} text-${badgeColor}"></i>
+                                <div class="flex-grow-1">
+                                    <div class="stat-list-title">${event.title}</div>
+                                    <div class="stat-list-meta">
+                                        <i class="bi bi-calendar3 me-1"></i>${dateStr} &middot; ${diffText}
+                                    </div>
+                                </div>
+                            </div>
+                            <i class="bi bi-arrow-right-circle text-muted"></i>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                panel.innerHTML = html;
+            }
+
+            // Toggle list panel visibility
+            window.toggleStatList = function(type) {
+                const panel = document.getElementById('list-' + type);
+                const card = document.getElementById('card-' + type);
+                const allPanels = document.querySelectorAll('.stat-list-panel');
+                const allCards = document.querySelectorAll('.stat-card-clickable');
+
+                // Close other panels
+                allPanels.forEach(p => {
+                    if (p.id !== 'list-' + type) {
+                        p.classList.remove('show');
+                    }
+                });
+                allCards.forEach(c => {
+                    if (c.id !== 'card-' + type) {
+                        c.classList.remove('active');
+                    }
+                });
+
+                // Toggle current
+                panel.classList.toggle('show');
+                card.classList.toggle('active');
+            };
+
+            // Navigate calendar to event date
+            window.navigateToEvent = function(dateStr, eventId) {
+                const eventDate = new Date(dateStr);
+                calendar.gotoDate(eventDate);
+
+                // Close the list panel
+                document.querySelectorAll('.stat-list-panel').forEach(p => p.classList.remove('show'));
+                document.querySelectorAll('.stat-card-clickable').forEach(c => c.classList.remove('active'));
+
+                // Scroll to calendar
+                document.getElementById('calendar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Highlight the event after a short delay (wait for calendar render)
+                setTimeout(() => {
+                    const allFcEvents = document.querySelectorAll('.fc-event');
+                    allFcEvents.forEach(el => el.classList.remove('fc-event-highlight'));
+
+                    // Find and highlight the matching event
+                    const calEvents = calendar.getEvents();
+                    calEvents.forEach(ev => {
+                        if (ev.id === eventId) {
+                            const evEls = ev.el ? [ev.el] : [];
+                            // Fallback: search DOM
+                            if (evEls.length === 0) {
+                                document.querySelectorAll('.fc-event').forEach(el => {
+                                    if (el.textContent.includes(ev.title)) {
+                                        evEls.push(el);
+                                    }
+                                });
+                            }
+                            evEls.forEach(el => {
+                                el.classList.add('fc-event-highlight');
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                setTimeout(() => el.classList.remove('fc-event-highlight'), 3000);
+                            });
+                        }
+                    });
+                }, 500);
+            };
 
             function animateValue(id, value) {
                 const element = document.getElementById(id);
@@ -370,7 +507,6 @@
             animation: fadeIn 0.5s ease-out forwards;
         }
 
-        /* === STAT CARDS === */
         .stat-card {
             background: white;
             border-radius: 12px;
@@ -378,37 +514,73 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            border: 1px solid #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 1px solid #f8f9fa;
             position: relative;
             overflow: hidden;
         }
 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-
         .stat-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            border-color: #e9ecef;
         }
 
-        .stat-card:hover::before {
-            width: 100%;
-            opacity: 0.05;
+        .stat-card-danger:hover .stat-icon { box-shadow: 0 8px 24px rgba(220, 53, 69, 0.3); transform: scale(1.05); }
+        .stat-card-warning:hover .stat-icon { box-shadow: 0 8px 24px rgba(255, 193, 7, 0.3); transform: scale(1.05); }
+        .stat-card-primary:hover .stat-icon { box-shadow: 0 8px 24px rgba(13, 110, 253, 0.3); transform: scale(1.05); }
+        .stat-card-success:hover .stat-icon { box-shadow: 0 8px 24px rgba(25, 135, 84, 0.3); transform: scale(1.05); }
+
+        .stat-card-clickable {
+            cursor: pointer;
+            user-select: none;
         }
 
-        .stat-card-danger::before { background: #dc3545; }
-        .stat-card-warning::before { background: #ffc107; }
-        .stat-card-primary::before { background: #0d6efd; }
-        .stat-card-success::before { background: #198754; }
+        .stat-card-clickable:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .stat-card-clickable.active {
+            border-color: currentColor;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card-clickable.active .stat-chevron i {
+            transform: rotate(180deg);
+        }
+
+        .stat-chevron {
+            display: flex;
+            align-items: center;
+            color: #adb5bd;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .stat-chevron i {
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card-clickable:hover .stat-chevron {
+            color: #495057;
+        }
+
+        /* Pulse animation for danger card */
+        @keyframes dangerPulse {
+            0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+            50% { box-shadow: 0 4px 20px rgba(220, 53, 69, 0.3); }
+        }
+
+        .stat-card-pulse {
+            animation: dangerPulse 2s ease-in-out infinite;
+        }
+
+        .stat-card-pulse:hover {
+            animation: none;
+        }
+
+
 
         .stat-icon {
             width: 60px;
@@ -457,6 +629,100 @@
             font-size: 0.875rem;
             color: #6c757d;
             font-weight: 500;
+        }
+
+        /* === STAT LIST PANEL (dropdown) === */
+        .stat-list-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease, margin 0.3s ease;
+            opacity: 0;
+            margin-top: 0;
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #f0f0f0;
+            border-top: none;
+        }
+
+        .stat-list-panel.show {
+            max-height: 400px;
+            opacity: 1;
+            margin-top: -4px;
+            overflow-y: auto;
+        }
+
+        .stat-list-panel::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .stat-list-panel::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+
+        .stat-list-items {
+            list-style: none;
+            margin: 0;
+            padding: 0.5rem 0;
+        }
+
+        .stat-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .stat-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-list-item:hover {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+            padding-left: 1.25rem;
+        }
+
+        .stat-list-item:hover .bi-arrow-right-circle {
+            color: #0d6efd !important;
+            transform: translateX(3px);
+        }
+
+        .stat-list-item .bi-arrow-right-circle {
+            transition: all 0.2s ease;
+        }
+
+        .stat-list-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #2c3e50;
+        }
+
+        .stat-list-meta {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        .stat-list-empty {
+            padding: 1rem;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        /* Calendar event highlight */
+        @keyframes eventGlow {
+            0%, 100% { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); }
+            50% { box-shadow: 0 0 20px rgba(13, 110, 253, 0.6); transform: scale(1.05); }
+        }
+
+        .fc-event-highlight {
+            animation: eventGlow 0.8s ease-in-out 3 !important;
+            z-index: 100 !important;
         }
 
         /* === FILTER BUTTONS === */
@@ -701,6 +967,74 @@
             .fc-toolbar-title {
                 font-size: 1.2rem !important;
             }
+        }
+
+        /* --- DARK MODE OVERRIDES --- */
+        [data-bs-theme="dark"] .modern-calendar {
+            background-color: transparent !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        [data-bs-theme="dark"] .fc-header-toolbar {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-bs-theme="dark"] .fc-toolbar-title {
+            color: #f8fafc !important;
+            text-shadow: none !important;
+        }
+
+        [data-bs-theme="dark"] .fc-col-header-cell {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #94a3b8 !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-bs-theme="dark"] .fc-button-primary {
+            background: transparent !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: none !important;
+        }
+        
+        [data-bs-theme="dark"] .fc-button-primary:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+        }
+        
+        [data-bs-theme="dark"] .fc-button-active {
+            background: #0d6efd !important;
+            color: white !important;
+            border-color: #0d6efd !important;
+        }
+
+        [data-bs-theme="dark"] .fc-day-today {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        
+        [data-bs-theme="dark"] .fc-day-today::before {
+            border-top-color: #0d6efd !important;
+            background: transparent !important;
+        }
+
+        [data-bs-theme="dark"] .fc-popover-header {
+            background: var(--topbar-bg) !important;
+            color: #f8fafc !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+        }
+        
+        [data-bs-theme="dark"] .fc-popover-body {
+            background: var(--body-bg) !important;
+            color: #f8fafc !important;
+        }
+        
+        [data-bs-theme="dark"] .stat-list-item:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+        
+        [data-bs-theme="dark"] .stat-list-title {
+            color: #f8fafc !important;
         }
     </style>
 @endpush

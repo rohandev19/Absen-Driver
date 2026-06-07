@@ -25,7 +25,8 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \App\Models\Driver::observe(\App\Observers\DriverObserver::class);
+        \App\Models\Vehicle::observe(\App\Observers\VehicleObserver::class);
     }
 
     /**

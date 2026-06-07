@@ -16,11 +16,11 @@
         <div class="d-flex gap-2 flex-wrap">
             <form action="{{ route('admin.maintenance.alerts.generate') }}" method="POST" class="d-inline">
                 @csrf
-                <button type="submit" class="btn btn-sm btn-primary">
+                <button type="submit" class="btn-primary-corp">
                     <i class="bi bi-arrow-repeat me-1"></i> Perbarui Alert
                 </button>
             </form>
-            <a href="{{ route('admin.maintenance.export.alerts', request()->all()) }}" class="btn btn-sm btn-success">
+            <a href="{{ route('admin.maintenance.export.alerts', request()->all()) }}" class="btn-primary-corp">
                 <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
             </a>
             <span class="badge bg-light text-dark border px-3 py-2">
@@ -32,35 +32,51 @@
     {{-- Summary Cards --}}
     <div class="row mb-4 g-3">
         <div class="col-md-3">
-            <div class="card-metric border-left-danger">
-                <div class="metric-label">🔴 OVERDUE</div>
-                <div class="metric-value">{{ $summary['by_type']['overdue'] }}</div>
-                <div class="metric-desc">Sudah lewat batas</div>
-                <i class="bi bi-exclamation-octagon-fill card-icon"></i>
+            <div class="stat-card card-metric stat-card-danger border-left-danger animate-fade-in" style="animation-delay: 0.1s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-exclamation-octagon-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">{{ $summary['by_type']['overdue'] }}</div>
+                    <div class="stat-label metric-label">🔴 OVERDUE</div>
+                    <div class="stat-desc metric-desc">Sudah lewat batas</div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card-metric border-left-warning">
-                <div class="metric-label">🟠 CRITICAL</div>
-                <div class="metric-value">{{ $summary['by_type']['critical'] }}</div>
-                <div class="metric-desc">Perlu segera</div>
-                <i class="bi bi-exclamation-triangle-fill card-icon"></i>
+            <div class="stat-card card-metric stat-card-warning border-left-warning animate-fade-in" style="animation-delay: 0.2s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">{{ $summary['by_type']['critical'] }}</div>
+                    <div class="stat-label metric-label">🟠 CRITICAL</div>
+                    <div class="stat-desc metric-desc">Perlu segera</div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card-metric border-left-info">
-                <div class="metric-label">🟡 WARNING</div>
-                <div class="metric-value">{{ $summary['by_type']['warning'] }}</div>
-                <div class="metric-desc">Perlu perhatian</div>
-                <i class="bi bi-info-circle-fill card-icon"></i>
+            <div class="stat-card card-metric stat-card-info border-left-info animate-fade-in" style="animation-delay: 0.3s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-info-circle-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">{{ $summary['by_type']['warning'] }}</div>
+                    <div class="stat-label metric-label">🟡 WARNING</div>
+                    <div class="stat-desc metric-desc">Perlu perhatian</div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card-metric border-left-primary">
-                <div class="metric-label">TOTAL ALERTS</div>
-                <div class="metric-value">{{ $summary['total'] }}</div>
-                <div class="metric-desc">Alert aktif</div>
-                <i class="bi bi-bell-fill card-icon"></i>
+            <div class="stat-card card-metric stat-card-primary border-left-primary animate-fade-in" style="animation-delay: 0.4s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-bell-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">{{ $summary['total'] }}</div>
+                    <div class="stat-label metric-label">TOTAL ALERTS</div>
+                    <div class="stat-desc metric-desc">Alert aktif</div>
+                </div>
             </div>
         </div>
     </div>
@@ -90,7 +106,7 @@
                 </div>
                 <div class="col-md-6 d-flex align-items-end">
                     @if(request()->hasAny(['status', 'alert_type']))
-                        <a href="{{ route('admin.maintenance.alerts') }}" class="btn btn-sm btn-outline-secondary">
+                        <a href="{{ route('admin.maintenance.alerts') }}" class="btn-action-corp">
                             <i class="bi bi-x-lg me-1"></i> Reset Filter
                         </a>
                     @endif
@@ -103,7 +119,7 @@
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
             @if($alerts->count() > 0)
-                <div class="table-responsive">
+                <div class="table-responsive table-responsive-cards">
                     <table class="table-corporate">
                         <thead>
                             <tr>
@@ -117,7 +133,7 @@
                         </thead>
                         <tbody>
                             @foreach($alerts as $alert)
-                                <tr>
+                                <tr class="aset-row">
                                     <td data-label="Vehicle">
                                         <span class="badge-corp badge-corp-primary">
                                             <i class="bi bi-truck"></i> {{ $alert->vehicle->plate_number }}

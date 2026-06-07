@@ -52,6 +52,9 @@ trait FormatAttendance
 
             'driver_name' => $item->driver->full_name ?? 'N/A',
             'plate_number' => $item->vehicle->plate_number ?? 'N/A',
+            'vehicle_entry_method' => $item->vehicle_entry_method ?? 'qr',
+            'vehicle_verification_status' => $item->vehicle_verification_status ?? 'verified',
+            'manual_vehicle_reason' => $item->manual_vehicle_reason,
 
             // Casting ke integer agar aman saat kalkulasi
             'speedo_awal' => (int) ($item->speedo_awal ?? 0),
@@ -63,6 +66,7 @@ trait FormatAttendance
             'link_selfie' => $item->selfie_photo_path ? Storage::url($item->selfie_photo_path) : '#',
             'link_speedo_awal' => $item->speedo_photo_awal_path ? Storage::url($item->speedo_photo_awal_path) : '#',
             'link_speedo_akhir' => $item->speedo_photo_akhir_path ? Storage::url($item->speedo_photo_akhir_path) : '#',
+            'link_manual_vehicle_photo' => $item->manual_vehicle_photo_path ? Storage::url($item->manual_vehicle_photo_path) : '#',
         ];
     }
 }

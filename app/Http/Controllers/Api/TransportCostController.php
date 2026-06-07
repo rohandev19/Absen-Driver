@@ -51,6 +51,9 @@ class TransportCostController extends Controller
             'gasoline_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
             'toll_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
             'parking_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'gasoline_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'toll_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'parking_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ], [
             'do_number.required' => 'Nomor DO wajib diisi',
             'drop_point_count.min' => 'Jumlah drop point minimal 1',
@@ -64,21 +67,29 @@ class TransportCostController extends Controller
             'toll_receipt.max' => 'Bukti tol maksimal 5MB',
             'parking_receipt.image' => 'Bukti parkir harus berupa gambar',
             'parking_receipt.max' => 'Bukti parkir maksimal 5MB',
+            'gasoline_receipt_path.image' => 'Bukti bensin harus berupa gambar',
+            'gasoline_receipt_path.max' => 'Bukti bensin maksimal 5MB',
+            'toll_receipt_path.image' => 'Bukti tol harus berupa gambar',
+            'toll_receipt_path.max' => 'Bukti tol maksimal 5MB',
+            'parking_receipt_path.image' => 'Bukti parkir harus berupa gambar',
+            'parking_receipt_path.max' => 'Bukti parkir maksimal 5MB',
         ]);
 
         try {
             $driver = Auth::user();
             
-            // Process images
             $data = $validated;
-            if ($request->hasFile('gasoline_receipt')) {
-                $data['gasoline_receipt_path'] = $this->optimizedImageProcessing($request->file('gasoline_receipt'));
+
+            unset($data['gasoline_receipt'], $data['toll_receipt'], $data['parking_receipt']);
+
+            if ($gasolineReceipt = $this->receiptFile($request, 'gasoline_receipt', 'gasoline_receipt_path')) {
+                $data['gasoline_receipt_path'] = app(\App\Services\ImageProcessingService::class)->optimize($gasolineReceipt);
             }
-            if ($request->hasFile('toll_receipt')) {
-                $data['toll_receipt_path'] = $this->optimizedImageProcessing($request->file('toll_receipt'));
+            if ($tollReceipt = $this->receiptFile($request, 'toll_receipt', 'toll_receipt_path')) {
+                $data['toll_receipt_path'] = app(\App\Services\ImageProcessingService::class)->optimize($tollReceipt);
             }
-            if ($request->hasFile('parking_receipt')) {
-                $data['parking_receipt_path'] = $this->optimizedImageProcessing($request->file('parking_receipt'));
+            if ($parkingReceipt = $this->receiptFile($request, 'parking_receipt', 'parking_receipt_path')) {
+                $data['parking_receipt_path'] = app(\App\Services\ImageProcessingService::class)->optimize($parkingReceipt);
             }
 
             $tripEntry = $this->transportCostService->createTripEntry($driver, $data);
@@ -97,7 +108,7 @@ class TransportCostController extends Controller
                     'bonus_driver' => $tripEntry->bonus_driver,
                     'approval_status' => $tripEntry->approval_status,
                 ],
-            ], 200);
+            ], 201);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
@@ -110,7 +121,7 @@ class TransportCostController extends Controller
                     'status' => 'error',
                     'error_code' => 'DUPLICATE_TRIP',
                     'message' => 'Anda sudah membuat laporan uang jalan untuk hari ini',
-                ], 409);
+                ], 422);
             }
             throw $e;
         }
@@ -179,5 +190,10 @@ class TransportCostController extends Controller
         }
 
         return $fileName;
+    }
+
+    private function receiptFile(Request $request, string $field, string $legacyField): ?\Illuminate\Http\UploadedFile
+    {
+        return $request->file($field) ?? $request->file($legacyField);
     }
 }

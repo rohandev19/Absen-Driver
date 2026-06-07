@@ -18,6 +18,7 @@ class AuthController extends Controller
             $validated = $request->validate([
                 'driver_id' => 'required|string',
                 'password' => 'required|string',
+                'fcm_token' => 'nullable|string',
             ]);
 
             $driver = Driver::where('driver_id_nik', $validated['driver_id'])->first();
@@ -26,6 +27,12 @@ class AuthController extends Controller
                 throw ValidationException::withMessages([
                     'message' => 'ID Driver atau Password salah.',
                 ]);
+            }
+
+            // Update FCM token jika ada
+            if (!empty($validated['fcm_token'])) {
+                $driver->fcm_token = $validated['fcm_token'];
+                $driver->save();
             }
 
             // SINGLE DEVICE LOGIN: Hapus token lama
@@ -43,6 +50,7 @@ class AuthController extends Controller
                 'data' => [
                     'driver_id' => $driver->driver_id_nik,
                     'full_name' => $driver->full_name,
+                    'profile_photo_url' => $driver->profile_photo ? asset('storage/' . $driver->profile_photo) : null,
                 ],
                 'token' => $token,
                 'sim_alert' => $simStatus
@@ -71,11 +79,10 @@ class AuthController extends Controller
                 'new_password' => [
                     'required',
                     'confirmed',
-                    \Illuminate\Validation\Rules\Password::min(12)
-                        ->mixedCase()      // Require uppercase and lowercase
-                        ->numbers()        // Require at least one number
-                        ->symbols()        // Require at least one symbol
-                        ->uncompromised(), // Check against haveibeenpwned.com
+                    \Illuminate\Validation\Rules\Password::min(8)
+                        ->mixedCase()
+                        ->numbers()
+                        ->symbols(),
                 ],
             ]);
 
@@ -94,7 +101,11 @@ class AuthController extends Controller
             return response()->json(['status' => 'success', 'message' => 'Password berhasil diubah.']);
 
         } catch (ValidationException $e) {
-            return response()->json(['status' => 'error', 'message' => $e->validator->errors()->first()], 422);
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->validator->errors()->first(),
+                'errors' => $e->validator->errors()->toArray()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Gagal mengubah password.'], 500);
         }
@@ -107,6 +118,60 @@ class AuthController extends Controller
             return response()->json(['status' => 'success', 'message' => 'Logout berhasil']);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Gagal logout.'], 500);
+        }
+    }
+
+    public function updateFcmToken(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'fcm_token' => 'required|string',
+            ]);
+
+            $driver = $request->user();
+            $driver->fcm_token = $validated['fcm_token'];
+            $driver->save();
+
+            return response()->json(['status' => 'success', 'message' => 'FCM Token updated']);
+        } catch (\Exception $e) {
+            Log::error("Update FCM Token Error: " . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Gagal update FCM token'], 500);
+        }
+    }
+
+    public function updateProfilePhoto(Request $request)
+    {
+        try {
+            $request->validate([
+                'photo' => 'required|image|mimes:jpeg,png,jpg|max:10240', // Max 10MB as requested (no compression needed)
+            ]);
+
+            $driver = $request->user();
+
+            if ($request->hasFile('photo')) {
+                // Hapus foto lama jika ada
+                if ($driver->profile_photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($driver->profile_photo)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($driver->profile_photo);
+                }
+
+                // Simpan foto baru
+                $path = $request->file('photo')->store('profile_photos', 'public');
+                $driver->profile_photo = $path;
+                $driver->save();
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Foto profil berhasil diubah.',
+                    'profile_photo_url' => asset('storage/' . $path)
+                ]);
+            }
+
+            return response()->json(['status' => 'error', 'message' => 'Tidak ada file foto yang dikirim.'], 400);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => 'error', 'message' => $e->validator->errors()->first()], 422);
+        } catch (\Exception $e) {
+            Log::error("Update Profile Photo Error: " . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengubah foto profil.'], 500);
         }
     }
 

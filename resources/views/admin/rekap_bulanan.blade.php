@@ -129,6 +129,11 @@
     </style>
 
     <div class="container-fluid p-0">
+        {{-- PRINT HEADER --}}
+        <div class="d-none d-print-block text-center mb-4">
+            <h2 class="fw-bold mb-1" style="color: #000; font-size: 24px; text-transform: uppercase;">PT HAMADA LOGISTIK</h2>
+            <p class="mb-0" style="font-size: 14px; color: #000; border-bottom: 2px solid #000; padding-bottom: 10px;">Laporan Rekap Bulanan - Periode: {{ \Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }}</p>
+        </div>
 
         {{-- HEADER --}}
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
@@ -170,6 +175,9 @@
                         <a href="{{ route('admin.rekap_bulanan.export_checklist', ['bulan' => $selectedMonth, 'project_id' => request('project_id')]) }}"
                             class="btn btn-success btn-sm w-100 w-md-auto d-flex align-items-center justify-content-center shadow-sm">
                             <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
+                        </a>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm w-100 w-md-auto d-flex align-items-center justify-content-center d-print-none shadow-sm">
+                            <i class="bi bi-arrow-left me-2"></i> Kembali
                         </a>
                     </div>
                 </div>
@@ -223,7 +231,7 @@
             </div>
 
             {{-- KOLOM KANAN: REKAP UNIT --}}
-            <div class="col-lg-6">
+            <div class="col-lg-6 mt-4 mt-lg-0 mt-print-0">
                 <div class="card shadow-sm border-0 h-100 rounded-3 overflow-hidden">
                     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-truck text-info me-2"></i>Utilisasi Armada</h6>

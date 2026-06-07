@@ -596,6 +596,12 @@
                             <i class="bi bi-shield-lock me-2"></i> Kebijakan Privasi
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('customer.panduan') }}"
+                            class="nav-link {{ request()->routeIs('customer.panduan') ? 'active' : '' }}">
+                            <i class="bi bi-book me-2"></i> Panduan Penggunaan
+                        </a>
+                    </li>
                 </ul>
             </div>
 

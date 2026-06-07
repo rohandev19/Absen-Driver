@@ -18,6 +18,9 @@ class EnsureUserRole
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (!Auth::check() || !in_array(Auth::user()->role, $roles)) {
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Akses ditolak'], 403);
+            }
             abort(403, 'Akses ditolak');
         }
 

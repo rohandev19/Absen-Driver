@@ -1,302 +1,385 @@
 @extends('customer.layouts.app')
 
-@section('title', 'Detail Service Report')
+@section('title', 'Detail Konfirmasi Service Unit')
 
 @section('content')
-<div class="container-fluid">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h2 class="fw-bold mb-0 fs-5 fs-md-4"><i class="bi bi-file-earmark-text"></i> Detail Laporan Service</h2>
-        <div class="d-flex gap-2">
-            <button type="button" onclick="window.print()" class="btn btn-primary btn-sm d-print-none shadow-sm" style="min-height:40px; display:flex; align-items:center;">
-                <i class="bi bi-printer me-1"></i> Cetak Laporan
-            </button>
-            <a href="{{ route('customer.approve.index') }}" class="btn btn-secondary btn-sm" style="min-height:40px; display:flex; align-items:center;">
-                <i class="bi bi-arrow-left me-1"></i> Kembali
-            </a>
+<div class="container-fluid mb-5">
+    {{-- Top Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1 fs-5 text-dark">Detail Konfirmasi Service Unit</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 small">
+                    <li class="breadcrumb-item"><a href="{{ route('customer.approve.index') }}" class="text-decoration-none text-muted">Konfirmasi Service Unit</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Detail Laporan</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <a href="#" class="text-decoration-none text-primary small fw-semibold"><i class="bi bi-question-circle me-1"></i> Bantuan</a>
+            <div class="d-flex align-items-center bg-white border rounded-pill px-3 py-1 shadow-sm">
+                <div class="text-end me-2">
+                    <div class="fw-bold fs-6" style="line-height: 1.2;">{{ Auth::user()->name }}</div>
+                    <div class="text-muted" style="font-size: 0.7rem;">{{ ucfirst(Auth::user()->role) }}</div>
+                </div>
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 35px; height: 35px;">
+                    {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- Status Badge --}}
-    <div class="card mb-3">
-        <div class="card-body text-center py-3">
+    {{-- Action Buttons --}}
+    <div class="d-flex justify-content-between mb-4">
+        <a href="{{ route('customer.approve.index') }}" class="btn btn-white border shadow-sm">
+            <i class="bi bi-arrow-left me-2"></i> Kembali ke Daftar
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('customer.approve.download', $report->id) }}" class="btn btn-white border text-primary shadow-sm fw-semibold">
+                <i class="bi bi-download me-2"></i> Download Draft PDF
+            </a>
+            <button type="button" class="btn btn-primary shadow-sm fw-semibold" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i> Cetak Ringkasan
+            </button>
+        </div>
+    </div>
+
+    {{-- Info Card Bar --}}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <small class="text-muted fw-bold d-block mb-1">No Tiket</small>
+                <div class="fw-bold fs-5 text-dark">{{ $report->ticket_number ?? 'N/A' }}</div>
+            </div>
+            <div>
+                <small class="text-muted fw-bold d-block mb-1">Status Konfirmasi</small>
+                @if($report->status === 'pending_customer')
+                    <span class="badge bg-warning text-dark border border-warning px-3 py-2 bg-opacity-25 rounded-1">Menunggu Konfirmasi</span>
+                @elseif($report->status === 'approved_customer')
+                    <span class="badge bg-success text-success border border-success px-3 py-2 bg-opacity-25 rounded-1">Terkonfirmasi</span>
+                @elseif($report->status === 'revision_requested')
+                    <span class="badge bg-info text-info border border-info px-3 py-2 bg-opacity-25 rounded-1">Minta Klarifikasi</span>
+                @elseif($report->status === 'rejected_customer')
+                    <span class="badge bg-danger text-danger border border-danger px-3 py-2 bg-opacity-25 rounded-1">Ditolak</span>
+                @endif
+            </div>
+            <div>
+                <small class="text-muted fw-bold d-block mb-1">Dikirim oleh PT Hamada</small>
+                <div class="fw-semibold text-dark">{{ $report->timestamp->format('d-m-Y H:i') }}</div>
+            </div>
             @if($report->status === 'pending_customer')
-                <span class="badge bg-warning text-dark fs-6 px-3 py-2">Menunggu Persetujuan Anda</span>
-            @elseif($report->status === 'approved_customer')
-                <span class="badge bg-success fs-6 px-3 py-2">Disetujui pada {{ $report->approved_at_customer->format('d-m-Y H:i') }}</span>
+            <div class="alert alert-warning mb-0 px-4 py-2 border-warning bg-warning bg-opacity-10 d-flex align-items-center">
+                <i class="bi bi-hourglass-split fs-4 text-warning me-3"></i>
+                <div>
+                    <div class="small fw-semibold text-warning">Mohon konfirmasi sebelum</div>
+                    <div class="fw-bold text-dark fs-6">{{ $report->timestamp->addDays(5)->format('d-m-Y 23:59') }}</div>
+                </div>
+            </div>
             @endif
         </div>
     </div>
 
-    <div class="row g-3">
-        {{-- Photo Column — full width on mobile --}}
-        <div class="col-12 col-lg-6">
-            <div class="card mb-3">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0 fs-6"><i class="bi bi-camera"></i> Foto Kondisi Kendaraan</h5>
+    <div class="row g-4">
+        {{-- Left Column --}}
+        <div class="col-12 col-lg-7">
+            {{-- Informasi Unit --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold text-primary mb-0"><i class="bi bi-truck me-2"></i>Informasi Unit</h6>
                 </div>
-                <div class="card-body text-center p-2">
-                    <img src="{{ asset('storage/' . $report->vehicle_condition_photo_path) }}" 
-                         alt="Kondisi Kendaraan" 
-                         class="img-fluid rounded shadow"
-                         style="max-height: 300px; cursor: pointer; width: 100%; object-fit: contain;"
-                         onclick="window.open(this.src, '_blank')">
-                    <p class="text-muted mt-1 small mb-0">Klik untuk memperbesar</p>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <small class="text-muted fw-bold d-block mb-1">Plat Nomor</small>
+                                <span class="badge bg-secondary px-3 py-2 text-dark bg-opacity-10 border border-secondary">{{ $report->vehicle->plate_number ?? '-' }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted fw-bold d-block mb-1">Unit</small>
+                                <div class="text-dark fw-semibold">{{ $report->vehicle->type ?? '-' }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted fw-bold d-block mb-1">Driver</small>
+                                <div class="text-dark fw-semibold">{{ $report->driver->name ?? '-' }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted fw-bold d-block mb-1">Customer / Project</small>
+                                <div class="text-dark fw-semibold">{{ $report->customer->name ?? '-' }}</div>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold d-block mb-1">KM Saat Kendala</small>
+                                <div class="text-dark fw-semibold">{{ number_format($report->odometer, 0, ',', '.') }} KM</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <small class="text-muted fw-bold d-block mb-1">Tanggal Kendala</small>
+                                <div class="text-dark fw-semibold">{{ $report->timestamp->format('d-m-Y H:i') }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted fw-bold d-block mb-1">Tanggal Laporan</small>
+                                <div class="text-dark fw-semibold">{{ $report->timestamp->format('d-m-Y H:i') }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted fw-bold d-block mb-1">Selesai Ditangani</small>
+                                <div class="text-dark fw-semibold">{{ $report->approved_at_admin ? $report->approved_at_admin->format('d-m-Y H:i') : '-' }}</div>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold d-block mb-1">Lokasi Kendala</small>
+                                <div class="text-dark fw-semibold mb-1">{{ $report->gps_location ?? '-' }}</div>
+                                @if($report->gps_location)
+                                    <a href="https://maps.google.com/?q={{ $report->gps_location }}" target="_blank" class="small text-decoration-none text-primary fw-semibold">Lihat di Google Maps <i class="bi bi-box-arrow-up-right ms-1"></i></a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Dokumentasi Kendaraan --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold text-primary mb-0"><i class="bi bi-images me-2"></i>Dokumentasi Kendaraan</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        {{-- Photo 1 --}}
+                        <div class="col-12 col-md-4">
+                            <div class="border rounded bg-light p-2 h-100 d-flex flex-column">
+                                <small class="fw-bold text-dark mb-2 d-block">Sebelum Service / Kendala</small>
+                                <div class="position-relative bg-dark rounded overflow-hidden flex-grow-1" style="min-height: 120px;">
+                                    @if($report->vehicle_condition_photo_path)
+                                        <img src="{{ $report->vehicle_condition_photo_url }}" class="img-fluid w-100 h-100 object-fit-cover" alt="Kondisi Kendaraan" style="cursor: zoom-in;" onclick="viewImage(this.src)">
+                                        <div class="position-absolute bottom-0 end-0 bg-dark bg-opacity-75 text-white small px-2 py-1 m-1 rounded pointer-events-none" style="font-size: 0.7rem;">
+                                            {{ $report->before_service_photo_uploaded_at ? \Carbon\Carbon::parse($report->before_service_photo_uploaded_at)->format('d-m-Y H:i') : '-' }}
+                                        </div>
+                                    @else
+                                        <div class="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
+                                            <i class="bi bi-image fs-1"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="mt-2 text-muted small" style="font-size: 0.75rem; line-height: 1.3;">
+                                    Foto kondisi sebelum perbaikan.
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Photo 2 --}}
+                        <div class="col-12 col-md-4">
+                            <div class="border rounded bg-light p-2 h-100 d-flex flex-column">
+                                <small class="fw-bold text-dark mb-2 d-block">Setelah Service</small>
+                                <div class="position-relative bg-dark rounded overflow-hidden flex-grow-1" style="min-height: 120px;">
+                                    @if($report->after_service_photo_path)
+                                        <img src="{{ asset('storage/' . $report->after_service_photo_path) }}" class="img-fluid w-100 h-100 object-fit-cover" alt="Setelah Service" style="cursor: zoom-in;" onclick="viewImage(this.src)">
+                                        <div class="position-absolute bottom-0 end-0 bg-dark bg-opacity-75 text-white small px-2 py-1 m-1 rounded pointer-events-none" style="font-size: 0.7rem;">
+                                            {{ $report->after_service_photo_taken_at ? \Carbon\Carbon::parse($report->after_service_photo_taken_at)->format('d-m-Y H:i') : '-' }}
+                                        </div>
+                                    @else
+                                        <div class="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
+                                            <i class="bi bi-image fs-1"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="mt-2 text-muted small" style="font-size: 0.75rem; line-height: 1.3;">
+                                    Foto setelah perbaikan selesai.
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Photo 3 --}}
+                        <div class="col-12 col-md-4">
+                            <div class="border rounded bg-light p-2 h-100 d-flex flex-column">
+                                <small class="fw-bold text-dark mb-2 d-block">Odometer / KM</small>
+                                <div class="position-relative bg-dark rounded overflow-hidden flex-grow-1" style="min-height: 120px;">
+                                    @if($report->odometer_photo_path)
+                                        <img src="{{ asset('storage/' . $report->odometer_photo_path) }}" class="img-fluid w-100 h-100 object-fit-cover" alt="Odometer" style="cursor: zoom-in;" onclick="viewImage(this.src)">
+                                        <div class="position-absolute bottom-0 end-0 bg-dark bg-opacity-75 text-white small px-2 py-1 m-1 rounded pointer-events-none" style="font-size: 0.7rem;">
+                                            {{ $report->odometer_photo_taken_at ? \Carbon\Carbon::parse($report->odometer_photo_taken_at)->format('d-m-Y H:i') : '-' }}
+                                        </div>
+                                    @else
+                                        <div class="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
+                                            <i class="bi bi-image fs-1"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="mt-2 text-muted small" style="font-size: 0.75rem; line-height: 1.3;">
+                                    Foto odometer kendaraan.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- Info & Actions Column — full width on mobile --}}
-        <div class="col-12 col-lg-6">
-            {{-- Info Card --}}
-            <div class="card mb-3">
-                <div class="card-header bg-info text-white py-2">
-                    <h5 class="mb-0 fs-6"><i class="bi bi-info-circle"></i> Informasi Laporan</h5>
+        {{-- Right Column --}}
+        <div class="col-12 col-lg-5">
+            {{-- Kronologi Kendala --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold text-primary mb-0"><i class="bi bi-clock-history me-2"></i>Kronologi Kendala</h6>
                 </div>
-                <div class="card-body p-3">
-                    {{-- Mobile-friendly stacked info --}}
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <small class="text-muted d-block fw-bold text-uppercase" style="font-size:0.65rem; letter-spacing:0.5px;">Tanggal</small>
-                            <span class="small fw-semibold">{{ $report->timestamp->format('d-m-Y H:i') }}</span>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted d-block fw-bold text-uppercase" style="font-size:0.65rem; letter-spacing:0.5px;">Plat Nomor</small>
-                            <span class="badge bg-secondary">{{ $report->vehicle->plate_number ?? 'N/A' }}</span>
-                        </div>
-                        <div class="col-12">
-                            <small class="text-muted d-block fw-bold text-uppercase" style="font-size:0.65rem; letter-spacing:0.5px;">Driver</small>
-                            <span class="small">{{ $report->driver->full_name ?? 'N/A' }}</span>
-                        </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-2 fs-6">Deskripsi Kendala</h6>
+                        <p class="text-muted small mb-0" style="line-height: 1.6;">{{ $report->description ?? '-' }}</p>
                     </div>
-
-                    <hr class="my-2">
-
-                    <h6 class="fw-bold small">Deskripsi Pekerjaan:</h6>
-                    <p class="text-muted small mb-0">{{ $report->description }}</p>
-
-                    @if($report->admin_notes)
-                        <hr class="my-2">
-                        <h6 class="fw-bold small">Catatan dari Admin:</h6>
-                        <p class="text-muted small mb-0">{{ $report->admin_notes }}</p>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Approval Actions --}}
-            @if($report->status === 'pending_customer')
-                <div class="card mb-3 border-warning">
-                    <div class="card-header bg-warning text-dark py-2">
-                        <h5 class="mb-0 fs-6"><i class="bi bi-exclamation-triangle"></i> Persetujuan Diperlukan</h5>
+                    <hr class="text-muted border-secondary opacity-25">
+                    
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-2 fs-6">Tindakan Penanganan</h6>
+                        <p class="text-muted small mb-0" style="line-height: 1.6;">{{ $report->service_action ?? '-' }}</p>
                     </div>
-                    <div class="card-body p-3">
-                        <p class="mb-3 small">
-                            Untuk menyetujui service ini, silakan klik tombol di bawah. Anda dapat membaca draf dokumen Word terlebih dahulu, lalu menandatangani secara digital di layar.
-                        </p>
-                        
-                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#approveModal" style="min-height:48px; font-size:1rem;">
-                            <i class="bi bi-check-circle me-1"></i> Approve Service
-                        </button>
-                    </div>
-                </div>
-            @elseif($report->status === 'approved_customer')
-                <div class="card border-success mb-3">
-                    <div class="card-header bg-success text-white py-2">
-                        <h5 class="mb-0 fs-6"><i class="bi bi-check-circle"></i> Sudah Disetujui</h5>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="row g-2 mb-3">
-                            <div class="col-12">
-                                <small class="text-muted d-block fw-bold">Disetujui oleh:</small>
-                                {{ $report->approvedByCustomer->name ?? '-' }}
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted d-block fw-bold">Tanggal:</small>
-                                {{ $report->approved_at_customer->format('d-m-Y H:i') }}
-                            </div>
-                        </div>
-
-                        @if($report->customer_signed_document_path)
-                            <a href="{{ asset('storage/' . $report->customer_signed_document_path) }}" 
-                               class="btn btn-success w-100" 
-                               download
-                               style="min-height:44px; display:flex; align-items:center; justify-content:center;">
-                                <i class="bi bi-download me-1"></i> Download Dokumen Ber-Tanda-Tangan
-                            </a>
+                    
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-2 fs-6">Status Akhir Unit</h6>
+                        @if($report->unit_status_after_service == 'Aman' || str_contains(strtolower($report->unit_status_after_service), 'jalan'))
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success py-2 px-3"><i class="bi bi-circle-fill small me-2" style="font-size:8px;"></i>{{ $report->unit_status_after_service }}</span>
+                        @elseif($report->unit_status_after_service)
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger py-2 px-3"><i class="bi bi-circle-fill small me-2" style="font-size:8px;"></i>{{ $report->unit_status_after_service }}</span>
+                        @else
+                            <span class="text-muted">-</span>
                         @endif
                     </div>
+                    
+                    <hr class="text-muted border-secondary opacity-25">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-2 fs-6">Catatan dari Admin</h6>
+                        <p class="text-muted small mb-0" style="line-height: 1.6;">{{ $report->admin_notes ?? '-' }}</p>
+                    </div>
                 </div>
-            @endif
+            </div>
+
+            {{-- Konfirmasi Laporan Box --}}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 bg-light bg-opacity-50 border border-info border-opacity-25 rounded">
+                    <h5 class="fw-bold text-dark mb-3">Konfirmasi Laporan</h5>
+                    <p class="small text-muted mb-4" style="line-height: 1.6;">
+                        Dengan menekan tombol konfirmasi, Anda menyatakan bahwa laporan kendala dan penanganan unit di atas telah diterima dan diketahui.
+                    </p>
+                    <div class="alert alert-primary bg-primary bg-opacity-10 border-0 d-flex mb-0 p-3">
+                        <i class="bi bi-info-circle-fill text-primary mt-1 me-3 fs-5"></i>
+                        <p class="small text-dark mb-0">
+                            <b>Konfirmasi ini bukan</b> merupakan kuitansi tagihan atau rincian invoice pembayaran service.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    {{-- Footer Actions Bar --}}
+    @if($report->status === 'pending_customer')
+    <div class="card border-0 shadow-sm mt-4 bg-white sticky-bottom" style="bottom: 20px; z-index: 1000;">
+        <div class="card-body p-4 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
+            {{-- Verifikasi Admin --}}
+            <div class="d-flex align-items-center bg-warning bg-opacity-10 border border-warning border-opacity-50 p-3 rounded flex-grow-1 w-100" style="max-width: 500px;">
+                <i class="bi bi-check-circle-fill text-warning fs-3 me-3"></i>
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">Verifikasi PT Hamada Logistik</h6>
+                    <p class="small text-muted mb-0" style="font-size: 0.75rem;">
+                        Laporan ini telah diverifikasi oleh Admin Operasional PT Hamada Logistik sebelum dikirim ke Anda.
+                    </p>
+                </div>
+                <div class="ms-auto ps-3 border-start d-none d-sm-block">
+                    <div class="small fw-bold text-dark mb-1">Diverifikasi oleh</div>
+                    <div class="small text-muted fw-semibold">{{ $report->admin_signer_name ?? 'Admin Operasional' }}</div>
+                    <div class="small fw-bold text-dark mt-2 mb-1">Waktu Verifikasi</div>
+                    <div class="small text-muted">{{ $report->approved_at_admin ? $report->approved_at_admin->format('d-m-Y H:i') : '-' }}</div>
+                </div>
+            </div>
+
+            {{-- Buttons --}}
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end w-100">
+                <button type="button" class="btn btn-outline-primary px-4 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#clarifyModal">
+                    <i class="bi bi-pencil-square me-2"></i> Minta Klarifikasi
+                </button>
+                <button type="button" class="btn btn-outline-danger px-4 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                    <i class="bi bi-x-circle me-2"></i> Tolak Laporan
+                </button>
+                <a href="{{ route('customer.approve.sign', $report->id) }}" class="btn btn-success px-4 fw-semibold shadow-sm text-white">
+                    <i class="bi bi-check-circle me-2"></i> Konfirmasi Laporan
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
 
-{{-- Approve Modal — FULLSCREEN on mobile for better signature experience --}}
-<div class="modal fade" id="approveModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-fullscreen-md-down modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white py-2">
-                <h5 class="modal-title fs-6">Approve Service</h5>
+{{-- Reject Modal --}}
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-bottom-0 py-3">
+                <h5 class="modal-title fs-5 fw-bold"><i class="bi bi-x-circle-fill me-2"></i>Tolak Laporan Service</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-3">
-                <div id="step1">
-                    <h6 class="fw-bold mb-3">Step 1: Baca Draf Dokumen (Opsional)</h6>
-                    <p class="small">Silakan download file Word di bawah ini untuk membaca rincian perbaikan dan mengecek tanda tangan Admin.</p>
-                    
-                    <a href="{{ route('customer.approve.download', $report->id) }}" 
-                       class="btn btn-primary w-100 mb-3" 
-                       id="downloadBtn"
-                       style="min-height:48px; display:flex; align-items:center; justify-content:center;">
-                        <i class="bi bi-download me-1"></i> Download Draf Dokumen Word
-                    </a>
-
-                    <div class="alert alert-info small py-2 mb-3">
-                        <i class="bi bi-info-circle"></i> Jika rincian sudah sesuai, lanjut ke Step 2 untuk tanda tangan.
+            <form action="{{ route('customer.approve.reject', $report->id) }}" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">Silakan tuliskan alasan Anda menolak hasil service ini. Alasan ini akan dikirimkan kembali ke pihak Admin Hamada Logistik untuk ditindaklanjuti.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Alasan Penolakan <span class="text-danger">*</span></label>
+                        <textarea name="customer_rejection_reason" class="form-control bg-light" rows="4" placeholder="Misal: Perbaikan tidak sesuai kesepakatan, plat nomor salah, dll" required></textarea>
                     </div>
-
-                    <button type="button" class="btn btn-success w-100" onclick="showStep2()" style="min-height:48px; font-size:1rem;">
-                        Lanjut ke Step 2 <i class="bi bi-arrow-right"></i>
-                    </button>
                 </div>
-
-                <div id="step2" style="display: none;">
-                    <h6 class="fw-bold mb-3">Step 2: Isi Data dan Tanda Tangan Digital</h6>
-                    <p class="small mb-3">Lengkapi nama, jabatan, dan coret tanda tangan Anda di bawah ini.</p>
-
-                    <form action="{{ route('customer.approve.upload', $report->id) }}" 
-                          method="POST" 
-                          id="approvalForm">
-                        @csrf
-                        
-                        <div class="row g-2 mb-3">
-                            <div class="col-12 col-sm-6">
-                                <label class="form-label small fw-bold mb-1">Nama Penandatangan</label>
-                                <input type="text" name="signer_name" class="form-control" value="{{ Auth::user()->name }}" required style="min-height:44px;">
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label class="form-label small fw-bold mb-1">Jabatan</label>
-                                <input type="text" name="signer_role" class="form-control" value="Perwakilan Customer" required style="min-height:44px;">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Tanda Tangan Digital (Wajib)</label>
-                            <div class="border rounded bg-white position-relative" style="touch-action: none;">
-                                <canvas id="signature-pad" class="signature-pad" style="width: 100%; height: 220px; touch-action: none; cursor: crosshair; display: block;"></canvas>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clear-signature" style="min-height:36px;">
-                                <i class="bi bi-eraser"></i> Hapus Tanda Tangan
-                            </button>
-                        </div>
-                        
-                        <input type="hidden" name="signature" id="signature-input" required>
-
-                        <button type="button" id="btn-submit" class="btn btn-success w-100" style="min-height:48px; font-size:1rem;">
-                            <i class="bi bi-check2-circle me-1"></i> Setujui Laporan
-                        </button>
-                    </form>
-
-                    <button type="button" class="btn btn-secondary w-100 mt-2" onclick="showStep1()" style="min-height:44px;">
-                        <i class="bi bi-arrow-left"></i> Kembali ke Step 1
-                    </button>
+                <div class="modal-footer border-top-0 bg-light">
+                    <button type="button" class="btn btn-white border" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-semibold"><i class="bi bi-check me-1"></i> Konfirmasi Tolak</button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
+
+{{-- Clarify Modal --}}
+<div class="modal fade" id="clarifyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white border-bottom-0 py-3">
+                <h5 class="modal-title fs-5 fw-bold"><i class="bi bi-pencil-square me-2"></i>Minta Klarifikasi</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('customer.approve.clarify', $report->id) }}" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">Tuliskan hal-hal yang perlu diklarifikasi atau direvisi oleh Admin mengenai laporan service ini.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Pesan Klarifikasi <span class="text-danger">*</span></label>
+                        <textarea name="customer_revision_notes" class="form-control bg-light" rows="4" placeholder="Misal: Terdapat kesalahan penulisan Plat Nomor, mohon diperbaiki." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 bg-light">
+                    <button type="button" class="btn btn-white border" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold"><i class="bi bi-send-fill me-1"></i> Kirim Pesan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 justify-content-end p-2 position-absolute w-100" style="z-index: 10;">
+                <button type="button" class="btn-close btn-close-white bg-dark rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.8;"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="viewerImage" src="" class="img-fluid rounded shadow-lg" style="max-height: 85vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>
 <script>
-    var signaturePad = null;
-    var canvas = null;
-
-    function initSignaturePad() {
-        canvas = document.getElementById('signature-pad');
-        if (!canvas) return;
-
-        function resizeCanvas() {
-            var ratio = Math.max(window.devicePixelRatio || 1, 1);
-            var wasEmpty = signaturePad ? signaturePad.isEmpty() : true;
-            var data = !wasEmpty ? signaturePad.toDataURL() : null;
-
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            canvas.getContext("2d").scale(ratio, ratio);
-
-            if (signaturePad) {
-                signaturePad.clear();
-                if (!wasEmpty && data) {
-                    signaturePad.fromDataURL(data);
-                }
-            }
-        }
-
-        signaturePad = new SignaturePad(canvas, {
-            backgroundColor: 'rgba(255, 255, 255, 1)',
-            penColor: 'rgb(0, 0, 0)',
-            minWidth: 1,
-            maxWidth: 3
-        });
-
-        window.addEventListener('resize', resizeCanvas);
-        
-        // Delay resize to ensure modal is fully rendered
-        setTimeout(resizeCanvas, 150);
-
-        document.getElementById('clear-signature').addEventListener('click', function () {
-            signaturePad.clear();
-        });
-
-        document.getElementById('btn-submit').addEventListener('click', function (e) {
-            if (signaturePad.isEmpty()) {
-                alert("Silakan isi Tanda Tangan terlebih dahulu!");
-                return false;
-            }
-
-            document.getElementById('signature-input').value = signaturePad.toDataURL('image/png');
-            document.getElementById('approvalForm').submit();
-        });
+    function viewImage(src) {
+        document.getElementById('viewerImage').src = src;
+        var imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
+        imageModal.show();
     }
-
-    function showStep2() {
-        document.getElementById('step1').style.display = 'none';
-        document.getElementById('step2').style.display = 'block';
-        // Reinitialize signature pad after step change
-        setTimeout(function() {
-            if (!signaturePad) {
-                initSignaturePad();
-            } else {
-                var ratio = Math.max(window.devicePixelRatio || 1, 1);
-                var wasEmpty = signaturePad.isEmpty();
-                var data = !wasEmpty ? signaturePad.toDataURL() : null;
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
-                signaturePad.clear();
-                if (!wasEmpty && data) {
-                    signaturePad.fromDataURL(data);
-                }
-            }
-        }, 200);
-    }
-
-    function showStep1() {
-        document.getElementById('step1').style.display = 'block';
-        document.getElementById('step2').style.display = 'none';
-    }
-
-    // Initialize when modal is shown
-    document.addEventListener('DOMContentLoaded', function() {
-        var modalEl = document.getElementById('approveModal');
-        if (modalEl) {
-            modalEl.addEventListener('shown.bs.modal', function() {
-                if (!signaturePad) {
-                    initSignaturePad();
-                }
-            });
-        }
-    });
 </script>
 @endpush

@@ -41,9 +41,21 @@ class AdminLoginController extends Controller
             'password' => 'required|string',
         ]);
 
+        $throttleKey = \Illuminate\Support\Str::lower($request->input('email')) . '|' . $request->ip();
+
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            \Illuminate\Support\Facades\Log::warning("Admin login locked out", ['email' => $request->email, 'ip' => $request->ip()]);
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            return back()->withErrors([
+                'email' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
+            ])->onlyInput('email');
+        }
+
         // 2. Coba login menggunakan Facade Auth (Guard default: web)
         // 'remember' akan membuat cookie "Remember Me" jika dicentang
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+
+            \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
 
             // SECURITY CRITICAL: Regenerasi ID Sesi setelah login sukses
             // Ini wajib untuk mencegah Session Fixation attacks.
@@ -61,8 +73,12 @@ class AdminLoginController extends Controller
             return redirect()->intended($redirectRoute);
         }
 
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 300); // 5 minutes lockout
+        \Illuminate\Support\Facades\Log::warning("Failed admin login", ['email' => $request->email, 'ip' => $request->ip()]);
+
         // 4. Jika gagal, kembalikan ke form dengan pesan error
         // 'onlyInput' mengembalikan email agar user tidak perlu mengetik ulang
+        // Sesuai BUG #38, pesan generic "Email atau Password yang Anda masukkan salah." tetap dipertahankan
         return back()->withErrors([
             'email' => 'Email atau Password yang Anda masukkan salah.',
         ])->onlyInput('email');

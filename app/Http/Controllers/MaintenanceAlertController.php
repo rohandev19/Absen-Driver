@@ -2,125 +2,71 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\MaintenanceAlert;
 use App\Services\MaintenanceAlertService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\MaintenanceAlertsExport;
 
 class MaintenanceAlertController extends Controller
 {
-    public function __construct(
-        private MaintenanceAlertService $alertService
-    ) {}
+    protected $alertService;
 
-    /**
-     * Get all alerts
-     */
+    public function __construct(MaintenanceAlertService $alertService)
+    {
+        $this->alertService = $alertService;
+    }
+
     public function index(Request $request)
     {
         $query = MaintenanceAlert::with(['vehicle', 'component']);
 
-        // Filter by status
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
-        }
-
-        // Filter by alert type
-        if ($request->has('alert_type')) {
-            $query->where('alert_type', $request->alert_type);
-        }
-
-        // Filter by vehicle
-        if ($request->has('vehicle_id')) {
-            $query->where('vehicle_id', $request->vehicle_id);
-        }
-
-        // Get only active alerts
-        if ($request->has('active') && $request->active) {
+        } else {
             $query->active();
         }
 
-        // Get only critical alerts
-        if ($request->has('critical') && $request->critical) {
-            $query->critical();
+        if ($request->filled('alert_type')) {
+            $query->where('alert_type', $request->alert_type);
         }
 
         $alerts = $query->orderBy('alert_type')
             ->orderBy('triggered_at', 'desc')
             ->paginate(20);
 
-        return response()->json([
-            'success' => true,
-            'data' => $alerts,
-        ]);
-    }
-
-    /**
-     * Get alerts summary
-     */
-    public function summary()
-    {
         $summary = $this->alertService->getActiveAlertsSummary();
 
-        return response()->json([
-            'success' => true,
-            'data' => $summary,
-        ]);
+        return view('admin.maintenance.alerts', compact('alerts', 'summary'));
     }
 
-    /**
-     * Acknowledge alert
-     */
-    public function acknowledge(MaintenanceAlert $alert)
-    {
-        $alert->acknowledge(Auth::user());
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Alert acknowledged',
-            'data' => $alert->fresh(['vehicle', 'component', 'acknowledgedBy']),
-        ]);
-    }
-
-    /**
-     * Resolve alert
-     */
-    public function resolve(MaintenanceAlert $alert)
-    {
-        $alert->resolve();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Alert resolved',
-            'data' => $alert->fresh(['vehicle', 'component']),
-        ]);
-    }
-
-    /**
-     * Dismiss alert
-     */
-    public function dismiss(MaintenanceAlert $alert)
-    {
-        $alert->dismiss();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Alert dismissed',
-            'data' => $alert->fresh(['vehicle', 'component']),
-        ]);
-    }
-
-    /**
-     * Generate alerts manually
-     */
     public function generate()
     {
-        $stats = $this->alertService->generateAlertsForAllVehicles();
+        $this->alertService->generateAlertsForAllVehicles();
+        return back()->with('success', 'Alert pemeliharaan berhasil diperbarui dari data terbaru.');
+    }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Alerts generated successfully',
-            'data' => $stats,
-        ]);
+    public function acknowledge($alertId)
+    {
+        $alert = MaintenanceAlert::findOrFail($alertId);
+        $alert->acknowledge(Auth::user());
+
+        return back()->with('success', 'Alert telah di-acknowledge.');
+    }
+
+    public function resolve($alertId)
+    {
+        $alert = MaintenanceAlert::findOrFail($alertId);
+        $alert->resolve();
+
+        return back()->with('success', 'Alert telah di-resolve.');
+    }
+
+    public function export(Request $request)
+    {
+        $namaFile = 'Laporan_Alert_Maintenance_' . Carbon::now()->format('Ymd_His') . '.xlsx';
+        return Excel::download(new MaintenanceAlertsExport($request), $namaFile);
     }
 }

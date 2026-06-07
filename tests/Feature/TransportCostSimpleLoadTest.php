@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  */
 class TransportCostSimpleLoadTest extends TestCase
 {
-    use WithFaker;
+    use WithFaker, \Illuminate\Foundation\Testing\RefreshDatabase;
 
     /**
      * Test: Simulasi 70 driver create transport cost secara bersamaan
@@ -39,13 +39,9 @@ class TransportCostSimpleLoadTest extends TestCase
 
         // Create 70 drivers with attendance
         for ($i = 1; $i <= 70; $i++) {
-            $user = User::factory()->create([
-                'role' => 'driver',
-                'email' => "loadtest$i@test.com",
-            ]);
-
             $driver = Driver::factory()->create([
-                'user_id' => $user->id,
+                'driver_id_nik' => "DRV-" . str_pad($i, 6, '0', STR_PAD_LEFT),
+                'full_name' => "Driver Test $i",
                 'project_id' => $project->id,
             ]);
 
@@ -56,21 +52,18 @@ class TransportCostSimpleLoadTest extends TestCase
             $attendance = Attendance::create([
                 'driver_id' => $driver->id,
                 'vehicle_id' => $vehicle->id,
-                'project_id' => $project->id,
-                'tanggal_absen' => now()->format('Y-m-d'),
-                'waktu_masuk' => now()->subHours(10),
-                'lokasi_masuk' => 'Test Location',
-                'foto_masuk' => 'test.jpg',
+                'time_in' => now()->subHours(10),
+                'gps_location_in' => '-6.200000, 106.816666',
+                'selfie_photo_path' => 'photos/test_selfie.jpg',
+                'speedo_photo_awal_path' => 'photos/test_speedo.jpg',
                 'speedo_awal' => 10000 + ($i * 100),
-                'waktu_keluar' => now()->subHours(2),
-                'lokasi_keluar' => 'Test Location',
-                'foto_keluar' => 'test.jpg',
+                'time_out' => now()->subHours(2),
+                'speedo_photo_akhir_path' => 'photos/test_speedo_akhir.jpg',
                 'speedo_akhir' => 10250 + ($i * 100),
-                'status' => 'hadir',
             ]);
 
             $drivers[] = [
-                'user' => $user,
+                'user' => $driver, // Set 'user' to $driver to avoid changing test case lines
                 'driver' => $driver,
                 'vehicle' => $vehicle,
                 'attendance' => $attendance,
@@ -223,17 +216,14 @@ class TransportCostSimpleLoadTest extends TestCase
             $attendance = Attendance::create([
                 'driver_id' => $driver->id,
                 'vehicle_id' => $vehicle->id,
-                'project_id' => $project->id,
-                'tanggal_absen' => now()->subDays($i)->format('Y-m-d'),
-                'waktu_masuk' => now()->subDays($i)->subHours(10),
-                'lokasi_masuk' => 'Test',
-                'foto_masuk' => 'test.jpg',
+                'time_in' => now()->subDays($i)->subHours(10),
+                'gps_location_in' => '-6.200000, 106.816666',
+                'selfie_photo_path' => 'photos/test_selfie.jpg',
+                'speedo_photo_awal_path' => 'photos/test_speedo.jpg',
                 'speedo_awal' => 10000 + ($i * 100),
-                'waktu_keluar' => now()->subDays($i)->subHours(2),
-                'lokasi_keluar' => 'Test',
-                'foto_keluar' => 'test.jpg',
+                'time_out' => now()->subDays($i)->subHours(2),
+                'speedo_photo_akhir_path' => 'photos/test_speedo_akhir.jpg',
                 'speedo_akhir' => 10250 + ($i * 100),
-                'status' => 'hadir',
             ]);
 
             TransportCost::create([

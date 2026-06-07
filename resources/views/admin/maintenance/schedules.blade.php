@@ -26,27 +26,39 @@
     {{-- Stats Cards --}}
     <div class="row mb-4 g-3">
         <div class="col-md-4">
-            <div class="card-metric border-left-danger">
-                <div class="metric-label">OVERDUE</div>
-                <div class="metric-value">{{ $stats['overdue'] }}</div>
-                <div class="metric-desc">Jadwal terlambat</div>
-                <i class="bi bi-calendar-x-fill card-icon"></i>
+            <div class="stat-card card-metric stat-card-danger border-left-danger animate-fade-in" style="animation-delay: 0.1s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-calendar-x-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">{{ $stats['overdue'] }}</div>
+                    <div class="stat-label metric-label">OVERDUE</div>
+                    <div class="stat-desc metric-desc">Jadwal terlambat</div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card-metric border-left-warning">
-                <div class="metric-label">TODAY</div>
-                <div class="metric-value">{{ $stats['today'] }}</div>
-                <div class="metric-desc">Jadwal hari ini</div>
-                <i class="bi bi-calendar-day-fill card-icon"></i>
+            <div class="stat-card card-metric stat-card-warning border-left-warning animate-fade-in" style="animation-delay: 0.2s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-calendar-day-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">{{ $stats['today'] }}</div>
+                    <div class="stat-label metric-label">TODAY</div>
+                    <div class="stat-desc metric-desc">Jadwal hari ini</div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card-metric border-left-info">
-                <div class="metric-label">THIS WEEK</div>
-                <div class="metric-value">{{ $stats['this_week'] }}</div>
-                <div class="metric-desc">7 hari ke depan</div>
-                <i class="bi bi-calendar-week-fill card-icon"></i>
+            <div class="stat-card card-metric stat-card-info border-left-info animate-fade-in" style="animation-delay: 0.3s">
+                <div class="stat-icon card-icon">
+                    <i class="bi bi-calendar-week-fill"></i>
+                </div>
+                <div class="stat-content metric-content">
+                    <div class="stat-value metric-value">{{ $stats['this_week'] }}</div>
+                    <div class="stat-label metric-label">THIS WEEK</div>
+                    <div class="stat-desc metric-desc">7 hari ke depan</div>
+                </div>
             </div>
         </div>
     </div>
@@ -101,7 +113,7 @@
     {{-- Schedules Table --}}
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
-            <div class="table-responsive">
+            <div class="table-responsive table-responsive-cards">
                 <table class="table-corporate mb-0">
                     <thead class="table-light">
                         <tr>
@@ -117,44 +129,44 @@
                     </thead>
                     <tbody>
                         @forelse($schedules as $schedule)
-                        <tr class="{{ $schedule->isOverdue() ? 'table-danger' : '' }}">
-                            <td class="ps-4">
+                        <tr class="aset-row {{ $schedule->isOverdue() ? 'table-danger' : '' }}">
+                            <td class="ps-4" data-label="Tanggal">
                                 <div class="fw-bold">{{ $schedule->scheduled_date->format('d M Y') }}</div>
                                 <small class="text-muted">{{ $schedule->scheduled_date->diffForHumans() }}</small>
                             </td>
-                            <td>
+                            <td data-label="Kendaraan">
                                 <div class="fw-bold">{{ $schedule->vehicle->plate_number }}</div>
                                 <small class="text-muted">{{ $schedule->vehicle->type }}</small>
                             </td>
-                            <td>
+                            <td data-label="Komponen">
                                 @if($schedule->component)
                                     <span class="badge-corp badge-corp-info"><i class="bi bi-gear"></i> {{ $schedule->component->component_name }}</span>
                                 @else
                                     <span class="text-muted">General</span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Tipe">
                                 <span class="badge-corp badge-corp-primary">{{ ucfirst($schedule->type) }}</span>
                             </td>
-                            <td>
+                            <td data-label="Priority">
                                 <span class="badge-corp badge-corp-{{ $schedule->priority == 'critical' ? 'danger' : ($schedule->priority == 'high' ? 'warning' : ($schedule->priority == 'medium' ? 'info' : 'success')) }}">
                                     <i class="bi bi-{{ $schedule->priority == 'critical' ? 'exclamation-octagon' : ($schedule->priority == 'high' ? 'exclamation-triangle' : 'info-circle') }}"></i>
                                     {{ ucfirst($schedule->priority) }}
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <span class="badge-corp badge-corp-{{ $schedule->status == 'completed' ? 'success' : ($schedule->status == 'in_progress' ? 'primary' : 'warning') }}">
                                     <i class="bi bi-{{ $schedule->status == 'completed' ? 'check-circle' : ($schedule->status == 'in_progress' ? 'hourglass-split' : 'clock') }}"></i>
                                     {{ ucfirst(str_replace('_', ' ', $schedule->status)) }}
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Biaya">
                                 <div class="fw-bold">Rp {{ number_format($schedule->estimated_cost, 0, ',', '.') }}</div>
                                 @if($schedule->actual_cost)
                                     <small class="text-success">Actual: Rp {{ number_format($schedule->actual_cost, 0, ',', '.') }}</small>
                                 @endif
                             </td>
-                            <td class="text-end pe-4">
+                            <td class="text-end pe-4" data-label="Aksi">
                                 @if($schedule->status != 'completed' && $schedule->status != 'cancelled')
                                     <button class="btn-primary-corp" 
                                         data-bs-toggle="modal" 

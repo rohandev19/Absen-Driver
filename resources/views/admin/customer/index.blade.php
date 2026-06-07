@@ -53,8 +53,8 @@
                                 <thead class="bg-light">
                                     <tr>
                                         <th class="ps-4">Nama Customer</th>
-                                        <th>Contact Person</th>
-                                        <th>WhatsApp</th>
+                                        <th class="d-none d-md-table-cell">Contact Person</th>
+                                        <th class="d-none d-md-table-cell">WhatsApp</th>
                                         <th>Project</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
@@ -63,8 +63,8 @@
                                     @forelse($customers as $customer)
                                         <tr>
                                             <td class="ps-4 fw-bold">{{ $customer->name }}</td>
-                                            <td>{{ $customer->contact_person ?? '-' }}</td>
-                                            <td>
+                                            <td class="d-none d-md-table-cell">{{ $customer->contact_person ?? '-' }}</td>
+                                            <td class="d-none d-md-table-cell">
                                                 @if($customer->phone)
                                                     <a href="https://wa.me/{{ $customer->phone }}" target="_blank" class="text-success">
                                                         <i class="bi bi-whatsapp"></i> {{ $customer->phone }}
@@ -77,27 +77,29 @@
                                                 <span class="badge bg-info">{{ $customer->projects->count() }} project</span>
                                             </td>
                                             <td class="text-center">
-                                                {{-- Tombol Edit --}}
-                                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" 
-                                                    data-bs-target="#editModal{{ $customer->id }}" title="Edit Customer">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-
-                                                {{-- Tombol Hapus (hanya jika tidak ada project) --}}
-                                                @if($customer->projects->count() == 0)
-                                                    <form action="{{ route('admin.customer.destroy', $customer->id) }}" method="POST"
-                                                        class="d-inline" onsubmit="return confirm('Yakin hapus customer ini?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button class="btn btn-danger btn-sm" title="Hapus Customer">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @else
-                                                    <button class="btn btn-secondary btn-sm" disabled title="Customer masih terhubung dengan project">
-                                                        <i class="bi bi-lock-fill"></i>
+                                                <div class="d-inline-flex flex-nowrap gap-1">
+                                                    {{-- Tombol Edit --}}
+                                                    <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" 
+                                                        data-bs-target="#editModal{{ $customer->id }}" data-bs-toggle="tooltip" title="Edit Customer">
+                                                        <i class="bi bi-pencil-fill"></i>
                                                     </button>
-                                                @endif
+
+                                                    {{-- Tombol Hapus (hanya jika tidak ada project) --}}
+                                                    @if($customer->projects->count() == 0)
+                                                        <form action="{{ route('admin.customer.destroy', $customer->id) }}" method="POST"
+                                                            class="d-inline" onsubmit="return confirm('Yakin hapus customer ini?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" title="Hapus Customer">
+                                                                <i class="bi bi-trash-fill"></i>
+                                                            </button>
+                                                        </form>
+                                                    @else
+                                                        <button class="btn btn-outline-secondary btn-sm" disabled data-bs-toggle="tooltip" title="Customer masih terhubung dengan project">
+                                                            <i class="bi bi-lock-fill"></i>
+                                                        </button>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
 

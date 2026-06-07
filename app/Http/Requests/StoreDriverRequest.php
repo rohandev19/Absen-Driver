@@ -31,8 +31,11 @@ class StoreDriverRequest extends FormRequest
         return [
             'full_name' => ['required', 'string', 'max:255'],
 
-            // Validasi NIK harus unik di tabel drivers
+            // Validasi NIK Pegawai harus unik
             'driver_id_nik' => ['required', 'string', 'max:255', 'unique:' . Driver::class],
+
+            // Validasi NIK KTP harus unik
+            'nik_ktp' => ['nullable', 'string', 'max:20', 'unique:' . Driver::class],
 
             'sim_expiry_date' => ['required', 'date'],
 
@@ -52,7 +55,8 @@ class StoreDriverRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'driver_id_nik.unique' => 'NIK Driver ini sudah terdaftar. Mohon cek kembali.',
+            'driver_id_nik.unique' => 'NIK Pegawai ini sudah terdaftar. Mohon cek kembali.',
+            'nik_ktp.unique' => 'NIK KTP ini sudah terdaftar. Mohon cek kembali.',
             'sim_expiry_date.required' => 'Tanggal masa berlaku SIM wajib diisi.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ];

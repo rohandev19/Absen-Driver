@@ -12,10 +12,15 @@ class ServiceReport extends Model
 
     // Status constants
     const STATUS_PENDING = 'pending';
+    const STATUS_PENDING_ADMIN = 'pending_admin';
+    const STATUS_WAITING_COMPLETION = 'waiting_completion';
     const STATUS_APPROVED_ADMIN = 'approved_admin';
     const STATUS_PENDING_CUSTOMER = 'pending_customer';
     const STATUS_APPROVED_CUSTOMER = 'approved_customer';
     const STATUS_REJECTED = 'rejected';
+    const STATUS_REJECTED_ADMIN = 'rejected_admin';
+    const STATUS_REJECTED_CUSTOMER = 'rejected_customer';
+    const STATUS_REVISION_REQUESTED = 'revision_requested';
 
     protected $fillable = [
         'driver_id',
@@ -24,8 +29,22 @@ class ServiceReport extends Model
         'timestamp',
         'gps_location',
         'description',
+        'ticket_number',
+        'service_type',
+        'problem_category',
+        'odometer',
+        'service_action',
+        'unit_status_after_service',
+        'additional_notes',
+        'before_service_photo_source',
+        'before_service_photo_uploaded_at',
         'vehicle_condition_photo_path',
+        'after_service_photo_path',
+        'after_service_photo_taken_at',
+        'odometer_photo_path',
+        'odometer_photo_taken_at',
         'receipt_photo_path',
+        'receipt_photo_taken_at',
         'status',
         'admin_notes',
         'approved_by_admin_id',
@@ -35,6 +54,17 @@ class ServiceReport extends Model
         'admin_signer_role',
         'finance_word_path',
         'customer_word_path',
+        'customer_pdf_path',
+        'customer_signed_pdf_path',
+        'admin_internal_pdf_path',
+        'finance_pdf_path',
+        'workshop_name',
+        'invoice_number',
+        'service_cost',
+        'sparepart_cost',
+        'other_cost',
+        'total_cost',
+        'finance_notes',
         'customer_signed_document_path',
         'customer_signature_path',
         'customer_signer_name',
@@ -42,6 +72,11 @@ class ServiceReport extends Model
         'approved_by_customer_id',
         'approved_at_customer',
         'rejected_reason',
+        'rejected_by_role',
+        'customer_rejection_reason',
+        'customer_revision_notes',
+        'rejected_at',
+        'revision_requested_at',
     ];
 
     protected $casts = [
@@ -72,6 +107,11 @@ class ServiceReport extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function vehicleReplacements()
+    {
+        return $this->hasMany(VehicleReplacement::class);
     }
 
     /**

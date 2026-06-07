@@ -21,19 +21,34 @@ class Vehicle extends Model
     protected $fillable = [
         'plate_number',
         'type',
+        'tahun_pembuatan',
         'project_id', // <--- Sudah ditambahkan
         'status',
+        'is_temporary',
+        'verification_status',
+        'verified_by',
+        'verified_at',
+        'source',
+        'notes',
         'current_km',
         'service_interval_km',
         'last_service_km',
         'pajak_stnk_berlaku_sampai',
         'kir_berlaku_sampai',
+        'qr_code_path',
+        'qr_code_identifier',
+    ];
+
+    protected $appends = [
+        'qr_code_url',
     ];
 
     // Casting agar field tanggal otomatis jadi object Carbon
     protected $casts = [
         'pajak_stnk_berlaku_sampai' => 'date',
         'kir_berlaku_sampai' => 'date',
+        'is_temporary' => 'boolean',
+        'verified_at' => 'datetime',
     ];
 
     /* =========================================================================
@@ -75,6 +90,16 @@ class Vehicle extends Model
         return $this->hasMany(MaintenanceAlert::class);
     }
 
+    public function replacementUsages()
+    {
+        return $this->hasMany(VehicleReplacement::class, 'replacement_vehicle_id');
+    }
+
+    public function replacementHistories()
+    {
+        return $this->hasMany(VehicleReplacement::class, 'original_vehicle_id');
+    }
+
     public function transportCosts()
     {
         return $this->hasMany(TransportCost::class);
@@ -84,7 +109,7 @@ class Vehicle extends Model
      * BUSINESS LOGIC (LOGIKA BISNIS)
      * ========================================================================= */
 
-    public function getCurrentKmAttribute()
+    public function getComputedKmAttribute()
     {
         // Prioritas 1: Odometer dari absen keluar supir terakhir
         // Prioritas 2: Odometer dari absen masuk supir terakhir
@@ -102,7 +127,7 @@ class Vehicle extends Model
             return null;
 
         $nextService = $this->last_service_km + $this->service_interval_km;
-        return $nextService - $this->current_km;
+        return $nextService - $this->computed_km;
     }
 
     public function getHealthStatusCodeAttribute()
@@ -140,5 +165,18 @@ class Vehicle extends Model
             $q->where('plate_number', 'like', "%{$keyword}%")
                 ->orWhere('type', 'like', "%{$keyword}%");
         });
+    }
+
+    /**
+     * Accessor for full QR code URL.
+     *
+     * @return string|null
+     */
+    public function getQrCodeUrlAttribute()
+    {
+        if ($this->qr_code_path) {
+            return \Illuminate\Support\Facades\Storage::url($this->qr_code_path);
+        }
+        return null;
     }
 }

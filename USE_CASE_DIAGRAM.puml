@@ -1,0 +1,110 @@
+@startuml Use Case Diagram
+left to right direction
+skinparam shadowing false
+skinparam usecase {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam actor {
+    BackgroundColor white
+    BorderColor black
+}
+
+' ============================================
+' ACTORS (Kiri & Kanan)
+' ============================================
+actor "Driver" as Driver
+actor "Customer" as Customer
+
+actor "Service Admin" as ServiceAdmin
+actor "Admin Master" as AdminMaster
+
+' ============================================
+' GLOBAL USE CASES (Atas & Bawah)
+' ============================================
+usecase "Melakukan Login" as Login
+usecase "Melakukan Logout" as Logout
+
+' ============================================
+' DRIVER USE CASES
+' ============================================
+usecase "Melakukan Absensi" as D1
+usecase "Mengirim Laporan Darurat" as D2
+usecase "Mengirim Laporan Service" as D3
+usecase "Menginput Biaya Transport" as D4
+usecase "Melihat Riwayat Absensi" as D5
+
+' ============================================
+' CUSTOMER USE CASES
+' ============================================
+usecase "Melihat Dashboard Customer" as C1
+usecase "Melihat Data Kendaraan" as C2
+usecase "Melakukan Approval Service" as C3
+usecase "Mengelola Profil" as C4
+
+' ============================================
+' SERVICE ADMIN USE CASES
+' ============================================
+usecase "Melihat Dashboard Maintenance" as SA1
+usecase "Mengelola Pemeliharaan Kendaraan" as SA2
+usecase "Melakukan Visual Check" as SA3
+usecase "Mengelola Jadwal Maintenance" as SA4
+usecase "Mengelola Komponen Kendaraan" as SA5
+usecase "Approval Laporan Service" as SA6
+
+' ============================================
+' ADMIN MASTER USE CASES
+' ============================================
+usecase "Melihat Dashboard Operasional" as AM1
+usecase "Melihat Maintenance" as AM2
+usecase "Mengelola Data Master" as AM3
+usecase "Mengelola Data Kendaraan" as AM4
+usecase "Melihat Laporan Operasional" as AM5
+usecase "Approval Biaya Transport" as AM6
+
+' ============================================
+' CONNECTIONS - DRIVER (KIRI)
+' ============================================
+Driver ---> Login
+Driver ---> D1
+Driver ---> D2
+Driver ---> D3
+Driver ---> D4
+Driver ---> D5
+Driver ---> Logout
+
+' ============================================
+' CONNECTIONS - CUSTOMER (KIRI)
+' ============================================
+Customer ---> Login
+Customer ---> C1
+Customer ---> C2
+Customer ---> C3
+Customer ---> C4
+Customer ---> Logout
+
+' ============================================
+' CONNECTIONS - SERVICE ADMIN (KANAN)
+' ============================================
+Login <--- ServiceAdmin
+SA1 <--- ServiceAdmin
+SA2 <--- ServiceAdmin
+SA3 <--- ServiceAdmin
+SA4 <--- ServiceAdmin
+SA5 <--- ServiceAdmin
+SA6 <--- ServiceAdmin
+Logout <--- ServiceAdmin
+
+' ============================================
+' CONNECTIONS - ADMIN MASTER (KANAN)
+' ============================================
+Login <--- AdminMaster
+AM1 <--- AdminMaster
+AM2 <--- AdminMaster
+AM3 <--- AdminMaster
+AM4 <--- AdminMaster
+AM5 <--- AdminMaster
+AM6 <--- AdminMaster
+Logout <--- AdminMaster
+
+@enduml

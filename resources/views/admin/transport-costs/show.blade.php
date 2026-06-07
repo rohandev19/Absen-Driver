@@ -35,6 +35,139 @@
 
 @section('content')
 <div class="container-fluid">
+    {{-- PRINT LAYOUT (Hanya Tampil Saat Dicetak) --}}
+    <div class="d-none d-print-block w-100" style="color: #000 !important; background: #fff !important; font-family: Arial, sans-serif;">
+        {{-- Kop Surat --}}
+        <div style="text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase;">PT HAMADA LOGISTIK</h1>
+            <p style="font-size: 14px; margin: 0;">Slip Rincian Uang Jalan & Pengeluaran</p>
+        </div>
+
+        {{-- Info Dasar --}}
+        <table style="width: 100%; margin-bottom: 20px; font-size: 12px; border-collapse: collapse;">
+            <tr>
+                <td style="width: 15%; font-weight: bold; padding: 3px 0;">Tanggal</td>
+                <td style="width: 35%; padding: 3px 0;">: {{ $trip->trip_date->format('d-m-Y') }}</td>
+                <td style="width: 15%; font-weight: bold; padding: 3px 0;">Status</td>
+                <td style="width: 35%; padding: 3px 0;">: {{ ucfirst($trip->approval_status) }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; padding: 3px 0;">Nama Driver</td>
+                <td style="padding: 3px 0;">: {{ $trip->driver->full_name }}</td>
+                <td style="font-weight: bold; padding: 3px 0;">Project</td>
+                <td style="padding: 3px 0;">: {{ $trip->project->name }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; padding: 3px 0;">Plat Nomor</td>
+                <td style="padding: 3px 0;">: {{ $trip->vehicle->plate_number }}</td>
+                <td style="font-weight: bold; padding: 3px 0;">DO Number</td>
+                <td style="padding: 3px 0;">: {{ $trip->do_number }}</td>
+            </tr>
+        </table>
+
+        {{-- Odometer & Efisiensi --}}
+        <table style="width: 100%; margin-bottom: 20px; font-size: 12px; border-collapse: collapse; border: 1px solid #000;">
+            <thead>
+                <tr>
+                    <th colspan="4" style="background: #f0f0f0; border-bottom: 1px solid #000; padding: 5px; text-align: left;">Data Perjalanan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; width: 25%;">Odometer Awal</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; width: 25%;">{{ number_format($trip->odometer_start, 0, ',', '.') }} KM</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; width: 25%;">Bensin Terpakai</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; width: 25%;">{{ $trip->fuel_consumed ? number_format($trip->fuel_consumed, 2) . ' L' : '-' }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; width: 25%;">Odometer Akhir</td>
+                    <td style="padding: 5px; width: 25%;">{{ number_format($trip->odometer_end, 0, ',', '.') }} KM</td>
+                    <td style="padding: 5px; width: 25%;">Efisiensi BBM</td>
+                    <td style="padding: 5px; width: 25%;">{{ $trip->fuel_efficiency_ratio ? number_format($trip->fuel_efficiency_ratio, 2) . ' KM/L' : '-' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        {{-- Rincian Biaya --}}
+        <table style="width: 100%; margin-bottom: 20px; font-size: 12px; border-collapse: collapse; border: 1px solid #000;">
+            <thead>
+                <tr>
+                    <th colspan="2" style="background: #f0f0f0; border-bottom: 1px solid #000; padding: 5px; text-align: left;">Rincian Pengeluaran (Reimburse)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd;">Biaya Bensin</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">Rp {{ number_format($trip->gasoline_cost, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd;">Biaya Tol</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">Rp {{ number_format($trip->toll_cost, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd;">Biaya Parkir</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">Rp {{ number_format($trip->parking_cost, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 5px; text-align: left;">Subtotal Pengeluaran</th>
+                    <th style="padding: 5px; text-align: right;">Rp {{ number_format($trip->total_cost, 0, ',', '.') }}</th>
+                </tr>
+            </tbody>
+        </table>
+
+        {{-- Lembur & Bonus --}}
+        <table style="width: 100%; margin-bottom: 20px; font-size: 12px; border-collapse: collapse; border: 1px solid #000;">
+            <thead>
+                <tr>
+                    <th colspan="2" style="background: #f0f0f0; border-bottom: 1px solid #000; padding: 5px; text-align: left;">Rincian Lembur & Bonus</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd;">Waktu Kerja</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">{{ $trip->delivery_start_time->format('H:i') }} - {{ $trip->delivery_end_time->format('H:i') }} ({{ number_format($trip->actual_delivery_hours, 2) }} jam)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd;">Uang Lembur ({{ number_format($trip->overtime_hours, 2) }} jam)</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">Rp {{ number_format($trip->overtime_payment, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd;">Bonus Driver</td>
+                    <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">Rp {{ number_format($trip->bonus_driver, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 5px; text-align: left;">Subtotal Lembur & Bonus</th>
+                    <th style="padding: 5px; text-align: right;">Rp {{ number_format($trip->overtime_payment + $trip->bonus_driver, 0, ',', '.') }}</th>
+                </tr>
+            </tbody>
+        </table>
+
+        {{-- Grand Total --}}
+        <div style="text-align: right; margin-bottom: 40px; border: 2px solid #000; padding: 10px;">
+            <h3 style="margin: 0; font-size: 16px;">GRAND TOTAL: Rp {{ number_format($trip->total_cost + $trip->overtime_payment + $trip->bonus_driver, 0, ',', '.') }}</h3>
+        </div>
+
+        {{-- Tanda Tangan --}}
+        <table style="width: 100%; text-align: center; font-size: 12px; page-break-inside: avoid;">
+            <tr>
+                <td style="width: 33%;">
+                    <p style="margin-bottom: 60px;">Dibuat Oleh (Driver),</p>
+                    <p style="font-weight: bold; text-decoration: underline; margin: 0;">{{ $trip->driver->full_name }}</p>
+                </td>
+                <td style="width: 33%;">
+                    <p style="margin-bottom: 60px;">Diperiksa Oleh (Admin),</p>
+                    <p style="font-weight: bold; text-decoration: underline; margin: 0;">{{ $trip->approver->name ?? '(.........................)' }}</p>
+                </td>
+                <td style="width: 33%;">
+                    <p style="margin-bottom: 60px;">Disetujui Oleh (Finance),</p>
+                    <p style="font-weight: bold; text-decoration: underline; margin: 0;">(.........................)</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- WEB UI --}}
+    <div class="d-print-none">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold"><i class="bi bi-cash-coin"></i> Detail Uang Jalan</h2>
         <a href="{{ route('admin.transport-costs.index') }}" class="btn btn-secondary">
@@ -417,6 +550,7 @@
             </div>
         </div>
     @endif
+    </div> <!-- End .d-print-none -->
 </div>
 
 {{-- Reject Modal --}}

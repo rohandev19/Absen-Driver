@@ -144,9 +144,42 @@ class DriverController extends Controller
         return redirect()->route('admin.driver.index')->with('success', 'Driver berhasil dihapus.');
     }
 
+    /**
+     * SECURITY FIX: Added authorization, input validation, and audit logging
+     * Critical IDOR vulnerability fixed - prevents unauthorized access to sensitive documents
+     */
     public function lihatDokumen($id, $jenis)
     {
+        // 1. Strict input validation - whitelist allowed document types
+        if (!in_array($jenis, ['ktp', 'sim'], true)) {
+            abort(403, 'Jenis dokumen tidak valid.');
+        }
+
+        // 2. Authorization check - only master and service_admin can access
+        // This prevents customer role from accessing driver documents
+        if (!in_array(auth()->user()->role, ['master', 'service_admin'])) {
+            \Illuminate\Support\Facades\Log::warning('Unauthorized document access attempt', [
+                'user_id' => auth()->id(),
+                'user_role' => auth()->user()->role,
+                'target_driver_id' => $id,
+                'document_type' => $jenis,
+                'ip' => request()->ip(),
+            ]);
+            abort(403, 'Akses tidak diizinkan.');
+        }
+
         $driver = Driver::findOrFail($id);
+        
+        // 3. Audit log - track every document access for security compliance
+        \Illuminate\Support\Facades\Log::info('Driver document accessed', [
+            'admin_id' => auth()->id(),
+            'admin_name' => auth()->user()->name,
+            'driver_id' => $driver->id,
+            'driver_name' => $driver->full_name,
+            'document_type' => $jenis,
+            'ip' => request()->ip(),
+            'timestamp' => now(),
+        ]);
         
         $path = '';
         if ($jenis === 'ktp' && $driver->foto_ktp) {
@@ -159,6 +192,9 @@ class DriverController extends Controller
             abort(404, 'Dokumen tidak ditemukan.');
         }
 
-        return response()->file(storage_path('app/' . $path));
+        // Path is from database, no path traversal risk
+        $fullPath = Storage::disk('local')->path($path);
+
+        return response()->file($fullPath);
     }
 }

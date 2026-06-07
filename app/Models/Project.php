@@ -1,15 +1,20 @@
 <?php
 namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Project extends Model
 {
+    use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      * SECURITY: Using explicit $fillable instead of $guarded for better control
      */
     protected $fillable = [
         'name',
+        'code',
         'description',
         'customer_id',
     ];

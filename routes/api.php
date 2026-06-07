@@ -10,6 +10,7 @@ use App\Http\Controllers\VehicleComponentController;
 use App\Http\Controllers\VehicleHealthController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\MaintenanceAlertController;
+use App\Http\Controllers\Api\QRCodeScanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,21 +44,31 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         // A. OTORISASI
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
+        Route::post('/fcm-token', [AuthController::class, 'updateFcmToken']);
+        Route::post('/driver/update-photo', [AuthController::class, 'updateProfilePhoto']);
 
         // B. OPERASIONAL ABSENSI
         Route::post('/submit-attendance', [AttendanceController::class, 'submitAttendance']);
         Route::post('/submit-end-of-duty', [AttendanceController::class, 'submitEndOfDutyReport']);
+        Route::post('/clock-out-offline', [AttendanceController::class, 'clockOutOffline']);
         Route::post('/submit-emergency-report', [AttendanceController::class, 'submitEmergencyReport']);
         Route::post('/submit-service-report', [ServiceReportController::class, 'submitServiceReport']);
+        Route::get('/service-reports', [ServiceReportController::class, 'index']);
+        Route::get('/service-reports/{serviceReport}', [ServiceReportController::class, 'show']);
 
         // C. PENGAMBILAN DATA (GET)
         Route::get('/driver-details', [AttendanceController::class, 'getDriverDetails']);
         Route::get('/driver/status', [AttendanceController::class, 'checkDriverStatus']);
+        Route::get('/attendance/duty-status', [AttendanceController::class, 'getDutyStatus']);
         Route::get('/driver/history', [AttendanceController::class, 'getAttendanceHistory']);
 
         // D. UTILITIES
         Route::post('/clear-cache', [AttendanceController::class, 'clearCache']);
         Route::get('/vehicles/{plate_number}/last-odometer', [AttendanceController::class, 'getLastOdometer']);
+
+        // E. QR CODE SCANNING
+        Route::post('/qrcode/scan/driver', [QRCodeScanController::class, 'scanDriver']);
+        Route::post('/qrcode/scan/vehicle', [QRCodeScanController::class, 'scanVehicle']);
 
         // F. TRANSPORT COST MONITORING (Uang Jalan)
         Route::get('/transport-costs/can-create', [TransportCostController::class, 'canCreate']);
@@ -211,8 +222,100 @@ Route::get('/health', function () {
     ]);
 });
 
+$maintenanceTokenIsValid = static function (Request $request): bool {
+    $expectedToken = config('services.maintenance_url_token');
 
+    if (!is_string($expectedToken) || trim($expectedToken) === '') {
+        return false;
+    }
 
+    return hash_equals($expectedToken, (string) $request->query('token', ''));
+};
+
+// --- 3c. CRON JOB TRIGGER (VIA URL) ---
+// Berguna untuk shared hosting (FTP Only) tanpa akses terminal/crontab.
+// Daftarkan URL ini ke layanan CronJob Gratis (misal: cron-job.org) setiap 15 menit.
+Route::get('/cron/run-schedules', function (Request $request) use ($maintenanceTokenIsValid) {
+    if (! $maintenanceTokenIsValid($request)) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized token'], 403);
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('schedule:run');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Scheduler executed successfully.',
+            'output' => \Illuminate\Support\Facades\Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to execute schedule: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+// --- 3d. MIGRATE DATABASE (VIA URL) ---
+// Hanya untuk sekali pakai saat upload ke hosting FTP.
+Route::get('/migrate/run-secret', function (Request $request) use ($maintenanceTokenIsValid) {
+    if (app()->isProduction()) {
+        return response()->json(['status' => 'error', 'message' => 'Endpoint disabled in production'], 403);
+    }
+
+    if (! $maintenanceTokenIsValid($request)) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database migrated successfully!',
+            'output' => \Illuminate\Support\Facades\Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+});
+
+// --- 3e. RUN ARTISAN COMMANDS (VIA URL) ---
+// Sangat berguna untuk shared hosting (FTP) tanpa akses terminal.
+Route::get('/artisan/run-secret', function (Request $request) use ($maintenanceTokenIsValid) {
+    if (app()->isProduction()) {
+        return response()->json(['status' => 'error', 'message' => 'Endpoint disabled in production'], 403);
+    }
+
+    if (! $maintenanceTokenIsValid($request)) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+    }
+
+    $command = $request->query('command');
+    
+    // Daftar command yang diizinkan untuk alasan keamanan
+    $allowedCommands = [
+        'storage:link',
+        'qrcode:generate-missing',
+        'route:clear',
+        'config:clear',
+        'view:clear',
+        'cache:clear'
+    ];
+
+    if (!in_array($command, $allowedCommands)) {
+        return response()->json(['status' => 'error', 'message' => 'Command tidak diizinkan atau tidak ada.'], 403);
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call($command);
+        return response()->json([
+            'status' => 'success',
+            'message' => "Command '{$command}' berhasil dieksekusi!",
+            'output' => \Illuminate\Support\Facades\Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+});
 // --- 4. FALLBACK ROUTE (PENTING UNTUK FLUTTER) ---
 // Jika Flutter menembak URL yang salah (typo), server akan membalas JSON error, BUKAN HTML.
 // Ini mencegah aplikasi Flutter crash "FormatException".

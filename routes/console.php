@@ -36,3 +36,7 @@ Schedule::command('maintenance:generate-alerts')->everySixHours();
 
 // Generate schedules setiap hari jam 01:00
 Schedule::command('maintenance:generate-schedules')->dailyAt('01:00');
+
+// Push Notifications
+Schedule::command('notify:8-hours')->everyFifteenMinutes();
+Schedule::command('notify:sim-expiry')->dailyAt('09:00');

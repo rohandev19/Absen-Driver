@@ -226,9 +226,9 @@ class ReportController extends Controller
     {
         $laporanMasalahRaw = EmergencyReport::with(['driver', 'vehicle'])
             ->orderBy('timestamp', 'desc')
-            ->get();
+            ->paginate(50);
 
-        $laporanMasalah = $laporanMasalahRaw->map(function ($laporan) {
+        $laporanMasalah = $laporanMasalahRaw->getCollection()->map(function ($laporan) {
             $mapsUrl = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($laporan->gps_location);
             return [
                 'timestamp' => Carbon::parse($laporan->timestamp)->format('Y-m-d H:i:s'),
@@ -240,7 +240,7 @@ class ReportController extends Controller
             ];
         });
 
-        return view('admin.laporan_darurat', compact('laporanMasalah'));
+        return view('admin.laporan_darurat', compact('laporanMasalah', 'laporanMasalahRaw'));
     }
 
     public function rekapHarian(Request $request)

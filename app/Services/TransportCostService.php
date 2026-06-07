@@ -6,6 +6,7 @@ use App\Models\TransportCost;
 use App\Models\Attendance;
 use App\Models\Driver;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
 class TransportCostService
@@ -63,11 +64,19 @@ class TransportCostService
     public function createTripEntry(Driver $driver, array $data): TransportCost
     {
         return DB::transaction(function () use ($driver, $data) {
+            $tripDate = $data['trip_date'] ?? now()->toDateString();
+
             // Get attendance data
             $attendance = Attendance::where('driver_id', $driver->id)
-                ->whereDate('time_in', $data['trip_date'] ?? now())
+                ->whereDate('time_in', $tripDate)
                 ->whereNotNull('time_out')
                 ->firstOrFail();
+
+            if (TransportCost::where('driver_id', $driver->id)->whereDate('trip_date', $tripDate)->exists()) {
+                throw ValidationException::withMessages([
+                    'trip_date' => 'Anda sudah membuat laporan uang jalan untuk hari ini',
+                ]);
+            }
 
             // Auto-fill odometer from attendance
             $data['odometer_start'] = $attendance->speedo_awal;
@@ -76,8 +85,8 @@ class TransportCostService
             $data['driver_id'] = $driver->id;
             $data['vehicle_id'] = $attendance->vehicle_id;
             $data['project_id'] = $driver->project_id;
-            $data['created_by'] = $driver->id;
-            $data['trip_date'] = $data['trip_date'] ?? now()->toDateString();
+            $data['created_by'] = null;
+            $data['trip_date'] = $tripDate;
 
             // Calculate fuel efficiency
             $fuelData = $this->fuelEfficiencyService->calculate(

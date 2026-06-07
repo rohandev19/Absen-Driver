@@ -72,10 +72,10 @@
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 5%;">No.</th>
-                                <th style="width: 15%;">ID (NIK)</th>
+                                <th class="d-none d-md-table-cell" style="width: 15%;">ID (NIK)</th>
                                 <th style="width: 25%;">Nama Lengkap</th>
-                                <th style="width: 15%;">Project / Divisi</th>
-                                <th style="width: 20%;">Info SIM</th>
+                                <th class="d-none d-lg-table-cell" style="width: 15%;">Project / Divisi</th>
+                                <th class="d-none d-md-table-cell" style="width: 20%;">Info SIM</th>
                                 @can('is-master-admin')
                                     <th class="text-center" style="width: 10%;">Aksi</th>
                                 @endcan
@@ -85,11 +85,22 @@
                             @forelse ($drivers as $driver)
                                 <tr>
                                     <td>{{ $drivers->firstItem() + $loop->index }}</td>
-                                    <td><span class="badge bg-secondary font-monospace">{{ $driver->driver_id_nik }}</span></td>
-                                    <td class="fw-bold">{{ $driver->full_name }}</td>
+                                    <td class="d-none d-md-table-cell"><span class="badge bg-secondary font-monospace">{{ $driver->driver_id_nik }}</span></td>
+                                    <td class="fw-bold">
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if($driver->profile_photo)
+                                                <img src="{{ asset('storage/' . $driver->profile_photo) }}" alt="Foto" class="rounded-circle object-fit-cover border" style="width: 40px; height: 40px;">
+                                            @else
+                                                <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary border d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-person-fill fs-5"></i>
+                                                </div>
+                                            @endif
+                                            <span>{{ $driver->full_name }}</span>
+                                        </div>
+                                    </td>
                                     
                                     {{-- Kolom Project --}}
-                                    <td>
+                                    <td class="d-none d-lg-table-cell">
                                         @if($driver->project)
                                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
                                                 {{ $driver->project->name }}
@@ -100,7 +111,7 @@
                                     </td>
 
                                     {{-- Kolom SIM --}}
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <div class="d-flex flex-column gap-1">
                                             <span class="fw-bold text-dark small">
                                                 <i class="bi bi-card-heading me-1"></i> {{ $driver->sim_type ?? '??' }}
@@ -112,35 +123,35 @@
                                                     $diff = $today->diffInDays($expiry, false);
                                                 @endphp
                                                 @if($diff < 0)
-                                                    <span class="badge bg-danger" style="width: fit-content;">Mati ({{ $expiry->format('d/m/y') }})</span>
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger" style="width: fit-content;">Mati ({{ $expiry->format('d/m/y') }})</span>
                                                 @elseif($diff <= 30)
-                                                    <span class="badge bg-warning text-dark" style="width: fit-content;">Exp {{ $diff }} Hr</span>
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning" style="width: fit-content;">Exp {{ $diff }} Hr</span>
                                                 @else
-                                                    <span class="badge bg-success" style="width: fit-content;">Aktif</span>
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success" style="width: fit-content;">Aktif</span>
                                                 @endif
                                             @else
-                                                <span class="badge bg-secondary opacity-50">-</span>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary" style="width: fit-content;">-</span>
                                             @endif
                                         </div>
                                     </td>
 
                                     @can('is-master-admin')
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-1">
-                                                <button type="button" class="btn btn-info btn-sm text-white" title="Lihat Dokumen"
+                                            <div class="d-inline-flex flex-nowrap gap-1">
+                                                <button type="button" class="btn btn-outline-info btn-sm" title="Lihat Dokumen"
                                                     data-bs-toggle="modal" data-bs-target="#dokumenModal"
                                                     data-nama="{{ $driver->full_name }}"
                                                     data-ktp="{{ $driver->foto_ktp ? route('admin.driver.dokumen', ['id' => $driver->id, 'jenis' => 'ktp']) : '' }}"
                                                     data-sim="{{ $driver->foto_sim ? route('admin.driver.dokumen', ['id' => $driver->id, 'jenis' => 'sim']) : '' }}">
                                                     <i class="bi bi-person-vcard"></i>
                                                 </button>
-                                                <a href="{{ route('admin.driver.edit', $driver->id) }}" class="btn btn-warning btn-sm" title="Edit Data">
+                                                <a href="{{ route('admin.driver.edit', $driver->id) }}" class="btn btn-outline-warning btn-sm" data-bs-toggle="tooltip" title="Edit Data">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </a>
-                                                <form action="{{ route('admin.driver.destroy', $driver->id) }}" method="POST" class="form-delete-global" data-message="Hapus {{ $driver->full_name }}?">
+                                                <form action="{{ route('admin.driver.destroy', $driver->id) }}" method="POST" class="d-inline form-delete-global" data-message="Hapus {{ $driver->full_name }}?">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" title="Hapus Driver">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" title="Hapus Driver">
                                                         <i class="bi bi-trash-fill"></i>
                                                     </button>
                                                 </form>

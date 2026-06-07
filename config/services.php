@@ -68,4 +68,6 @@ return [
         'service_admin_phone' => env('WA_SERVICE_ADMIN_PHONE'),
         'customer_default_phone' => env('WA_CUSTOMER_DEFAULT_PHONE'),
     ],
+
+    'maintenance_url_token' => env('MAINTENANCE_URL_TOKEN'),
 ];

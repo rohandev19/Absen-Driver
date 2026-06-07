@@ -32,9 +32,17 @@
                                 Mobil</h5>
                             <small class="text-muted">Data administrasi dan legalitas armada</small>
                         </div>
-                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
-                            <i class="bi bi-database me-1"></i> {{ $vehicles->total() }} Unit Total
-                        </span>
+                        <div class="d-flex flex-wrap gap-2 justify-content-end">
+                            @if(($pendingVerificationCount ?? 0) > 0)
+                                <a href="{{ route('admin.daftar_aset', ['verification_status' => 'pending']) }}"
+                                    class="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 py-2 rounded-pill text-decoration-none">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> {{ $pendingVerificationCount }} Pending Verifikasi
+                                </a>
+                            @endif
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                                <i class="bi bi-database me-1"></i> {{ $vehicles->total() }} Unit Total
+                            </span>
+                        </div>
                     </div>
 
                     <div class="card-body">
@@ -79,8 +87,16 @@
                                             </select>
                                         </div>
 
+                                        <div class="col-md-2 col-6">
+                                            <select name="verification_status" class="form-select bg-light border-0" onchange="this.form.submit()">
+                                                <option value="">Semua Verifikasi</option>
+                                                <option value="pending" {{ request('verification_status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                                <option value="verified" {{ request('verification_status') == 'verified' ? 'selected' : '' }}>Terverifikasi</option>
+                                            </select>
+                                        </div>
+
                                         {{-- 3. SEARCH BAR --}}
-                                        <div class="col-md-4 col-12">
+                                        <div class="col-md-2 col-12">
                                             <div class="input-group">
                                                 <span class="input-group-text bg-light border-end-0 border-0"><i class="bi bi-search text-muted"></i></span>
                                                 <input type="search" class="form-control bg-light border-start-0 border-0 ps-0" 
@@ -92,7 +108,7 @@
                                         </div>
 
                                         {{-- TOMBOL RESET (Muncul jika ada filter aktif) --}}
-                                        @if(request('kategori') || request('search') || request('project_id'))
+                                        @if(request('kategori') || request('search') || request('project_id') || request('verification_status') || request('temporary_only'))
                                             <div class="col-auto">
                                                 <a href="{{ route('admin.daftar_aset') }}" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Reset Filter">
                                                     <i class="bi bi-x-lg"></i>
@@ -129,6 +145,16 @@
 
                                                 <td data-label="Plat Nomor">
                                                     <span class="badge bg-dark fs-6 font-monospace">{{ $vehicle->plate_number }}</span>
+                                                    <div class="d-flex flex-wrap gap-1 mt-2">
+                                                        @if($vehicle->is_temporary)
+                                                            <span class="badge bg-info bg-opacity-10 text-info border border-info">Unit Sementara</span>
+                                                        @endif
+                                                        @if($vehicle->verification_status === 'pending')
+                                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">Pending Verifikasi</span>
+                                                        @elseif($vehicle->source === 'driver_manual')
+                                                            <span class="badge bg-success bg-opacity-10 text-success border border-success">Manual Terverifikasi</span>
+                                                        @endif
+                                                    </div>
                                                 </td>
 
                                                 <td data-label="Jenis Mobil" class="fw-medium">{{ $vehicle->type ?? '-' }}</td>
@@ -145,7 +171,14 @@
                                                 </td>
 
                                                 <td data-label="Status">
-                                                    @if ($vehicle->status == 'maintenance')
+                                                    @php
+                                                        $statusLower = strtolower((string) $vehicle->status);
+                                                    @endphp
+                                                    @if ($vehicle->verification_status === 'pending')
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">
+                                                            <i class="bi bi-hourglass-split me-1"></i> Pending
+                                                        </span>
+                                                    @elseif (in_array($statusLower, ['maintenance', 'perbaikan', 'servis', 'service', 'rusak', 'tidak aktif', 'inactive', 'nonaktif']))
                                                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">
                                                             <i class="bi bi-tools me-1"></i> Perbaikan
                                                         </span>
@@ -195,6 +228,26 @@
                                                         </a>
 
                                                         @can('is-master-admin')
+                                                            @if($vehicle->verification_status === 'pending')
+                                                                <form action="{{ route('admin.aset.verify_temporary', $vehicle->id) }}" method="POST"
+                                                                    class="d-inline"
+                                                                    onsubmit="return confirm('Verifikasi unit {{ $vehicle->plate_number }} sebagai unit valid?')">
+                                                                    @csrf
+                                                                    <button type="submit" class="btn btn-outline-success btn-sm"
+                                                                        data-bs-toggle="tooltip" title="Verifikasi Unit">
+                                                                        <i class="bi bi-check2-circle"></i>
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+
+                                                            @if($vehicle->qr_code_path)
+                                                                <a href="{{ route('admin.vehicles.qr-print', $vehicle->id) }}" target="_blank"
+                                                                    class="btn btn-outline-primary btn-sm" data-bs-toggle="tooltip"
+                                                                    title="Print QR">
+                                                                    <i class="bi bi-qr-code"></i>
+                                                                </a>
+                                                            @endif
+
                                                             {{-- Edit --}}
                                                             <a href="{{ route('admin.aset.edit', $vehicle->id) }}"
                                                                 class="btn btn-outline-warning btn-sm" data-bs-toggle="tooltip"

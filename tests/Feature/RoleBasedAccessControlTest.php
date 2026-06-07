@@ -128,10 +128,14 @@ class RoleBasedAccessControlTest extends TestCase
      */
     public function test_customer_can_access_customer_routes()
     {
+        // Create customer record
+        $customerRecord = \App\Models\Customer::factory()->create();
+
         // Create a customer user
         $customer = User::factory()->create([
             'role' => 'customer',
             'email' => 'customer@test.com',
+            'customer_id' => $customerRecord->id,
         ]);
 
         // Login as customer

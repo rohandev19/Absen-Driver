@@ -16,6 +16,11 @@ class Attendance extends Model
         // Kolom Check-in
         'driver_id',
         'vehicle_id',
+        'vehicle_entry_method',
+        'manual_vehicle_plate',
+        'manual_vehicle_reason',
+        'manual_vehicle_photo_path',
+        'vehicle_verification_status',
         'time_in',
         'gps_location_in',
         'selfie_photo_path',
@@ -33,6 +38,23 @@ class Attendance extends Model
         'check_lampu',
         'check_rem',
         'speedo_akhir',
+
+        // Offline Recovery Metadata
+        'is_offline_recovery',
+        'recovery_timestamp',
+        'offline_entry_id',
+        'is_late_submission',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     */
+    protected $casts = [
+        'is_offline_recovery' => 'boolean',
+        'is_late_submission' => 'boolean',
+        'recovery_timestamp' => 'datetime',
+        'time_in' => 'datetime',
+        'time_out' => 'datetime',
     ];
 
     public function driver()
@@ -48,5 +70,13 @@ class Attendance extends Model
     public function transportCost()
     {
         return $this->hasOne(TransportCost::class);
+    }
+
+    /**
+     * Get the offline recovery log associated with this attendance.
+     */
+    public function offlineRecoveryLog()
+    {
+        return $this->hasOne(OfflineRecoveryLog::class);
     }
 }

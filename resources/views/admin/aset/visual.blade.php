@@ -435,16 +435,8 @@
                 mesin: "{{ $finalStatus['mesin'] }}"
             };
 
-            // Vehicle Type untuk dynamic coloring
+            // Vehicle Type
             const vehicleType = "{{ $vehicle->type }}";
-
-            // Mapping warna berdasarkan tipe kendaraan
-            let cabinColorHex = 0xf1c40f; // Default kuning
-            if (vehicleType.toLowerCase().includes('pickup')) cabinColorHex = 0x3498db; // Biru
-            else if (vehicleType.toLowerCase().includes('minibus')) cabinColorHex = 0xe74c3c; // Merah
-            else if (vehicleType.toLowerCase().includes('sedan')) cabinColorHex = 0x2ecc71; // Hijau
-            else if (vehicleType.toLowerCase().includes('suv')) cabinColorHex = 0x9b59b6; // Ungu
-            else if (vehicleType.toLowerCase().includes('truk')) cabinColorHex = 0xf39c12; // Orange
 
             function init() {
                 const container = document.getElementById('vehicle-3d');
@@ -524,153 +516,402 @@
             function createTruckModel() {
                 truckGroup = new THREE.Group();
 
-                // --- Materials ---
-                const matCabin = new THREE.MeshStandardMaterial({
-                    color: cabinColorHex, // Dynamic color based on vehicle type
-                    roughness: 0.3,
-                    metalness: 0.1
-                }); // Vehicle color
+                // --- Materials (Isuzu ELF style: white body) ---
+                const matCabinWhite = new THREE.MeshStandardMaterial({
+                    color: 0xf0f0f0, roughness: 0.35, metalness: 0.05
+                });
                 const matChassis = new THREE.MeshStandardMaterial({
-                    color: 0x111111,
-                    roughness: 0.9
-                }); // Dark Grey
+                    color: 0x1a1a1a, roughness: 0.9
+                });
+                const matFrame = new THREE.MeshStandardMaterial({
+                    color: 0x2a2a2a, roughness: 0.8, metalness: 0.3
+                });
                 const matBox = new THREE.MeshStandardMaterial({
-                    color: 0xecf0f1,
-                    roughness: 0.5
-                }); // White
+                    color: 0xe8e8e8, roughness: 0.45
+                });
+                const matBoxTrim = new THREE.MeshStandardMaterial({
+                    color: 0xcccccc, roughness: 0.5, metalness: 0.15
+                });
                 const matGlass = new THREE.MeshStandardMaterial({
-                    color: 0x3498db,
-                    transparent: true,
-                    opacity: 0.6,
-                    roughness: 0.1
+                    color: 0x1a3a5c, transparent: true, opacity: 0.55, roughness: 0.05, metalness: 0.1
                 });
                 const matTire = new THREE.MeshStandardMaterial({
-                    color: 0x222222
+                    color: 0x1a1a1a, roughness: 0.95
                 });
                 const matRim = new THREE.MeshStandardMaterial({
-                    color: 0xbdc3c7,
-                    metalness: 0.5
+                    color: 0x888888, metalness: 0.6, roughness: 0.3
                 });
-                const matLight = new THREE.MeshStandardMaterial({
-                    color: 0xffffff,
-                    emissive: 0xffffcc,
-                    emissiveIntensity: 0.5
+                const matHeadlight = new THREE.MeshStandardMaterial({
+                    color: 0xffffff, emissive: 0xffffdd, emissiveIntensity: 0.4, roughness: 0.1
                 });
-                const matDetail = new THREE.MeshStandardMaterial({
-                    color: 0x333333
-                }); // For mirrors/handles
+                const matTaillight = new THREE.MeshStandardMaterial({
+                    color: 0xcc0000, emissive: 0x880000, emissiveIntensity: 0.3
+                });
+                const matIndicator = new THREE.MeshStandardMaterial({
+                    color: 0xff8800, emissive: 0xcc6600, emissiveIntensity: 0.3
+                });
+                const matGrille = new THREE.MeshStandardMaterial({
+                    color: 0x333333, roughness: 0.7
+                });
+                const matBumper = new THREE.MeshStandardMaterial({
+                    color: 0x2a2a2a, roughness: 0.6, metalness: 0.2
+                });
+                const matMirror = new THREE.MeshStandardMaterial({
+                    color: 0x222222, roughness: 0.5
+                });
+                const matOrangeStripe = new THREE.MeshStandardMaterial({
+                    color: 0xf5a623, roughness: 0.5
+                });
+                const matStep = new THREE.MeshStandardMaterial({
+                    color: 0x444444, roughness: 0.7, metalness: 0.3
+                });
+                const matExhaust = new THREE.MeshStandardMaterial({
+                    color: 0x555555, metalness: 0.5, roughness: 0.4
+                });
 
-                // 1. CHASSIS
-                const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, 5.5), matChassis.clone());
-                chassis.position.y = 0.6;
-                chassis.castShadow = true;
-                truckGroup.add(chassis);
-                parts.chassis = chassis;
+                // =============================================
+                // 1. CHASSIS FRAME (Rail dua batang)
+                // =============================================
+                const railGeo = new THREE.BoxGeometry(0.15, 0.2, 5.9);
+                const railL = new THREE.Mesh(railGeo, matFrame.clone());
+                railL.position.set(0.45, 0.55, 0.25);
+                railL.castShadow = true;
+                truckGroup.add(railL);
+                const railR = new THREE.Mesh(railGeo, matFrame.clone());
+                railR.position.set(-0.45, 0.55, 0.25);
+                railR.castShadow = true;
+                truckGroup.add(railR);
 
-                // 2. KABIN DEPAN (Group)
+                // Cross members
+                for (let i = -3; i <= 3; i++) {
+                    const cross = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.75, 0.08, 0.12), matFrame
+                    );
+                    cross.position.set(0, 0.52, i * 0.8 + 0.25);
+                    truckGroup.add(cross);
+                }
+                parts.chassis = railL;
+
+                // =============================================
+                // 2. KABIN ISUZU ELF (Cab Over Engine)
+                // =============================================
                 const cabinGroup = new THREE.Group();
 
-                // Base Cabin Block
-                const cabBase = new THREE.Mesh(new THREE.BoxGeometry(2, 1.4, 1.6), matCabin.clone());
-                cabBase.position.set(0, 1.4, 1.8);
-                cabBase.castShadow = true;
-                cabinGroup.add(cabBase);
+                // --- Main cabin body ---
+                const cabBody = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.05, 1.55, 1.7), matCabinWhite.clone()
+                );
+                cabBody.position.set(0, 1.50, 2.35);
+                cabBody.castShadow = true;
+                cabinGroup.add(cabBody);
 
-                // --- KACA DEPAN ---
-                const windshieldShape = new THREE.Shape();
-                // Koordinat Shape (X, Y) dalam 2D sebelum di-extrude
-                // Disesuaikan agar lebih presisi
-                windshieldShape.moveTo(-0.9, -0.35); // Kiri Bawah
-                windshieldShape.lineTo(0.9, -0.35);  // Kanan Bawah
-                windshieldShape.lineTo(0.85, 0.35);  // Kanan Atas (Trapesium halus)
-                windshieldShape.lineTo(-0.85, 0.35); // Kiri Atas
-                windshieldShape.lineTo(-0.9, -0.35); // Tutup Jalur
+                // --- Roof (slightly wider, rounded feel) ---
+                const roof = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.1, 0.1, 1.75), matCabinWhite.clone()
+                );
+                roof.position.set(0, 2.33, 2.35);
+                roof.castShadow = true;
+                cabinGroup.add(roof);
 
-                const windshieldGeo = new THREE.ExtrudeGeometry(windshieldShape, {
-                    depth: 0.05,        // Tipis saja
-                    bevelEnabled: true, // Bevel agar pinggiran halus
-                    bevelThickness: 0.02,
-                    bevelSize: 0.02,
-                    bevelSegments: 2
+                // Roof edge (subtle lip)
+                const roofEdge = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.15, 0.04, 0.08), matBoxTrim
+                );
+                roofEdge.position.set(0, 2.36, 3.22);
+                cabinGroup.add(roofEdge);
+
+                // --- Windshield (large, slightly angled - ELF style) ---
+                const wsShape = new THREE.Shape();
+                wsShape.moveTo(-0.92, -0.55);
+                wsShape.lineTo(0.92, -0.55);
+                wsShape.lineTo(0.88, 0.55);
+                wsShape.lineTo(-0.88, 0.55);
+                wsShape.lineTo(-0.92, -0.55);
+
+                const wsGeo = new THREE.ExtrudeGeometry(wsShape, {
+                    depth: 0.04, bevelEnabled: true,
+                    bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 2
                 });
-                const windshield = new THREE.Mesh(windshieldGeo, matGlass);
-
-                // KOORDINAT BARU YANG LEBIH PAS:
-                // Y: 1.8 (Posisi vertikal di tengah atas kabin)
-                // Z: 2.62 (Maju sedikit dari kabin, menempel di depan)
-                // Rotasi X: -0.1 (Miring sedikit ke belakang agar aerodinamis tapi tidak melayang)
-                windshield.position.set(0, 1.8, 2.62);
-                windshield.rotation.x = -0.1;
-
+                const windshield = new THREE.Mesh(wsGeo, matGlass);
+                windshield.position.set(0, 1.65, 3.22);
+                windshield.rotation.x = -0.12;
                 cabinGroup.add(windshield);
-                // ----------------------------
 
-                // Front Lights (Lampu)
-                const lightL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.1), matLight.clone());
-                lightL.position.set(0.6, 0.9, 2.65);
+                // Windshield divider (center pillar)
+                const wsDivider = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.03, 1.1, 0.06), matCabinWhite
+                );
+                wsDivider.position.set(0, 1.65, 3.24);
+                cabinGroup.add(wsDivider);
+
+                // --- Side Windows ---
+                const sideWinGeo = new THREE.PlaneGeometry(1.2, 0.7);
+                const sideWinL = new THREE.Mesh(sideWinGeo, matGlass.clone());
+                sideWinL.position.set(1.03, 1.75, 2.35);
+                sideWinL.rotation.y = Math.PI / 2;
+                cabinGroup.add(sideWinL);
+                const sideWinR = new THREE.Mesh(sideWinGeo, matGlass.clone());
+                sideWinR.position.set(-1.03, 1.75, 2.35);
+                sideWinR.rotation.y = -Math.PI / 2;
+                cabinGroup.add(sideWinR);
+
+                // Side window frames (A-pillar)
+                const pillarGeo = new THREE.BoxGeometry(0.05, 1.1, 0.06);
+                [1.04, -1.04].forEach(x => {
+                    const pillarF = new THREE.Mesh(pillarGeo, matCabinWhite);
+                    pillarF.position.set(x, 1.65, 2.95);
+                    cabinGroup.add(pillarF);
+                    const pillarR = new THREE.Mesh(pillarGeo, matCabinWhite);
+                    pillarR.position.set(x, 1.65, 1.75);
+                    cabinGroup.add(pillarR);
+                });
+
+                // --- Front Face (below windshield) ---
+                const frontFace = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.05, 0.6, 0.08), matCabinWhite.clone()
+                );
+                frontFace.position.set(0, 0.95, 3.2);
+                cabinGroup.add(frontFace);
+
+                // --- Grille (horizontal slats - Isuzu ELF style) ---
+                for (let i = 0; i < 4; i++) {
+                    const slat = new THREE.Mesh(
+                        new THREE.BoxGeometry(1.4, 0.04, 0.06), matGrille
+                    );
+                    slat.position.set(0, 0.78 + i * 0.08, 3.24);
+                    cabinGroup.add(slat);
+                }
+                // Grille frame
+                const grilleFrame = new THREE.Mesh(
+                    new THREE.BoxGeometry(1.5, 0.38, 0.04), matGrille
+                );
+                grilleFrame.position.set(0, 0.92, 3.23);
+                cabinGroup.add(grilleFrame);
+
+                // --- Headlights (rectangular, Isuzu ELF style) ---
+                const hlGeo = new THREE.BoxGeometry(0.28, 0.2, 0.1);
+                const lightL = new THREE.Mesh(hlGeo, matHeadlight.clone());
+                lightL.position.set(0.82, 0.95, 3.22);
                 cabinGroup.add(lightL);
-                const lightR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.1), matLight.clone());
-                lightR.position.set(-0.6, 0.9, 2.65);
+                const lightR = new THREE.Mesh(hlGeo, matHeadlight.clone());
+                lightR.position.set(-0.82, 0.95, 3.22);
                 cabinGroup.add(lightR);
 
-                // Grille / Bumper Detail
-                const bumper = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.3, 0.15), matDetail);
-                bumper.position.set(0, 0.6, 2.65);
+                // Indicator lights (orange, below headlights)
+                const indGeo = new THREE.BoxGeometry(0.25, 0.08, 0.08);
+                const indL = new THREE.Mesh(indGeo, matIndicator.clone());
+                indL.position.set(0.82, 0.8, 3.24);
+                cabinGroup.add(indL);
+                const indR = new THREE.Mesh(indGeo, matIndicator.clone());
+                indR.position.set(-0.82, 0.8, 3.24);
+                cabinGroup.add(indR);
+
+                // --- Bumper (prominent, dark) ---
+                const bumper = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.15, 0.25, 0.2), matBumper
+                );
+                bumper.position.set(0, 0.55, 3.28);
+                bumper.castShadow = true;
                 cabinGroup.add(bumper);
 
-                // Side Mirrors (Spion)
-                const mirrorGeo = new THREE.BoxGeometry(0.1, 0.4, 0.2);
-                const mirrorL = new THREE.Mesh(mirrorGeo, matDetail);
-                mirrorL.position.set(1.1, 1.8, 2.0);
-                mirrorL.rotation.y = 0.2;
-                cabinGroup.add(mirrorL);
-                const mirrorR = new THREE.Mesh(mirrorGeo, matDetail);
-                mirrorR.position.set(-1.1, 1.8, 2.0);
-                mirrorR.rotation.y = -0.2;
-                cabinGroup.add(mirrorR);
+                // Bumper fog lights
+                const fogGeo = new THREE.BoxGeometry(0.15, 0.1, 0.08);
+                const fogL = new THREE.Mesh(fogGeo, matHeadlight.clone());
+                fogL.position.set(0.7, 0.55, 3.38);
+                cabinGroup.add(fogL);
+                const fogR = new THREE.Mesh(fogGeo, matHeadlight.clone());
+                fogR.position.set(-0.7, 0.55, 3.38);
+                cabinGroup.add(fogR);
+
+                // --- Side Mirrors (on stalks, ELF style) ---
+                [1, -1].forEach(side => {
+                    // Stalk
+                    const stalk = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.35, 0.04, 0.04), matMirror
+                    );
+                    stalk.position.set(side * 1.2, 2.0, 2.9);
+                    cabinGroup.add(stalk);
+                    // Mirror housing
+                    const mirrorHousing = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.06, 0.3, 0.2), matMirror
+                    );
+                    mirrorHousing.position.set(side * 1.38, 1.9, 2.9);
+                    cabinGroup.add(mirrorHousing);
+                    // Mirror glass
+                    const mirrorGlass = new THREE.Mesh(
+                        new THREE.PlaneGeometry(0.25, 0.15), matGlass
+                    );
+                    mirrorGlass.position.set(side * 1.38, 1.92, 2.91);
+                    mirrorGlass.rotation.y = side > 0 ? Math.PI / 2 : -Math.PI / 2;
+                    cabinGroup.add(mirrorGlass);
+                });
+
+                // --- Door handles ---
+                const handleGeo = new THREE.BoxGeometry(0.12, 0.03, 0.03);
+                const handleL = new THREE.Mesh(handleGeo, matMirror);
+                handleL.position.set(1.04, 1.35, 2.2);
+                cabinGroup.add(handleL);
+                const handleR = new THREE.Mesh(handleGeo, matMirror);
+                handleR.position.set(-1.04, 1.35, 2.2);
+                cabinGroup.add(handleR);
+
+
 
                 truckGroup.add(cabinGroup);
-                parts.cabin = cabBase; // Logic highlights the main block
-                parts.lampu = [lightL, lightR];
+                parts.cabin = cabBody;
+                parts.lampu = [lightL, lightR, indL, indR, fogL, fogR];
 
-                // 3. BOX BELAKANG
-                const box = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.2, 3.8), matBox.clone());
-                box.position.set(0, 1.8, -0.8);
-                box.castShadow = true;
-                truckGroup.add(box);
-                parts.box = box;
+                // =============================================
+                // 3. CARGO BOX (Bak tertutup - Isuzu ELF Box)
+                // =============================================
+                const boxGroup = new THREE.Group();
 
-                // 4. WHEELS
-                const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.25, 24);
+                // Main box body
+                const cargoBox = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.15, 2.3, 4.2), matBox.clone()
+                );
+                cargoBox.position.set(0, 1.85, -0.6);
+                cargoBox.castShadow = true;
+                boxGroup.add(cargoBox);
+
+                // Horizontal panel lines on sides (ELF box style)
+                for (let i = 0; i < 6; i++) {
+                    const lineGeo = new THREE.BoxGeometry(0.01, 0.015, 4.15);
+                    [1.08, -1.08].forEach(x => {
+                        const panelLine = new THREE.Mesh(lineGeo, matBoxTrim);
+                        panelLine.position.set(x, 1.05 + i * 0.38, -0.6);
+                        boxGroup.add(panelLine);
+                    });
+                }
+
+                // Horizontal panel lines on rear
+                for (let i = 0; i < 6; i++) {
+                    const rearLine = new THREE.Mesh(
+                        new THREE.BoxGeometry(2.1, 0.015, 0.01), matBoxTrim
+                    );
+                    rearLine.position.set(0, 1.05 + i * 0.38, -2.7);
+                    boxGroup.add(rearLine);
+                }
+
+                // Box bottom rail / frame
+                const boxRail = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.2, 0.08, 4.25), matFrame
+                );
+                boxRail.position.set(0, 0.68, -0.6);
+                boxGroup.add(boxRail);
+
+                // Orange reflector stripe (ELF signature)
+                const stripeL = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.015, 0.08, 1.2), matOrangeStripe
+                );
+                stripeL.position.set(1.085, 0.9, -1.8);
+                boxGroup.add(stripeL);
+                const stripeR = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.015, 0.08, 1.2), matOrangeStripe
+                );
+                stripeR.position.set(-1.085, 0.9, -1.8);
+                boxGroup.add(stripeR);
+
+                // Rear orange reflector
+                const stripeRear = new THREE.Mesh(
+                    new THREE.BoxGeometry(1.0, 0.08, 0.015), matOrangeStripe
+                );
+                stripeRear.position.set(0, 0.9, -2.71);
+                boxGroup.add(stripeRear);
+
+                // Rear tail lights
+                const tailGeo = new THREE.BoxGeometry(0.2, 0.3, 0.06);
+                const tailL = new THREE.Mesh(tailGeo, matTaillight.clone());
+                tailL.position.set(0.9, 1.1, -2.72);
+                boxGroup.add(tailL);
+                const tailR = new THREE.Mesh(tailGeo, matTaillight.clone());
+                tailR.position.set(-0.9, 1.1, -2.72);
+                boxGroup.add(tailR);
+
+                // Rear indicators
+                const rIndGeo = new THREE.BoxGeometry(0.2, 0.1, 0.06);
+                const rIndL = new THREE.Mesh(rIndGeo, matIndicator);
+                rIndL.position.set(0.9, 1.35, -2.72);
+                boxGroup.add(rIndL);
+                const rIndR = new THREE.Mesh(rIndGeo, matIndicator);
+                rIndR.position.set(-0.9, 1.35, -2.72);
+                boxGroup.add(rIndR);
+
+                // Rear door handle
+                const rDoorHandle = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.3, 0.04, 0.04), matMirror
+                );
+                rDoorHandle.position.set(0, 1.5, -2.73);
+                boxGroup.add(rDoorHandle);
+
+                // Vertical reinforcement bars on sides
+                for (let i = 0; i < 4; i++) {
+                    [1.085, -1.085].forEach(x => {
+                        const vBar = new THREE.Mesh(
+                            new THREE.BoxGeometry(0.015, 1.8, 0.04), matBoxTrim
+                        );
+                        vBar.position.set(x, 1.6, 0.9 - i * 1.1);
+                        boxGroup.add(vBar);
+                    });
+                }
+
+                truckGroup.add(boxGroup);
+                parts.box = cargoBox;
+
+
+                // =============================================
+                // 5. WHEELS (Front single, Rear dual - ELF style)
+                // =============================================
+                const wheelGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.22, 28);
                 wheelGeo.rotateZ(Math.PI / 2);
-
-                const wheelPositions = [{
-                    x: 0.9,
-                    z: 1.8
-                }, {
-                    x: -0.9,
-                    z: 1.8
-                }, {
-                    x: 0.9,
-                    z: -1.5
-                }, {
-                    x: -0.9,
-                    z: -1.5
-                }];
+                const rimGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.23, 16);
+                rimGeo.rotateZ(Math.PI / 2);
+                const hubGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.24, 12);
+                hubGeo.rotateZ(Math.PI / 2);
 
                 parts.wheels = [];
-                wheelPositions.forEach(pos => {
+
+                // Front wheels (single)
+                [{x: 0.95, z: 2.35}, {x: -0.95, z: 2.35}].forEach(pos => {
                     const wheel = new THREE.Mesh(wheelGeo, matTire.clone());
-                    wheel.position.set(pos.x, 0.4, pos.z);
+                    wheel.position.set(pos.x, 0.42, pos.z);
                     wheel.castShadow = true;
                     truckGroup.add(wheel);
 
-                    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.26, 16).rotateZ(Math.PI / 2),
-                        matRim);
+                    const rim = new THREE.Mesh(rimGeo, matRim);
                     rim.position.copy(wheel.position);
                     truckGroup.add(rim);
 
+                    const hub = new THREE.Mesh(hubGeo, matRim);
+                    hub.position.copy(wheel.position);
+                    truckGroup.add(hub);
+
                     parts.wheels.push(wheel);
+                });
+
+                // Rear wheels (dual - inner + outer per side)
+                [{x: 0.82, z: -1.6}, {x: -0.82, z: -1.6}].forEach(pos => {
+                    // Inner wheel
+                    const wInner = new THREE.Mesh(wheelGeo, matTire.clone());
+                    wInner.position.set(pos.x, 0.42, pos.z);
+                    wInner.castShadow = true;
+                    truckGroup.add(wInner);
+                    const rimInner = new THREE.Mesh(rimGeo, matRim);
+                    rimInner.position.copy(wInner.position);
+                    truckGroup.add(rimInner);
+
+                    // Outer wheel
+                    const outerX = pos.x > 0 ? pos.x + 0.24 : pos.x - 0.24;
+                    const wOuter = new THREE.Mesh(wheelGeo, matTire.clone());
+                    wOuter.position.set(outerX, 0.42, pos.z);
+                    wOuter.castShadow = true;
+                    truckGroup.add(wOuter);
+                    const rimOuter = new THREE.Mesh(rimGeo, matRim);
+                    rimOuter.position.copy(wOuter.position);
+                    truckGroup.add(rimOuter);
+
+                    parts.wheels.push(wInner);
+                    parts.wheels.push(wOuter);
                 });
 
                 scene.add(truckGroup);
