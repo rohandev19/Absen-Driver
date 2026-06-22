@@ -24,7 +24,7 @@ class WhatsAppNotificationService
 
         $driverName = $serviceReport->driver->full_name ?? 'Unknown';
         $plateNumber = $serviceReport->vehicle->plate_number ?? 'N/A';
-        $timestamp = $serviceReport->timestamp->format('d-m-Y H:i');
+        $timestamp = now()->format('d-m-Y H:i');
         
         // Get customer from vehicle's project
         $customer = $serviceReport->getProjectCustomer() ?? $serviceReport->customer;
@@ -43,8 +43,9 @@ class WhatsAppNotificationService
         $message .= "Mohon segera review:\n{$url}";
 
         try {
-            Http::timeout(10)->post($gatewayUrl, [
-                'token' => $token,
+            Http::withHeaders([
+                'Authorization' => $token,
+            ])->timeout(10)->post($gatewayUrl, [
                 'target' => $adminPhone,
                 'message' => $message,
             ]);
@@ -91,8 +92,9 @@ class WhatsAppNotificationService
         $message .= "Terima kasih.";
 
         try {
-            Http::timeout(10)->post($gatewayUrl, [
-                'token' => $token,
+            Http::withHeaders([
+                'Authorization' => $token,
+            ])->timeout(10)->post($gatewayUrl, [
                 'target' => $customerPhone,
                 'message' => $message,
             ]);
@@ -126,8 +128,9 @@ class WhatsAppNotificationService
         $message .= "Terima kasih atas laporan Anda!";
 
         try {
-            Http::timeout(10)->post($gatewayUrl, [
-                'token' => $token,
+            Http::withHeaders([
+                'Authorization' => $token,
+            ])->timeout(10)->post($gatewayUrl, [
                 'target' => $driverPhone,
                 'message' => $message,
             ]);
@@ -170,8 +173,9 @@ class WhatsAppNotificationService
         $message .= "Silakan hubungi admin untuk informasi lebih lanjut.";
 
         try {
-            Http::timeout(10)->post($gatewayUrl, [
-                'token' => $token,
+            Http::withHeaders([
+                'Authorization' => $token,
+            ])->timeout(10)->post($gatewayUrl, [
                 'target' => $driverPhone,
                 'message' => $message,
             ]);
@@ -189,6 +193,86 @@ class WhatsAppNotificationService
             }
         } catch (\Exception $e) {
             Log::error('FCM rejection notification failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send WhatsApp notification to admin when customer requests revision.
+     */
+    public function notifyAdminOnRevision(ServiceReport $serviceReport): void
+    {
+        $gatewayUrl = config('services.wa.gateway_url');
+        $token = config('services.wa.gateway_token');
+        $adminPhone = config('services.wa.service_admin_phone');
+
+        if (!$gatewayUrl || !$token || !$adminPhone) {
+            Log::warning('WhatsApp gateway not configured properly for admin notification');
+            return;
+        }
+
+        $plateNumber = $serviceReport->vehicle->plate_number ?? 'N/A';
+        $customer = $serviceReport->getProjectCustomer() ?? $serviceReport->customer;
+        $customerName = $customer->name ?? 'Customer';
+        
+        $notes = mb_substr($serviceReport->customer_revision_notes, 0, 200);
+        $url = url(route('admin.service.show', $serviceReport->id));
+
+        $message = "⚠️ REQUEST KOREKSI SERVICE\n";
+        $message .= "─────────────────────────\n";
+        $message .= "Customer: {$customerName}\n";
+        $message .= "Plat    : {$plateNumber}\n";
+        $message .= "Catatan : {$notes}\n\n";
+        $message .= "Mohon segera diperbaiki:\n{$url}";
+
+        try {
+            Http::withHeaders([
+                'Authorization' => $token,
+            ])->timeout(10)->post($gatewayUrl, [
+                'target' => $adminPhone,
+                'message' => $message,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('WhatsApp admin notification (revision) failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send WhatsApp notification to admin when customer rejects report.
+     */
+    public function notifyAdminOnRejection(ServiceReport $serviceReport): void
+    {
+        $gatewayUrl = config('services.wa.gateway_url');
+        $token = config('services.wa.gateway_token');
+        $adminPhone = config('services.wa.service_admin_phone');
+
+        if (!$gatewayUrl || !$token || !$adminPhone) {
+            Log::warning('WhatsApp gateway not configured properly for admin notification');
+            return;
+        }
+
+        $plateNumber = $serviceReport->vehicle->plate_number ?? 'N/A';
+        $customer = $serviceReport->getProjectCustomer() ?? $serviceReport->customer;
+        $customerName = $customer->name ?? 'Customer';
+        
+        $reason = mb_substr($serviceReport->customer_rejection_reason, 0, 200);
+        $url = url(route('admin.service.show', $serviceReport->id));
+
+        $message = "❌ LAPORAN SERVICE DITOLAK\n";
+        $message .= "─────────────────────────\n";
+        $message .= "Customer: {$customerName}\n";
+        $message .= "Plat    : {$plateNumber}\n";
+        $message .= "Alasan  : {$reason}\n\n";
+        $message .= "Cek laporan:\n{$url}";
+
+        try {
+            Http::withHeaders([
+                'Authorization' => $token,
+            ])->timeout(10)->post($gatewayUrl, [
+                'target' => $adminPhone,
+                'message' => $message,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('WhatsApp admin notification (rejection) failed: ' . $e->getMessage());
         }
     }
 }

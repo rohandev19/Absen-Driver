@@ -14,6 +14,19 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    {{-- Anti-FOUC (Flash of Unstyled Content) for Dark Mode --}}
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem('theme');
+            var systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        })();
+    </script>
+
     <style>
         /* ============================================
            DESIGN SYSTEM — CUSTOMER PORTAL HAMADA
@@ -30,6 +43,267 @@
             --primary: #1e3a8a;
             --primary-light: #3b82f6;
             --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --body-bg: #f1f5f9;
+            --blue-soft: #f0f7ff;
+            --hover-bg: #f1f5f9;
+        }
+
+        /* Dark Mode variables and overrides */
+        [data-bs-theme="dark"] {
+            --body-bg: #0f172a;
+            --topbar-bg: #1e293b;
+            --sidebar-bg: #0f1d3d; /* Keep sidebar color consistent but we will style internal components nicely */
+            --sidebar-border: rgba(255, 255, 255, 0.08);
+            --bs-body-bg: #0f172a;
+            --bs-body-color: #f8fafc;
+            --primary: #3b82f6;
+            --primary-light: #60a5fa;
+            --blue-soft: rgba(59, 130, 246, 0.15);
+            --hover-bg: rgba(255, 255, 255, 0.04);
+        }
+
+        [data-bs-theme="dark"] .topbar {
+            background-color: var(--topbar-bg);
+            border-bottom-color: rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+        }
+
+        [data-bs-theme="dark"] .topbar #sidebar-toggle {
+            color: #94a3b8;
+        }
+
+        [data-bs-theme="dark"] .topbar #sidebar-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #f8fafc;
+        }
+
+        [data-bs-theme="dark"] .topbar-welcome-text .text-muted {
+            color: #94a3b8 !important;
+        }
+
+        [data-bs-theme="dark"] .topbar-welcome-text .text-dark {
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .topbar-user-name {
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .card {
+            background-color: var(--topbar-bg) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .card-header,
+        [data-bs-theme="dark"] .card-footer {
+            background-color: transparent !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        [data-bs-theme="dark"] .text-dark {
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .text-muted {
+            color: #94a3b8 !important;
+        }
+
+        [data-bs-theme="dark"] .table {
+            --bs-table-color: #f8fafc;
+            --bs-table-bg: transparent;
+            --bs-table-border-color: rgba(255, 255, 255, 0.08);
+            --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+            --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+        }
+
+        [data-bs-theme="dark"] .table th,
+        [data-bs-theme="dark"] .table td {
+            color: #e2e8f0 !important;
+        }
+
+        [data-bs-theme="dark"] .table-light {
+            --bs-table-bg: rgba(255, 255, 255, 0.03);
+            color: #e2e8f0;
+        }
+
+        [data-bs-theme="dark"] .btn-white {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .btn-white:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+        }
+
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: #0f172a !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .form-control:focus,
+        [data-bs-theme="dark"] .form-select:focus {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: var(--primary) !important;
+        }
+
+        [data-bs-theme="dark"] .form-control::placeholder {
+            color: #4b5563 !important;
+        }
+
+        [data-bs-theme="dark"] .modal-content {
+            background-color: var(--topbar-bg) !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-bs-theme="dark"] .modal-header,
+        [data-bs-theme="dark"] .modal-footer {
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        [data-bs-theme="dark"] .modal-footer.bg-light {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+
+        /* Stepper UI */
+        [data-bs-theme="dark"] .stepper-circle {
+            background-color: #1e293b !important;
+            border-color: #475569 !important;
+            color: #94a3b8 !important;
+        }
+
+        [data-bs-theme="dark"] .stepper-progress {
+            background-color: #334155 !important;
+        }
+
+        [data-bs-theme="dark"] .stepper-item.completed .stepper-circle {
+            background-color: #10b981 !important;
+            border-color: #10b981 !important;
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .stepper-item.active .stepper-circle {
+            background-color: #1e293b !important;
+            border-color: #3b82f6 !important;
+            color: #3b82f6 !important;
+        }
+
+        [data-bs-theme="dark"] .stepper-title {
+            color: #94a3b8 !important;
+        }
+
+        [data-bs-theme="dark"] .stepper-item.active .stepper-title {
+            color: #3b82f6 !important;
+        }
+
+        [data-bs-theme="dark"] .stepper-item.completed .stepper-title {
+            color: #f8fafc !important;
+        }
+
+        /* Badges / alerts inside details */
+        [data-bs-theme="dark"] .bg-light.bg-opacity-50 {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+
+        [data-bs-theme="dark"] .alert-warning {
+            background-color: rgba(245, 158, 11, 0.1) !important;
+            border-color: rgba(245, 158, 11, 0.2) !important;
+            color: #fef08a !important;
+        }
+
+        [data-bs-theme="dark"] .alert-warning .text-dark {
+            color: #fef08a !important;
+        }
+
+        [data-bs-theme="dark"] .alert-primary {
+            background-color: rgba(59, 130, 246, 0.1) !important;
+            border-color: rgba(59, 130, 246, 0.2) !important;
+            color: #93c5fd !important;
+        }
+
+        [data-bs-theme="dark"] .alert-primary .text-dark {
+            color: #93c5fd !important;
+        }
+
+        [data-bs-theme="dark"] .alert-info {
+            background-color: rgba(6, 182, 212, 0.1) !important;
+            border-color: rgba(6, 182, 212, 0.2) !important;
+            color: #67e8f9 !important;
+        }
+
+        [data-bs-theme="dark"] .alert-danger {
+            background-color: rgba(239, 68, 68, 0.1) !important;
+            border-color: rgba(239, 68, 68, 0.2) !important;
+            color: #fca5a5 !important;
+        }
+
+        [data-bs-theme="dark"] .table-responsive-cards tr.aset-row {
+            background-color: var(--topbar-bg) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        [data-bs-theme="dark"] .table-responsive-cards tr.aset-row>td {
+            border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        [data-bs-theme="dark"] .pagination .page-link {
+            background-color: var(--topbar-bg) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: #cbd5e1 !important;
+        }
+
+        [data-bs-theme="dark"] .pagination .page-item.active .page-link {
+            background-color: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #ffffff !important;
+        }
+
+        [data-bs-theme="dark"] .pagination .page-item.disabled .page-link {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            color: #475569 !important;
+        }
+
+        [data-bs-theme="dark"] .sweet-alert,
+        [data-bs-theme="dark"] .swal2-popup {
+            background-color: var(--topbar-bg) !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        
+        [data-bs-theme="dark"] .swal2-title,
+        [data-bs-theme="dark"] .swal2-html-container {
+            color: #f8fafc !important;
+        }
+
+        /* Nav links inside sidebar */
+        [data-bs-theme="dark"] #sidebar {
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        [data-bs-theme="dark"] .sidebar-header {
+            background: rgba(0,0,0,0.2) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        [data-bs-theme="dark"] .sidebar-logo img {
+            background: #1e293b;
+        }
+
+        [data-bs-theme="dark"] .bg-white {
+            background-color: var(--topbar-bg) !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        
+        [data-bs-theme="dark"] .bg-light {
+            background-color: rgba(255, 255, 255, 0.04) !important;
+            color: #f8fafc !important;
         }
 
         * {
@@ -37,7 +311,7 @@
         }
 
         body {
-            background-color: #f1f5f9;
+            background-color: var(--body-bg);
             overflow-x: hidden;
         }
 
@@ -404,11 +678,16 @@
            RESPONSIVE TABLES (Mobile card layout)
            ============================================ */
         @media (max-width: 992px) {
-            .table-responsive:not(.table-responsive-cards) .table {
+            .table-responsive:not(.table-responsive-cards) {
                 display: block !important;
                 width: 100% !important;
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch !important;
+            }
+
+            .table-responsive:not(.table-responsive-cards) .table {
+                min-width: 100%;
+                width: auto !important;
                 white-space: nowrap !important;
             }
 
@@ -518,7 +797,137 @@
                 box-shadow: none !important;
             }
         }
+
+        /* ============================================
+           STEPPER PROGRESS BAR
+           ============================================ */
+        .stepper-container {
+            padding: 1.5rem 0;
+        }
+        .stepper-wrapper {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+        .stepper-progress {
+            position: absolute;
+            top: 22px;
+            left: 16.66%;
+            right: 16.66%;
+            height: 4px;
+            background: #e2e8f0;
+            z-index: 1;
+            border-radius: 4px;
+        }
+        .stepper-progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px;
+        }
+        .stepper-wrapper.step-1 .stepper-progress-bar {
+            width: 0%;
+        }
+        .stepper-wrapper.step-2 .stepper-progress-bar {
+            width: 50%;
+        }
+        .stepper-wrapper.step-3 .stepper-progress-bar {
+            width: 100%;
+        }
+        .stepper-item {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .stepper-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #64748b;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .stepper-item.completed .stepper-circle {
+            background: #10b981;
+            border-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        }
+        .stepper-item.active .stepper-circle {
+            background: #ffffff;
+            border-color: #3b82f6;
+            color: #3b82f6;
+            font-size: 1.05rem;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 4px 10px rgba(59, 130, 246, 0.1);
+        }
+        .stepper-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+            margin-top: 0.75rem;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+        .stepper-item.active .stepper-title {
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+        .stepper-item.completed .stepper-title {
+            color: #0f172a;
+        }
+        .stepper-subtitle {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.15rem;
+            text-align: center;
+        }
+        .stepper-item.active .stepper-subtitle {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        .stepper-item.completed .stepper-subtitle {
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        /* Mobile Stepper Adjustments */
+        @media (max-width: 768px) {
+            .stepper-circle {
+                width: 32px;
+                height: 32px;
+                border-width: 2px;
+                font-size: 0.8rem;
+            }
+            .stepper-progress {
+                top: 14px;
+                height: 3px;
+                left: 16.66%;
+                right: 16.66%;
+            }
+            .stepper-title {
+                font-size: 0.75rem;
+                margin-top: 0.5rem;
+            }
+            .stepper-subtitle {
+                display: none;
+            }
+        }
     </style>
+    @stack('styles')
 </head>
 
 <body>
@@ -630,13 +1039,20 @@
                         @yield('title', 'Portal Customer')
                     </span>
                 </div>
-                <div class="topbar-user">
-                    <div class="d-none d-md-flex flex-column text-end topbar-welcome-text">
-                        <span class="text-muted" style="font-size: 0.7rem; line-height: 1;">Selamat Datang</span>
-                        <span class="fw-bold text-dark" style="font-size: 0.85rem;">{{ Auth::user()->name ?? 'Customer' }}</span>
-                    </div>
-                    <div class="topbar-user-avatar">
-                        {{ strtoupper(substr(Auth::user()->name ?? 'C', 0, 1)) }}
+                <div class="d-flex align-items-center gap-3">
+                    {{-- DARK MODE TOGGLE --}}
+                    <button id="theme-toggle" class="btn btn-sm btn-outline-secondary border-0 rounded-circle" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;" data-bs-toggle="tooltip" title="Toggle Dark Mode">
+                        <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+                    </button>
+
+                    <div class="topbar-user">
+                        <div class="d-none d-md-flex flex-column text-end topbar-welcome-text">
+                            <span class="text-muted" style="font-size: 0.7rem; line-height: 1;">Selamat Datang</span>
+                            <span class="fw-bold text-dark" style="font-size: 0.85rem;">{{ Auth::user()->name ?? 'Customer' }}</span>
+                        </div>
+                        <div class="topbar-user-avatar">
+                            {{ strtoupper(substr(Auth::user()->name ?? 'C', 0, 1)) }}
+                        </div>
                     </div>
                 </div>
             </header>
@@ -705,6 +1121,41 @@
                     }
                 }, 150);
             });
+
+            // DARK MODE TOGGLE LOGIC
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            const htmlElement = document.documentElement;
+
+            // Check local storage or system preference
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+            // Apply initial theme icon
+            if (initialTheme === 'dark') {
+                themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                themeIcon.classList.add('text-warning');
+            }
+
+            // Toggle on click
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    htmlElement.setAttribute('data-bs-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    
+                    if (newTheme === 'dark') {
+                        themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                        themeIcon.classList.add('text-warning');
+                    } else {
+                        themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                        themeIcon.classList.remove('text-warning');
+                    }
+                });
+            }
         });
     </script>
 </body>

@@ -9,6 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('vehicles', function (Blueprint $table) {
+            if (!Schema::hasColumn('vehicles', 'status')) {
+                $table->string('status')->default('Aktif')->after('type');
+            }
             $table->boolean('is_temporary')->default(false)->after('status');
             $table->string('verification_status', 30)->default('verified')->after('is_temporary');
             $table->foreignId('verified_by')->nullable()->after('verification_status')->constrained('users')->nullOnDelete();

@@ -286,7 +286,7 @@
         transition: all 0.2s ease;
     }
     tr.aset-row:hover {
-        background-color: #f1f5f9 !important;
+        background-color: var(--hover-bg) !important;
     }
 
     /* Mobile optimizations */

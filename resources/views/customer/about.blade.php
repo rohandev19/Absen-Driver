@@ -282,7 +282,15 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 14px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+            <style>
+                .help-card-bg {
+                    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                }
+                [data-bs-theme="dark"] .help-card-bg {
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(30, 64, 175, 0.15) 100%);
+                }
+            </style>
+            <div class="card border-0 shadow-sm h-100 help-card-bg" style="border-radius: 14px;">
                 <div class="card-body p-4 d-flex flex-column justify-content-center text-center">
                     <div class="mb-3">
                         <img src="{{ asset('images/hamada-logo.png') }}" alt="Hamada Logistik" style="max-width: 120px; height: auto;" class="mb-3">

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>ERD - Sistem Absensi & Manajemen Armada Driver</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #000;
+        }
+        svg { display: block; }
+        .entity rect { fill: #fff; stroke: #000; stroke-width: 2.5; }
+        .entity text { fill: #000; font-size: 14px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-family: 'Segoe UI', Arial, sans-serif; }
+        .attribute ellipse { fill: #fff; stroke: #000; stroke-width: 1.2; }
+        .attribute text { fill: #000; font-size: 9.5px; text-anchor: middle; dominant-baseline: central; font-family: 'Segoe UI', Arial, sans-serif; }
+        .attribute.pk ellipse { fill: #fff; stroke: #000; stroke-width: 2; }
+        .attribute.pk text { fill: #000; font-weight: 700; text-decoration: underline; }
+        .attribute.fk ellipse { fill: #fff; stroke: #000; stroke-width: 1.2; stroke-dasharray: 5,3; }
+        .attribute.fk text { fill: #000; font-style: italic; }
+        .relationship polygon { fill: #fff; stroke: #000; stroke-width: 1.8; }
+        .relationship text { fill: #000; font-size: 9px; font-weight: 600; text-anchor: middle; dominant-baseline: central; font-family: 'Segoe UI', Arial, sans-serif; }
+        .conn-line { stroke: #555; stroke-width: 0.8; fill: none; }
+        .rel-line { stroke: #000; stroke-width: 1.5; fill: none; }
+        .cardinality { fill: #000; font-size: 13px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-family: 'Segoe UI', Arial, sans-serif; }
+        .title-text { fill: #000; font-size: 22px; font-weight: 700; text-anchor: middle; font-family: 'Segoe UI', Arial, sans-serif; }
+        .subtitle-text { fill: #555; font-size: 13px; text-anchor: middle; font-family: 'Segoe UI', Arial, sans-serif; }
+    </style>
+</head>
+<body>
+<svg id="erd-svg" xmlns="http://www.w3.org/2000/svg" width="3200" height="2400" viewBox="-100 -80 3200 2400">
+    <rect x="-100" y="-80" width="3200" height="2400" fill="#fff"/>
+    
+    <!-- Title -->
+    <text x="1500" y="-30" class="title-text">ERD - Sistem Absensi &amp; Manajemen Armada Driver (Notasi Chen)</text>
+    <text x="1500" y="0" class="subtitle-text">16 Entitas • 30 Relasi • Laravel Backend</text>
+
+    <g id="connections"></g>
+    <g id="entities"></g>
+</svg>
+
+<script>
+const svg = document.getElementById('erd-svg');
+const connectionsGroup = document.getElementById('connections');
+const entitiesGroup = document.getElementById('entities');
+
+// ============================================================
+// ENTITY DATA — positions carefully laid out to avoid overlaps
+// ============================================================
+const entities = [
+    {
+        id: 'users', label: 'users', x: 300, y: 250,
+        pk: ['id'],
+        fk: ['customer_id'],
+        attrs: ['name', 'email', 'password', 'role']
+    },
+    {
+        id: 'drivers', label: 'drivers', x: 820, y: 250,
+        pk: ['id'],
+        fk: ['project_id'],
+        attrs: ['driver_id_nik', 'full_name', 'nik_ktp', 'sim_expiry_date', 'sim_type', 'password', 'foto_sim', 'foto_ktp', 'profile_photo', 'fcm_token', 'is_on_duty']
+    },
+    {
+        id: 'vehicles', label: 'vehicles', x: 1450, y: 250,
+        pk: ['id'],
+        fk: ['project_id'],
+        attrs: ['plate_number', 'type', 'tahun_pembuatan', 'status', 'current_km', 'service_interval_km', 'last_service_km', 'pajak_stnk_berlaku_sampai', 'kir_berlaku_sampai', 'is_temporary', 'verification_status', 'qr_code_path']
+    },
+    {
+        id: 'customers', label: 'customers', x: 100, y: 720,
+        pk: ['id'],
+        fk: [],
+        attrs: ['name', 'code', 'contact_person', 'email', 'phone', 'address']
+    },
+    {
+        id: 'projects', label: 'projects', x: 560, y: 650,
+        pk: ['id'],
+        fk: ['customer_id'],
+        attrs: ['name', 'code', 'description']
+    },
+    {
+        id: 'attendances', label: 'attendances', x: 1100, y: 700,
+        pk: ['id'],
+        fk: ['driver_id', 'vehicle_id'],
+        attrs: ['time_in', 'time_out', 'gps_location_in', 'speedo_awal', 'speedo_akhir', 'selfie_photo_path', 'check_ban', 'check_lampu', 'check_rem', 'catatan', 'is_offline_recovery']
+    },
+    {
+        id: 'emergency_reports', label: 'emergency_reports', x: 1850, y: 500,
+        pk: ['id'],
+        fk: ['driver_id', 'vehicle_id', 'service_report_id', 'processed_by'],
+        attrs: ['timestamp', 'gps_location', 'description', 'proof_photo_path', 'follow_up_status']
+    },
+    {
+        id: 'service_reports', label: 'service_reports', x: 1850, y: 1000,
+        pk: ['id'],
+        fk: ['driver_id', 'vehicle_id', 'customer_id', 'approved_by_admin_id', 'approved_by_customer_id'],
+        attrs: ['timestamp', 'gps_location', 'description', 'status', 'service_type', 'workshop_name', 'total_cost', 'admin_notes', 'ticket_number']
+    },
+    {
+        id: 'maintenance_logs', label: 'maintenance_logs', x: 1450, y: 1150,
+        pk: ['id'],
+        fk: ['vehicle_id', 'recorded_by_user_id'],
+        attrs: ['service_date', 'km_at_service', 'description', 'workshop_name']
+    },
+    {
+        id: 'vehicle_components', label: 'vehicle_components', x: 2200, y: 250,
+        pk: ['id'],
+        fk: ['vehicle_id'],
+        attrs: ['component_name', 'category', 'replacement_interval_km', 'replacement_interval_days', 'last_replacement_km', 'next_replacement_km', 'cost_per_replacement', 'warning_threshold_km', 'status', 'notes']
+    },
+    {
+        id: 'maintenance_schedules', label: 'maintenance_schedules', x: 2550, y: 680,
+        pk: ['id'],
+        fk: ['vehicle_id', 'component_id', 'completed_by'],
+        attrs: ['scheduled_date', 'scheduled_km', 'type', 'priority', 'status', 'estimated_cost', 'actual_cost', 'workshop_name', 'notes', 'completed_at']
+    },
+    {
+        id: 'maintenance_alerts', label: 'maintenance_alerts', x: 2550, y: 1150,
+        pk: ['id'],
+        fk: ['vehicle_id', 'component_id', 'acknowledged_by'],
+        attrs: ['alert_type', 'message', 'triggered_at', 'acknowledged_at', 'resolved_at', 'status']
+    },
+    {
+        id: 'transport_costs', label: 'transport_costs', x: 700, y: 1100,
+        pk: ['id'],
+        fk: ['driver_id', 'vehicle_id', 'project_id', 'attendance_id', 'approved_by', 'created_by'],
+        attrs: ['trip_date', 'do_number', 'odometer_start', 'odometer_end', 'gasoline_cost', 'toll_cost', 'parking_cost', 'approval_status', 'overtime_hours']
+    },
+    {
+        id: 'vehicle_replacements', label: 'vehicle_replacements', x: 2250, y: 1550,
+        pk: ['id'],
+        fk: ['original_vehicle_id', 'replacement_vehicle_id', 'driver_id', 'service_report_id', 'created_by'],
+        attrs: ['start_at', 'end_at', 'reason', 'status', 'notes']
+    },
+    {
+        id: 'offline_recovery_logs', label: 'offline_recovery_logs', x: 800, y: 1550,
+        pk: ['id'],
+        fk: ['driver_id', 'attendance_id'],
+        attrs: ['offline_entry_id', 'device_timestamp', 'recovery_timestamp', 'delay_minutes', 'result', 'error_code', 'retry_count']
+    },
+    {
+        id: 'audit_histories', label: 'audit_histories', x: 200, y: 1350,
+        pk: ['id'],
+        fk: [],
+        attrs: ['report_id', 'type', 'status', 'total_findings', 'critical_count', 'high_count', 'medium_count', 'low_count', 'execution_time_seconds', 'triggered_by']
+    }
+];
+
+const relationships = [
+    { from: 'customers', to: 'users', label: 'memiliki', card1: '1', card2: 'N' },
+    { from: 'customers', to: 'projects', label: 'memiliki', card1: '1', card2: 'N' },
+    { from: 'customers', to: 'service_reports', label: 'menerima', card1: '1', card2: 'N' },
+    { from: 'projects', to: 'drivers', label: 'menaungi', card1: '1', card2: 'N' },
+    { from: 'projects', to: 'vehicles', label: 'menggunakan', card1: '1', card2: 'N' },
+    { from: 'drivers', to: 'attendances', label: 'melakukan', card1: '1', card2: 'N' },
+    { from: 'vehicles', to: 'attendances', label: 'digunakan', card1: '1', card2: 'N' },
+    { from: 'drivers', to: 'emergency_reports', label: 'melaporkan', card1: '1', card2: 'N' },
+    { from: 'vehicles', to: 'emergency_reports', label: 'terkait', card1: '1', card2: 'N' },
+    { from: 'drivers', to: 'service_reports', label: 'mengajukan', card1: '1', card2: 'N' },
+    { from: 'vehicles', to: 'service_reports', label: 'diservis', card1: '1', card2: 'N' },
+    { from: 'vehicles', to: 'maintenance_logs', label: 'dicatat', card1: '1', card2: 'N' },
+    { from: 'users', to: 'maintenance_logs', label: 'mencatat', card1: '1', card2: 'N' },
+    { from: 'vehicles', to: 'vehicle_components', label: 'memiliki', card1: '1', card2: 'N' },
+    { from: 'vehicles', to: 'maintenance_schedules', label: 'dijadwalkan', card1: '1', card2: 'N' },
+    { from: 'vehicle_components', to: 'maintenance_schedules', label: 'untuk', card1: '1', card2: 'N' },
+    { from: 'vehicles', to: 'maintenance_alerts', label: 'memicu', card1: '1', card2: 'N' },
+    { from: 'vehicle_components', to: 'maintenance_alerts', label: 'menghasilkan', card1: '1', card2: 'N' },
+    { from: 'users', to: 'maintenance_alerts', label: 'mengakui', card1: '1', card2: 'N' },
+    { from: 'users', to: 'maintenance_schedules', label: 'menyelesaikan', card1: '1', card2: 'N' },
+    { from: 'attendances', to: 'transport_costs', label: 'menghasilkan', card1: '1', card2: '1' },
+    { from: 'drivers', to: 'transport_costs', label: 'memiliki_biaya', card1: '1', card2: 'N' },
+    { from: 'vehicles', to: 'transport_costs', label: 'dipakai', card1: '1', card2: 'N' },
+    { from: 'projects', to: 'transport_costs', label: 'membiayai', card1: '1', card2: 'N' },
+    { from: 'users', to: 'service_reports', label: 'menyetujui', card1: '1', card2: 'N' },
+    { from: 'emergency_reports', to: 'service_reports', label: 'ditindaklanjuti', card1: 'N', card2: '1' },
+    { from: 'service_reports', to: 'vehicle_replacements', label: 'memerlukan', card1: '1', card2: 'N' },
+    { from: 'drivers', to: 'vehicle_replacements', label: 'menerima', card1: '1', card2: 'N' },
+    { from: 'attendances', to: 'offline_recovery_logs', label: 'memiliki_log', card1: '1', card2: '1' },
+    { from: 'drivers', to: 'offline_recovery_logs', label: 'recovery', card1: '1', card2: 'N' },
+];
+
+// ============================================================
+// RENDERING
+// ============================================================
+function textWidth(str, fontSize = 10) {
+    return str.length * fontSize * 0.56;
+}
+
+function getAttributePositions(entity) {
+    const allAttrs = [];
+    entity.pk.forEach(a => allAttrs.push({ name: a, type: 'pk' }));
+    entity.fk.forEach(a => allAttrs.push({ name: a, type: 'fk' }));
+    entity.attrs.forEach(a => allAttrs.push({ name: a, type: 'normal' }));
+
+    const count = allAttrs.length;
+    const positions = [];
+    const entityW = Math.max(textWidth(entity.label, 14) + 36, 140);
+    const attrSpacingY = 26;
+
+    const leftCount = Math.ceil(count / 2);
+    const rightCount = count - leftCount;
+
+    for (let i = 0; i < count; i++) {
+        let ax, ay;
+        if (i < leftCount) {
+            ax = entity.x - entityW / 2 - 85;
+            ay = entity.y - (leftCount - 1) * attrSpacingY / 2 + i * attrSpacingY;
+        } else {
+            const ri = i - leftCount;
+            ax = entity.x + entityW / 2 + 85;
+            ay = entity.y - (rightCount - 1) * attrSpacingY / 2 + ri * attrSpacingY;
+        }
+        positions.push({
+            ...allAttrs[i],
+            x: ax, y: ay,
+            entityX: entity.x, entityY: entity.y
+        });
+    }
+    return positions;
+}
+
+function drawEntity(entity) {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.classList.add('entity');
+
+    const w = Math.max(textWidth(entity.label, 14) + 36, 140);
+    const h = 34;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', entity.x - w / 2);
+    rect.setAttribute('y', entity.y - h / 2);
+    rect.setAttribute('width', w);
+    rect.setAttribute('height', h);
+    g.appendChild(rect);
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', entity.x);
+    text.setAttribute('y', entity.y);
+    text.textContent = entity.label;
+    g.appendChild(text);
+
+    entitiesGroup.appendChild(g);
+
+    const attrPositions = getAttributePositions(entity);
+    attrPositions.forEach(drawAttribute);
+}
+
+function drawAttribute(attr) {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.classList.add('attribute');
+    if (attr.type === 'pk') g.classList.add('pk');
+    if (attr.type === 'fk') g.classList.add('fk');
+
+    const w = Math.max(textWidth(attr.name, 9.5) + 18, 50);
+    const h = 18;
+
+    const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    ellipse.setAttribute('cx', attr.x);
+    ellipse.setAttribute('cy', attr.y);
+    ellipse.setAttribute('rx', w / 2);
+    ellipse.setAttribute('ry', h / 2);
+    g.appendChild(ellipse);
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', attr.x);
+    text.setAttribute('y', attr.y);
+    text.textContent = attr.name;
+    if (attr.type === 'pk') {
+        text.setAttribute('text-decoration', 'underline');
+    }
+    g.appendChild(text);
+
+    entitiesGroup.appendChild(g);
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', attr.x);
+    line.setAttribute('y1', attr.y);
+    line.setAttribute('x2', attr.entityX);
+    line.setAttribute('y2', attr.entityY);
+    line.classList.add('conn-line');
+    connectionsGroup.appendChild(line);
+}
+
+function drawRelationship(rel) {
+    const fromEntity = entities.find(e => e.id === rel.from);
+    const toEntity = entities.find(e => e.id === rel.to);
+    if (!fromEntity || !toEntity) return;
+
+    const mx = (fromEntity.x + toEntity.x) / 2;
+    const my = (fromEntity.y + toEntity.y) / 2;
+
+    const dw = Math.max(textWidth(rel.label, 9) + 24, 75);
+    const dh = 30;
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.classList.add('relationship');
+
+    const diamond = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    diamond.setAttribute('points',
+        `${mx},${my - dh / 2} ${mx + dw / 2},${my} ${mx},${my + dh / 2} ${mx - dw / 2},${my}`
+    );
+    g.appendChild(diamond);
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', mx);
+    text.setAttribute('y', my);
+    text.textContent = rel.label;
+    g.appendChild(text);
+
+    entitiesGroup.appendChild(g);
+
+    // Lines
+    const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line1.setAttribute('x1', fromEntity.x);
+    line1.setAttribute('y1', fromEntity.y);
+    line1.setAttribute('x2', mx);
+    line1.setAttribute('y2', my);
+    line1.classList.add('rel-line');
+    connectionsGroup.appendChild(line1);
+
+    const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line2.setAttribute('x1', mx);
+    line2.setAttribute('y1', my);
+    line2.setAttribute('x2', toEntity.x);
+    line2.setAttribute('y2', toEntity.y);
+    line2.classList.add('rel-line');
+    connectionsGroup.appendChild(line2);
+
+    // Cardinality
+    const drawCard = (entityPos, midPos, cardText) => {
+        const dx = midPos.x - entityPos.x;
+        const dy = midPos.y - entityPos.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        if (len === 0) return;
+        const offset = 25;
+        const perpX = -dy / len * 12;
+        const perpY = dx / len * 12;
+        const cx = entityPos.x + (dx / len) * offset + perpX;
+        const cy = entityPos.y + (dy / len) * offset + perpY;
+
+        const ct = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        ct.setAttribute('x', cx);
+        ct.setAttribute('y', cy);
+        ct.classList.add('cardinality');
+        ct.textContent = cardText;
+        entitiesGroup.appendChild(ct);
+    };
+
+    drawCard(fromEntity, { x: mx, y: my }, rel.card1);
+    drawCard(toEntity, { x: mx, y: my }, rel.card2);
+}
+
+// Render
+relationships.forEach(drawRelationship);
+entities.forEach(drawEntity);
+</script>
+</body>
+</html>

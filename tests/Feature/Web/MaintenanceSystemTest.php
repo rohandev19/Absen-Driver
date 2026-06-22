@@ -135,8 +135,12 @@ class MaintenanceSystemTest extends TestCase
         $vehicle = Vehicle::factory()->create(['current_km' => 50000]);
         VehicleComponent::factory()->create([
             'vehicle_id' => $vehicle->id,
-            'next_replacement_km' => 50100, // 100 KM remaining
+            'last_replacement_km' => 45000,
+            'replacement_interval_km' => 5100, // next_replacement_km will be 50100 (100 KM remaining)
             'critical_threshold_km' => 500,
+            'warning_threshold_km' => 1000,
+            'last_replacement_date' => Carbon::now()->subDays(10),
+            'replacement_interval_days' => 30, // next_replacement_date will be 20 days in the future (no date alert)
         ]);
 
         $response = $this->actingAs($this->admin)
@@ -227,6 +231,8 @@ class MaintenanceSystemTest extends TestCase
     /** @test */
     public function admin_can_complete_maintenance_schedule()
     {
+        \Illuminate\Support\Facades\Storage::fake('public');
+
         $vehicle = Vehicle::factory()->create(['current_km' => 50000]);
         $component = VehicleComponent::factory()->create([
             'vehicle_id' => $vehicle->id,
@@ -241,6 +247,11 @@ class MaintenanceSystemTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->post('/admin/maintenance/schedules/' . $schedule->id . '/complete', [
                 'actual_cost' => 550000,
+                'receipt_photo' => \Illuminate\Http\UploadedFile::fake()->image('receipt.jpg'),
+                'odometer_photo' => \Illuminate\Http\UploadedFile::fake()->image('odometer.jpg'),
+                'signer_name' => 'John Doe',
+                'signer_role' => 'Operator',
+                'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
             ]);
 
         $response->assertRedirect();

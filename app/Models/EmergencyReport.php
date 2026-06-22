@@ -9,6 +9,10 @@ class EmergencyReport extends Model
 {
     use HasFactory;
 
+    public const STATUS_NEW = 'new';
+    public const STATUS_SERVICE_CREATED = 'service_created';
+    public const STATUS_INFO_RESOLVED = 'info_resolved';
+
     protected $table = 'emergency_reports';
 
     protected $fillable = [
@@ -17,11 +21,17 @@ class EmergencyReport extends Model
         'timestamp',
         'gps_location',
         'description',
-        'proof_photo_path'
+        'proof_photo_path',
+        'follow_up_status',
+        'follow_up_notes',
+        'service_report_id',
+        'processed_by',
+        'processed_at',
     ];
 
     protected $casts = [
         'timestamp' => 'datetime',
+        'processed_at' => 'datetime',
     ];
 
     public function driver()
@@ -32,6 +42,16 @@ class EmergencyReport extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
+    }
+
+    public function serviceReport()
+    {
+        return $this->belongsTo(ServiceReport::class, 'service_report_id');
+    }
+
+    public function processedBy()
+    {
+        return $this->belongsTo(User::class, 'processed_by');
     }
 
     /* =========================================================================

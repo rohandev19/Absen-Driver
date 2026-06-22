@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('drivers', function (Blueprint $table) {
-            $table->string('qr_code_path')->nullable()->after('profile_photo');
-            $table->string('qr_code_identifier')->unique()->nullable()->after('qr_code_path');
+            if (!Schema::hasColumn('drivers', 'qr_code_path')) {
+                $table->string('qr_code_path')->nullable()->after('profile_photo');
+            }
+
+            if (!Schema::hasColumn('drivers', 'qr_code_identifier')) {
+                $table->string('qr_code_identifier')->unique()->nullable()->after('qr_code_path');
+            }
         });
     }
 
@@ -23,7 +28,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('drivers', function (Blueprint $table) {
-            $table->dropColumn(['qr_code_path', 'qr_code_identifier']);
+            $columns = array_filter([
+                Schema::hasColumn('drivers', 'qr_code_path') ? 'qr_code_path' : null,
+                Schema::hasColumn('drivers', 'qr_code_identifier') ? 'qr_code_identifier' : null,
+            ]);
+
+            if ($columns !== []) {
+                $table->dropColumn($columns);
+            }
         });
     }
 };

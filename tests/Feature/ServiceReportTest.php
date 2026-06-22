@@ -10,6 +10,8 @@ use App\Models\Driver;
 use App\Models\Vehicle;
 use App\Models\ServiceReport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceReportTest extends TestCase
 {
@@ -112,6 +114,38 @@ class ServiceReportTest extends TestCase
         $response->assertViewHas('report');
 
         echo "\n✅ Admin can view service reports index and show pages (CORRECT)\n";
+    }
+
+    public function test_admin_can_create_manual_service_report()
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->serviceAdmin);
+
+        $response = $this->post(route('admin.service.store_manual'), [
+            'driver_id' => $this->driver->id,
+            'vehicle_id' => $this->vehicle->id,
+            'timestamp' => now()->format('Y-m-d H:i:s'),
+            'manual_location' => 'Bengkel rekanan Citayem',
+            'description' => 'Unit bermasalah pada sistem pengereman dan ditangani langsung oleh admin service.',
+            'service_action' => 'Dilakukan pengecekan rem, pengisian minyak rem, dan uji jalan setelah perbaikan.',
+            'unit_status_after_service' => 'Aman digunakan',
+            'vehicle_condition_photo' => UploadedFile::fake()->image('before.jpg'),
+            'after_service_photo' => UploadedFile::fake()->image('after.jpg'),
+            'receipt_photo' => UploadedFile::fake()->image('receipt.jpg'),
+        ]);
+
+        $report = ServiceReport::latest('id')->first();
+
+        $response->assertRedirect(route('admin.service.show', $report->id));
+        $response->assertSessionHas('success');
+
+        $this->assertEquals(ServiceReport::STATUS_PENDING, $report->status);
+        $this->assertEquals('admin_manual', $report->report_source);
+        $this->assertEquals('manual', $report->location_source);
+        $this->assertNotNull($report->receipt_photo_path);
+
+        echo "\nAdmin can create manual service report (CORRECT)\n";
     }
 
     /**
@@ -218,6 +252,32 @@ class ServiceReportTest extends TestCase
         $response->assertViewHas('report');
 
         echo "\n✅ Customer can view their pending approvals index and show pages (CORRECT)\n";
+    }
+
+    public function test_customer_approval_page_does_not_show_internal_costs()
+    {
+        $this->actingAs($this->customerUser);
+
+        $this->report->update([
+            'status' => ServiceReport::STATUS_PENDING_CUSTOMER,
+            'workshop_name' => 'Bengkel Internal Rahasia',
+            'invoice_number' => 'INV-SECRET-001',
+            'service_cost' => 150000,
+            'sparepart_cost' => 350000,
+            'other_cost' => 25000,
+            'total_cost' => 525000,
+            'finance_notes' => 'Catatan finance internal',
+        ]);
+
+        $response = $this->get(route('customer.approve.show', $this->report->id));
+
+        $response->assertStatus(200);
+        $response->assertDontSee('INV-SECRET-001');
+        $response->assertDontSee('525000');
+        $response->assertDontSee('525.000');
+        $response->assertDontSee('Catatan finance internal');
+
+        echo "\nCustomer approval page hides internal service costs (CORRECT)\n";
     }
 
     /**

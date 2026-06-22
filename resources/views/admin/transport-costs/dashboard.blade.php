@@ -16,6 +16,23 @@
     --bg: #f8fafc;
 }
 
+:root[data-bs-theme="dark"] {
+    --text-primary:   #f8fafc;
+    --text-secondary: #94a3b8;
+    --border: rgba(255, 255, 255, 0.08);
+    --bg: #0f172a;
+    --blue-soft: rgba(37, 99, 235, 0.15);
+    --red-soft: rgba(225, 29, 72, 0.15);
+}
+
+[data-bs-theme="dark"] .stats-table tbody td {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] .stats-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
 /* ── Page wrapper ── */
 .uj-page { background: var(--bg); min-height: 100vh; padding-bottom: 40px; }
 

@@ -135,7 +135,7 @@
     <table class="info">
         <tr>
             <td class="label">Dibuat Oleh</td><td>{{ $driverName }}</td>
-            <td class="label">Sumber Laporan</td><td>Aplikasi Driver</td>
+            <td class="label">Sumber Laporan</td><td>{{ $report->report_source === 'admin_manual' ? 'Input Manual Admin Service' : 'Aplikasi Driver' }}</td>
         </tr>
         <tr>
             <td class="label">Waktu Submit</td><td>{{ optional($report->timestamp)->format('d/m/Y H:i') ?? '-' }}</td>

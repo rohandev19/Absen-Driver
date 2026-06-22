@@ -728,18 +728,18 @@ class AttendanceController extends Controller
     public function getAttendanceHistory()
     {
         $driverId = Auth::id();
-        $cacheKey = self::CACHE_ATTENDANCE_HISTORY . $driverId;
 
         // FIX #1: Sama seperti checkDriverStatus() — cache hanya menyimpan
         // array data mentah, bukan object Response.
         try {
-            $cachedData = Cache::remember($cacheKey, 300, function () use ($driverId) {
-                return Attendance::with('vehicle')
-                    ->where('driver_id', $driverId)
-                    ->orderBy('time_in', 'desc')
-                    ->take(30)
-                    ->get()
-                    ->map(function (Attendance $item) {
+            $data = Attendance::query()
+                ->select(['id', 'driver_id', 'vehicle_id', 'time_in', 'time_out'])
+                ->with('vehicle:id,plate_number,type')
+                ->where('driver_id', $driverId)
+                ->orderByDesc('time_in')
+                ->limit(30)
+                ->get()
+                ->map(function (Attendance $item) {
                         $timeIn = $item->time_in
                             ? Carbon::parse($item->time_in)->toDateTimeString()
                             : null;
@@ -760,13 +760,12 @@ class AttendanceController extends Controller
                             'jam_keluar' => $timeOut ?? '-',
                             'plat_nomor' => $item->vehicle->plate_number ?? '-',
                         ];
-                    })
-                    ->toArray(); // Simpan sebagai array murni, bukan Collection
-            });
+                })
+                ->toArray();
 
             return response()->json([
                 'status' => 'success',
-                'data' => $cachedData,
+                'data' => $data,
             ]);
 
         } catch (\Throwable $e) {

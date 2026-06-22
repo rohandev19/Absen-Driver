@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ERD BW Download</title>
+<style>
+    body { background: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; }
+    #msg { padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+    h2 { color: #333; margin-top: 0; }
+    p { color: #555; }
+    canvas { display: none; }
+</style>
+</head>
+<body>
+<div id="msg">
+    <h2>Memproses ERD (Hitam Putih)...</h2>
+    <p>Mohon tunggu sebentar, file PNG sedang dibuat dan akan otomatis terunduh.</p>
+</div>
+<canvas id="c" width="2600" height="1700"></canvas>
+<script>
+const W=2600,H=1700,c=document.getElementById('c'),g=c.getContext('2d');
+g.fillStyle='#fff';g.fillRect(0,0,W,H);
+function tw(s,f){return s.length*f*0.55}
+function el(cx,cy,rx,ry){g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,Math.PI*2)}
+function dm(cx,cy,hw,hh){g.beginPath();g.moveTo(cx,cy-hh);g.lineTo(cx+hw,cy);g.lineTo(cx,cy+hh);g.lineTo(cx-hw,cy);g.closePath()}
+
+g.fillStyle='#000';g.font='bold 24px Segoe UI,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
+g.fillText('ERD - Sistem Absensi & Manajemen Armada Driver (Notasi Chen)',W/2,35);
+g.font='14px Segoe UI,Arial,sans-serif';g.fillStyle='#333';
+g.fillText('16 Entitas \u2022 30 Relasi \u2022 Laravel Backend',W/2,60);
+
+const E=[
+{id:'users',l:'users',x:240,y:190,pk:['id'],fk:['customer_id'],a:['name','email','password','role']},
+{id:'drivers',l:'drivers',x:680,y:190,pk:['id'],fk:['project_id'],a:['driver_id_nik','full_name','nik_ktp','sim_expiry_date','sim_type','password','foto_sim','foto_ktp','profile_photo','fcm_token','is_on_duty']},
+{id:'vehicles',l:'vehicles',x:1200,y:190,pk:['id'],fk:['project_id'],a:['plate_number','type','tahun_pembuatan','status','current_km','service_interval_km','last_service_km','pajak_stnk_berlaku_sampai','kir_berlaku_sampai','is_temporary','verification_status','qr_code_path']},
+{id:'customers',l:'customers',x:90,y:590,pk:['id'],fk:[],a:['name','code','contact_person','email','phone','address']},
+{id:'projects',l:'projects',x:460,y:530,pk:['id'],fk:['customer_id'],a:['name','code','description']},
+{id:'attendances',l:'attendances',x:920,y:580,pk:['id'],fk:['driver_id','vehicle_id'],a:['time_in','time_out','gps_location_in','speedo_awal','speedo_akhir','selfie_photo_path','check_ban','check_lampu','check_rem','catatan','is_offline_recovery']},
+{id:'emergency_reports',l:'emergency_reports',x:1600,y:420,pk:['id'],fk:['driver_id','vehicle_id','service_report_id','processed_by'],a:['timestamp','gps_location','description','proof_photo_path','follow_up_status']},
+{id:'service_reports',l:'service_reports',x:1600,y:830,pk:['id'],fk:['driver_id','vehicle_id','customer_id','approved_by_admin_id','approved_by_customer_id'],a:['timestamp','gps_location','description','status','service_type','workshop_name','total_cost','admin_notes','ticket_number']},
+{id:'maintenance_logs',l:'maintenance_logs',x:1200,y:950,pk:['id'],fk:['vehicle_id','recorded_by_user_id'],a:['service_date','km_at_service','description','workshop_name']},
+{id:'vehicle_components',l:'vehicle_components',x:1900,y:190,pk:['id'],fk:['vehicle_id'],a:['component_name','category','replacement_interval_km','replacement_interval_days','last_replacement_km','next_replacement_km','cost_per_replacement','warning_threshold_km','status','notes']},
+{id:'maintenance_schedules',l:'maintenance_schedules',x:2250,y:550,pk:['id'],fk:['vehicle_id','component_id','completed_by'],a:['scheduled_date','scheduled_km','type','priority','status','estimated_cost','actual_cost','workshop_name','notes','completed_at']},
+{id:'maintenance_alerts',l:'maintenance_alerts',x:2250,y:980,pk:['id'],fk:['vehicle_id','component_id','acknowledged_by'],a:['alert_type','message','triggered_at','acknowledged_at','resolved_at','status']},
+{id:'transport_costs',l:'transport_costs',x:550,y:900,pk:['id'],fk:['driver_id','vehicle_id','project_id','attendance_id','approved_by','created_by'],a:['trip_date','do_number','odometer_start','odometer_end','gasoline_cost','toll_cost','parking_cost','approval_status','overtime_hours']},
+{id:'vehicle_replacements',l:'vehicle_replacements',x:1950,y:1300,pk:['id'],fk:['original_vehicle_id','replacement_vehicle_id','driver_id','service_report_id','created_by'],a:['start_at','end_at','reason','status','notes']},
+{id:'offline_recovery_logs',l:'offline_recovery_logs',x:650,y:1280,pk:['id'],fk:['driver_id','attendance_id'],a:['offline_entry_id','device_timestamp','recovery_timestamp','delay_minutes','result','error_code','retry_count']},
+{id:'audit_histories',l:'audit_histories',x:160,y:1100,pk:['id'],fk:[],a:['report_id','type','status','total_findings','critical_count','high_count','medium_count','low_count','execution_time_seconds','triggered_by']}
+];
+const R=[
+{f:'customers',t:'users',l:'memiliki',c1:'1',c2:'N'},
+{f:'customers',t:'projects',l:'memiliki',c1:'1',c2:'N'},
+{f:'customers',t:'service_reports',l:'menerima',c1:'1',c2:'N'},
+{f:'projects',t:'drivers',l:'menaungi',c1:'1',c2:'N'},
+{f:'projects',t:'vehicles',l:'menggunakan',c1:'1',c2:'N'},
+{f:'drivers',t:'attendances',l:'melakukan',c1:'1',c2:'N'},
+{f:'vehicles',t:'attendances',l:'digunakan',c1:'1',c2:'N'},
+{f:'drivers',t:'emergency_reports',l:'melaporkan',c1:'1',c2:'N'},
+{f:'vehicles',t:'emergency_reports',l:'terkait',c1:'1',c2:'N'},
+{f:'drivers',t:'service_reports',l:'mengajukan',c1:'1',c2:'N'},
+{f:'vehicles',t:'service_reports',l:'diservis',c1:'1',c2:'N'},
+{f:'vehicles',t:'maintenance_logs',l:'dicatat',c1:'1',c2:'N'},
+{f:'users',t:'maintenance_logs',l:'mencatat',c1:'1',c2:'N'},
+{f:'vehicles',t:'vehicle_components',l:'memiliki',c1:'1',c2:'N'},
+{f:'vehicles',t:'maintenance_schedules',l:'dijadwalkan',c1:'1',c2:'N'},
+{f:'vehicle_components',t:'maintenance_schedules',l:'untuk',c1:'1',c2:'N'},
+{f:'vehicles',t:'maintenance_alerts',l:'memicu',c1:'1',c2:'N'},
+{f:'vehicle_components',t:'maintenance_alerts',l:'menghasilkan',c1:'1',c2:'N'},
+{f:'users',t:'maintenance_alerts',l:'mengakui',c1:'1',c2:'N'},
+{f:'users',t:'maintenance_schedules',l:'menyelesaikan',c1:'1',c2:'N'},
+{f:'attendances',t:'transport_costs',l:'menghasilkan',c1:'1',c2:'1'},
+{f:'drivers',t:'transport_costs',l:'memiliki_biaya',c1:'1',c2:'N'},
+{f:'vehicles',t:'transport_costs',l:'dipakai',c1:'1',c2:'N'},
+{f:'projects',t:'transport_costs',l:'membiayai',c1:'1',c2:'N'},
+{f:'users',t:'service_reports',l:'menyetujui',c1:'1',c2:'N'},
+{f:'emergency_reports',t:'service_reports',l:'ditindaklanjuti',c1:'N',c2:'1'},
+{f:'service_reports',t:'vehicle_replacements',l:'memerlukan',c1:'1',c2:'N'},
+{f:'drivers',t:'vehicle_replacements',l:'menerima',c1:'1',c2:'N'},
+{f:'attendances',t:'offline_recovery_logs',l:'memiliki_log',c1:'1',c2:'1'},
+{f:'drivers',t:'offline_recovery_logs',l:'recovery',c1:'1',c2:'N'}
+];
+
+function ge(id){return E.find(e=>e.id===id)}
+function gAP(e){
+    const all=[];
+    e.pk.forEach(a=>all.push({n:a,t:'pk'}));
+    e.fk.forEach(a=>all.push({n:a,t:'fk'}));
+    e.a.forEach(a=>all.push({n:a,t:'n'}));
+    const cnt=all.length,ew=Math.max(tw(e.l,14)+36,130),sy=22;
+    const lc=Math.ceil(cnt/2),rc=cnt-lc,pos=[];
+    for(let i=0;i<cnt;i++){
+        let ax,ay;
+        if(i<lc){ax=e.x-ew/2-75;ay=e.y-(lc-1)*sy/2+i*sy;}
+        else{const ri=i-lc;ax=e.x+ew/2+75;ay=e.y-(rc-1)*sy/2+ri*sy;}
+        pos.push({...all[i],x:ax,y:ay,ex:e.x,ey:e.y});
+    }
+    return pos;
+}
+
+// 1. Rel lines
+g.strokeStyle='#000';g.lineWidth=1;
+R.forEach(r=>{const f=ge(r.f),t=ge(r.t);if(!f||!t)return;const mx=(f.x+t.x)/2,my=(f.y+t.y)/2;g.beginPath();g.moveTo(f.x,f.y);g.lineTo(mx,my);g.stroke();g.beginPath();g.moveTo(mx,my);g.lineTo(t.x,t.y);g.stroke()});
+
+// 2. Diamonds
+R.forEach(r=>{
+    const f=ge(r.f),t=ge(r.t);if(!f||!t)return;
+    const mx=(f.x+t.x)/2,my=(f.y+t.y)/2;
+    const dw=Math.max(tw(r.l,9)+10,35),dh=14;
+    g.fillStyle='#fff';g.strokeStyle='#000';g.lineWidth=1.5;
+    dm(mx,my,dw,dh);g.fill();g.stroke();
+    g.fillStyle='#000';g.font='9px Segoe UI,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
+    g.fillText(r.l,mx,my);
+    const dc=(ep,mp,ct)=>{const dx=mp.x-ep.x,dy=mp.y-ep.y,len=Math.sqrt(dx*dx+dy*dy);if(!len)return;const px=-dy/len*10,py=dx/len*10;g.font='bold 11px Segoe UI,Arial,sans-serif';g.fillStyle='#000';g.fillText(ct,ep.x+(dx/len)*20+px,ep.y+(dy/len)*20+py)};
+    dc(f,{x:mx,y:my},r.c1);dc(t,{x:mx,y:my},r.c2);
+});
+
+// 3. Attr lines
+g.lineWidth=0.6;g.strokeStyle='#777';
+E.forEach(e=>{gAP(e).forEach(a=>{g.beginPath();g.moveTo(a.x,a.y);g.lineTo(a.ex,a.ey);g.stroke()})});
+
+// 4. Attr ellipses
+E.forEach(e=>{gAP(e).forEach(a=>{
+    const aw=Math.max(tw(a.n,9)+14,42),ah=15;
+    g.fillStyle='#fff';g.lineWidth=a.t==='pk'?2:1;
+    g.setLineDash(a.t==='fk'?[4,2]:[]);g.strokeStyle='#000';
+    el(a.x,a.y,aw/2,ah/2);g.fill();g.stroke();g.setLineDash([]);
+    g.fillStyle='#000';g.textAlign='center';g.textBaseline='middle';
+    g.font=a.t==='pk'?'bold 9px Segoe UI,Arial,sans-serif':a.t==='fk'?'italic 9px Segoe UI,Arial,sans-serif':'9px Segoe UI,Arial,sans-serif';
+    g.fillText(a.n,a.x,a.y);
+    if(a.t==='pk'){const tw2=g.measureText(a.n).width;g.beginPath();g.moveTo(a.x-tw2/2,a.y+5.5);g.lineTo(a.x+tw2/2,a.y+5.5);g.lineWidth=0.8;g.stroke()}
+})});
+
+// 5. Entity boxes
+E.forEach(e=>{
+    const ew=Math.max(tw(e.l,14)+36,130),eh=30;
+    g.fillStyle='#fff';g.strokeStyle='#000';g.lineWidth=2.5;
+    g.fillRect(e.x-ew/2,e.y-eh/2,ew,eh);g.strokeRect(e.x-ew/2,e.y-eh/2,ew,eh);
+    g.fillStyle='#000';g.font='bold 13px Segoe UI,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
+    g.fillText(e.l,e.x,e.y);
+});
+
+// 6. Legend
+const lx=20,ly=H-120;
+g.fillStyle='#fff';g.strokeStyle='#000';g.lineWidth=1;
+g.fillRect(lx,ly,240,105);g.strokeRect(lx,ly,240,105);
+g.fillStyle='#000';g.font='bold 12px Segoe UI,Arial,sans-serif';g.textAlign='left';g.textBaseline='middle';
+g.fillText('Legenda:',lx+10,ly+15);
+g.lineWidth=2;g.strokeRect(lx+10,ly+26,18,12);g.font='11px Segoe UI,Arial,sans-serif';g.fillText('Entitas (Tabel)',lx+35,ly+32);
+dm(lx+19,ly+50,9,6);g.lineWidth=1.5;g.stroke();g.fillText('Relasi',lx+35,ly+50);
+g.lineWidth=2;el(lx+19,ly+66,9,5);g.stroke();g.font='bold 11px Segoe UI,Arial,sans-serif';g.fillText('Primary Key (PK) \u2014 underline',lx+35,ly+66);
+g.lineWidth=1;g.setLineDash([4,2]);el(lx+19,ly+82,9,5);g.stroke();g.setLineDash([]);
+g.font='italic 11px Segoe UI,Arial,sans-serif';g.fillText('Foreign Key (FK) \u2014 dashed',lx+35,ly+82);
+g.lineWidth=1;el(lx+19,ly+98,9,5);g.stroke();g.font='11px Segoe UI,Arial,sans-serif';g.fillText('Atribut Biasa',lx+35,ly+98);
+
+// Auto-download
+setTimeout(() => {
+    try {
+        c.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ERD_Absen_Driver_BW.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            document.getElementById('msg').innerHTML = '<h2>✅ Selesai!</h2><p>File <b>ERD_Absen_Driver_BW.png</b> telah berhasil diunduh ke folder Downloads Anda.</p>';
+        }, 'image/png');
+    } catch(err) {
+        document.getElementById('msg').innerHTML = '<h2>❌ Gagal</h2><p>Gagal men-generate gambar. Coba gunakan browser modern.</p>';
+    }
+}, 500);
+</script>
+</body>
+</html>

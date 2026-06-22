@@ -75,6 +75,18 @@
             color: #64748b;
             font-weight: 600;
         }
+
+        [data-bs-theme="dark"] .card-metric-v {
+            background: var(--topbar-bg) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        [data-bs-theme="dark"] .metric-v-value {
+            color: #f8fafc !important;
+        }
+        [data-bs-theme="dark"] .timeline-card {
+            background: var(--topbar-bg) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
     </style>
 
     <div class="container-fluid p-0">

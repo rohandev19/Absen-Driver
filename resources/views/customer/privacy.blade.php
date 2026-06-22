@@ -258,7 +258,15 @@
             </div>
 
             {{-- Kontak --}}
-            <div class="card border-0 shadow-sm" style="border-radius: 14px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+            <style>
+                .help-card-bg {
+                    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                }
+                [data-bs-theme="dark"] .help-card-bg {
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(30, 64, 175, 0.15) 100%);
+                }
+            </style>
+            <div class="card border-0 shadow-sm help-card-bg" style="border-radius: 14px;">
                 <div class="card-body p-4 text-center">
                     <i class="bi bi-envelope-paper text-primary fs-2 mb-2"></i>
                     <h5 class="fw-bold text-dark mb-2" data-en="Have Questions?" data-id="Ada Pertanyaan?">Have Questions?</h5>

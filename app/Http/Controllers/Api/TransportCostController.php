@@ -48,12 +48,12 @@ class TransportCostController extends Controller
             'gasoline_price_per_liter' => 'nullable|numeric|min:0',
             'delivery_start_time' => 'required|date_format:Y-m-d H:i:s',
             'delivery_end_time' => 'required|date_format:Y-m-d H:i:s|after:delivery_start_time',
-            'gasoline_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
-            'toll_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
-            'parking_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
-            'gasoline_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
-            'toll_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
-            'parking_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'gasoline_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:4096',
+            'toll_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:4096',
+            'parking_receipt' => 'nullable|image|mimes:jpeg,jpg,png|max:4096',
+            'gasoline_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:4096',
+            'toll_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:4096',
+            'parking_receipt_path' => 'nullable|image|mimes:jpeg,jpg,png|max:4096',
         ], [
             'do_number.required' => 'Nomor DO wajib diisi',
             'drop_point_count.min' => 'Jumlah drop point minimal 1',
@@ -62,17 +62,17 @@ class TransportCostController extends Controller
             'parking_cost.regex' => 'Biaya parkir maksimal 2 angka desimal',
             'delivery_end_time.after' => 'Waktu selesai harus setelah waktu mulai',
             'gasoline_receipt.image' => 'Bukti bensin harus berupa gambar',
-            'gasoline_receipt.max' => 'Bukti bensin maksimal 5MB',
+            'gasoline_receipt.max' => 'Bukti bensin maksimal 4MB',
             'toll_receipt.image' => 'Bukti tol harus berupa gambar',
-            'toll_receipt.max' => 'Bukti tol maksimal 5MB',
+            'toll_receipt.max' => 'Bukti tol maksimal 4MB',
             'parking_receipt.image' => 'Bukti parkir harus berupa gambar',
-            'parking_receipt.max' => 'Bukti parkir maksimal 5MB',
+            'parking_receipt.max' => 'Bukti parkir maksimal 4MB',
             'gasoline_receipt_path.image' => 'Bukti bensin harus berupa gambar',
-            'gasoline_receipt_path.max' => 'Bukti bensin maksimal 5MB',
+            'gasoline_receipt_path.max' => 'Bukti bensin maksimal 4MB',
             'toll_receipt_path.image' => 'Bukti tol harus berupa gambar',
-            'toll_receipt_path.max' => 'Bukti tol maksimal 5MB',
+            'toll_receipt_path.max' => 'Bukti tol maksimal 4MB',
             'parking_receipt_path.image' => 'Bukti parkir harus berupa gambar',
-            'parking_receipt_path.max' => 'Bukti parkir maksimal 5MB',
+            'parking_receipt_path.max' => 'Bukti parkir maksimal 4MB',
         ]);
 
         try {
@@ -134,7 +134,7 @@ class TransportCostController extends Controller
     public function index(Request $request)
     {
         $driver = Auth::user();
-        $perPage = $request->input('per_page', 20);
+        $perPage = min(max((int) $request->input('per_page', 20), 1), 50);
 
         $trips = TransportCost::where('driver_id', $driver->id)
             ->with('vehicle:id,plate_number')

@@ -152,7 +152,10 @@ class VehicleManagementTest extends TestCase
     /** @test */
     public function admin_can_record_service()
     {
-        $vehicle = Vehicle::factory()->create(['current_km' => 50000]);
+        $vehicle = Vehicle::factory()->create([
+            'current_km' => 50000,
+            'last_service_km' => 45000,
+        ]);
 
         $response = $this->actingAs($this->admin)
             ->post('/admin/daftar-aset/' . $vehicle->id . '/catat-servis', [

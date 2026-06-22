@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ServiceReport;
 use App\Services\ServiceReportDocumentService;
 use App\Services\ServiceReportPdfService;
+use App\Services\WhatsAppNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -15,13 +16,16 @@ class CustomerApprovalController extends Controller
 {
     protected $documentService;
     protected $pdfService;
+    protected $whatsappService;
 
     public function __construct(
         ServiceReportDocumentService $documentService,
-        ServiceReportPdfService $pdfService
+        ServiceReportPdfService $pdfService,
+        WhatsAppNotificationService $whatsappService
     ) {
         $this->documentService = $documentService;
         $this->pdfService = $pdfService;
+        $this->whatsappService = $whatsappService;
     }
 
     /**
@@ -261,6 +265,13 @@ class CustomerApprovalController extends Controller
                 'rejected_at' => now(),
             ]);
 
+            // Notify Admin via WhatsApp
+            try {
+                $this->whatsappService->notifyAdminOnRejection($report);
+            } catch (\Throwable $e) {
+                Log::warning("WhatsApp notification to admin (rejection) failed: " . $e->getMessage());
+            }
+
             return redirect()->route('customer.approve.show', $report->id)
                 ->with('success', 'Laporan service telah berhasil ditolak.');
         } catch (\Exception $e) {
@@ -290,6 +301,13 @@ class CustomerApprovalController extends Controller
                 'customer_revision_notes' => $validated['customer_revision_notes'],
                 'revision_requested_at' => now(),
             ]);
+
+            // Notify Admin via WhatsApp
+            try {
+                $this->whatsappService->notifyAdminOnRevision($report);
+            } catch (\Throwable $e) {
+                Log::warning("WhatsApp notification to admin (revision) failed: " . $e->getMessage());
+            }
 
             return redirect()->route('customer.approve.show', $report->id)
                 ->with('success', 'Permintaan klarifikasi telah berhasil dikirim ke Admin.');

@@ -390,12 +390,18 @@ class MaintenanceUIConsistencyPreservationTest extends TestCase
 
     public function test_complete_schedule_action_updates_database_status_correctly()
     {
+        \Illuminate\Support\Facades\Storage::fake('public');
         $schedule = MaintenanceSchedule::where('status', 'pending')->first();
         
         $response = $this->actingAs($this->admin)
             ->post(route('admin.maintenance.schedules.complete', $schedule->id), [
                 'actual_cost' => 550000,
                 'notes' => 'Maintenance completed successfully',
+                'signer_name' => 'John Doe',
+                'signer_role' => 'Operator',
+                'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+                'receipt_photo' => \Illuminate\Http\UploadedFile::fake()->image('receipt.jpg'),
+                'odometer_photo' => \Illuminate\Http\UploadedFile::fake()->image('odometer.jpg'),
             ]);
 
         $response->assertSessionHasNoErrors();

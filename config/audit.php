@@ -71,6 +71,10 @@ return [
     |
     */
     'performance' => [
+        'middleware_enabled' => env('PERFORMANCE_MONITOR_ENABLED', env('APP_ENV') !== 'production'),
+        'slow_query_logger_enabled' => env('SLOW_QUERY_LOGGER_ENABLED', env('APP_ENV') !== 'production'),
+        'headers_enabled' => env('PERFORMANCE_HEADERS_ENABLED', false),
+        'slow_query_threshold_ms' => env('SLOW_QUERY_THRESHOLD_MS', 500),
         'analyzers' => [
             'query' => true,
             'cache' => true,

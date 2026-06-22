@@ -95,6 +95,13 @@
             transition: 0.2s; text-decoration: none;
         }
         .btn-icon-corp:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+        
+        [data-bs-theme="dark"] .btn-icon-corp {
+            background: transparent; border-color: rgba(255,255,255,0.2); color: #e2e8f0;
+        }
+        [data-bs-theme="dark"] .btn-icon-corp:hover {
+            background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.3);
+        }
 
         /* === 5. MOBILE RESPONSIVE === */
         @media (max-width: 768px) {

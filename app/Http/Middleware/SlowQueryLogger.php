@@ -33,6 +33,10 @@ class SlowQueryLogger
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (! config('audit.performance.slow_query_logger_enabled', ! app()->isProduction())) {
+            return $next($request);
+        }
+
         $threshold = config('audit.performance.slow_query_threshold_ms', self::DEFAULT_THRESHOLD_MS);
 
         // Listen for slow queries

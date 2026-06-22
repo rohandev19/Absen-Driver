@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERD Chen - 3 Bagian</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #f3f4f6;
+            color: #111;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        header {
+            padding: 18px 28px;
+            background: #fff;
+            border-bottom: 1px solid #d1d5db;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+        .hint {
+            margin-top: 6px;
+            color: #555;
+            font-size: 13px;
+        }
+        .page {
+            width: 1280px;
+            margin: 24px auto;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            padding: 18px;
+        }
+        .page-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 4px;
+        }
+        .page-subtitle {
+            text-align: center;
+            font-size: 12px;
+            color: #555;
+            margin: 0 0 12px;
+        }
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #fff;
+        }
+        .entity rect {
+            fill: #fff;
+            stroke: #000;
+            stroke-width: 2.2;
+        }
+        .entity text {
+            font-size: 14px;
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .attribute ellipse {
+            fill: #fff;
+            stroke: #000;
+            stroke-width: 1.2;
+        }
+        .attribute text {
+            font-size: 11px;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .attribute.pk text {
+            font-weight: 700;
+            text-decoration: underline;
+        }
+        .relationship polygon {
+            fill: #fff;
+            stroke: #000;
+            stroke-width: 1.7;
+        }
+        .relationship text {
+            font-size: 12px;
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .line {
+            stroke: #000;
+            stroke-width: 1.2;
+            fill: none;
+        }
+        .rel-line {
+            stroke: #000;
+            stroke-width: 1.6;
+            fill: none;
+        }
+        .cardinality {
+            font-size: 14px;
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .legend {
+            font-size: 12px;
+            fill: #333;
+        }
+        @media print {
+            body { background: #fff; }
+            header { display: none; }
+            .page {
+                width: 100%;
+                margin: 0;
+                border: none;
+                box-shadow: none;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>ERD Notasi Chen - 3 Bagian</h1>
+    <div class="hint">Kotak = entitas, oval = atribut, belah ketupat = relasi. Atribut primary key diberi garis bawah.</div>
+</header>
+
+<section class="page">
+    <h2 class="page-title">Bagian 1 - ERD Core Absensi dan User Management</h2>
+    <p class="page-subtitle">Fokus: customer, project, driver, kendaraan, absensi, user, dan sinkronisasi offline.</p>
+    <svg id="erd-core" viewBox="0 0 1240 760" aria-label="ERD Core Absensi"></svg>
+</section>
+
+<section class="page">
+    <h2 class="page-title">Bagian 2 - ERD Preventive Maintenance</h2>
+    <p class="page-subtitle">Fokus: kendaraan, komponen, alert, jadwal, log maintenance, dan user yang memproses.</p>
+    <svg id="erd-maintenance" viewBox="0 0 1240 760" aria-label="ERD Preventive Maintenance"></svg>
+</section>
+
+<section class="page">
+    <h2 class="page-title">Bagian 3 - ERD Laporan dan Operasional Pendukung</h2>
+    <p class="page-subtitle">Fokus: service report, emergency report, vehicle replacement, transport cost, customer, user, driver, dan vehicle.</p>
+    <svg id="erd-operasional" viewBox="0 0 1240 820" aria-label="ERD Laporan dan Operasional"></svg>
+</section>
+
+<script>
+const diagrams = {
+    core: {
+        svgId: 'erd-core',
+        entities: [
+            { id: 'customer', label: 'CUSTOMER', x: 80, y: 80, attrs: [
+                ['id_customer', true, -35, -52], ['nama_customer', false, -55, 0], ['email', false, -40, 52], ['phone', false, 35, -52]
+            ]},
+            { id: 'project', label: 'PROJECT', x: 360, y: 80, attrs: [
+                ['id_project', true, -45, -52], ['nama_project', false, 45, -52], ['kode_project', false, -55, 52]
+            ]},
+            { id: 'user', label: 'USER', x: 80, y: 330, attrs: [
+                ['id_user', true, -35, -52], ['nama_user', false, -55, 0], ['email', false, 35, -52], ['role', false, 48, 50]
+            ]},
+            { id: 'driver', label: 'DRIVER', x: 360, y: 330, attrs: [
+                ['id_driver', true, -40, -58], ['nik_driver', false, 42, -58], ['nama_driver', false, -65, 0], ['sim_type', false, 55, 0], ['is_on_duty', false, 0, 62]
+            ]},
+            { id: 'vehicle', label: 'VEHICLE', x: 700, y: 330, attrs: [
+                ['id_vehicle', true, -42, -58], ['plate_number', false, 48, -58], ['type', false, -62, 0], ['status', false, 58, 0], ['current_km', false, 0, 62]
+            ]},
+            { id: 'attendance', label: 'ATTENDANCE', x: 540, y: 560, attrs: [
+                ['id_attendance', true, -65, -58], ['time_in', false, 60, -58], ['time_out', false, -70, 0], ['speedo_awal', false, 72, 0], ['speedo_akhir', false, 0, 62]
+            ]},
+            { id: 'offline_log', label: 'OFFLINE_RECOVERY_LOG', x: 920, y: 560, w: 190, attrs: [
+                ['id_recovery', true, -65, -58], ['offline_entry_id', false, 72, -58], ['device_timestamp', false, -78, 0], ['result', false, 70, 0]
+            ]}
+        ],
+        relationships: [
+            { label: 'MEMILIKI', x: 270, y: 110, links: [['customer', '1'], ['project', 'N']] },
+            { label: 'MEMILIKI', x: 220, y: 245, links: [['customer', '1'], ['user', 'N']] },
+            { label: 'MEMILIKI', x: 395, y: 220, links: [['project', '1'], ['driver', 'N']] },
+            { label: 'MEMILIKI', x: 585, y: 220, links: [['project', '1'], ['vehicle', 'N']] },
+            { label: 'MELAKUKAN', x: 445, y: 460, links: [['driver', '1'], ['attendance', 'N']] },
+            { label: 'DIGUNAKAN', x: 660, y: 460, links: [['vehicle', '1'], ['attendance', 'N']] },
+            { label: 'MEMILIKI', x: 760, y: 610, links: [['attendance', '1'], ['offline_log', '0..1']] }
+        ]
+    },
+    maintenance: {
+        svgId: 'erd-maintenance',
+        entities: [
+            { id: 'vehicle', label: 'VEHICLE', x: 110, y: 290, attrs: [
+                ['id_vehicle', true, -50, -62], ['plate_number', false, 58, -62], ['type', false, -70, 0], ['status', false, 70, 0], ['current_km', false, 0, 66]
+            ]},
+            { id: 'component', label: 'VEHICLE_COMPONENT', x: 430, y: 110, w: 180, attrs: [
+                ['id_component', true, -70, -58], ['component_name', false, 75, -58], ['category', false, -78, 0], ['next_replacement_km', false, 92, 0], ['status', false, 0, 62]
+            ]},
+            { id: 'alert', label: 'MAINTENANCE_ALERT', x: 780, y: 110, w: 180, attrs: [
+                ['id_alert', true, -55, -58], ['alert_type', false, 60, -58], ['message', false, -66, 0], ['status', false, 62, 0], ['triggered_at', false, 0, 62]
+            ]},
+            { id: 'schedule', label: 'MAINTENANCE_SCHEDULE', x: 780, y: 430, w: 210, attrs: [
+                ['id_schedule', true, -68, -58], ['scheduled_date', false, 78, -58], ['type', false, -84, 0], ['priority', false, 78, 0], ['status', false, -50, 62], ['actual_cost', false, 58, 62]
+            ]},
+            { id: 'log', label: 'MAINTENANCE_LOG', x: 430, y: 590, w: 170, attrs: [
+                ['id_log', true, -48, -58], ['service_date', false, 58, -58], ['description', false, -70, 0], ['cost', false, 58, 0]
+            ]},
+            { id: 'user', label: 'USER', x: 1060, y: 430, attrs: [
+                ['id_user', true, -45, -58], ['nama_user', false, 50, -58], ['email', false, -55, 0], ['role', false, 50, 0]
+            ]}
+        ],
+        relationships: [
+            { label: 'MEMILIKI', x: 280, y: 190, links: [['vehicle', '1'], ['component', 'N']] },
+            { label: 'MEMICU', x: 610, y: 110, links: [['component', '1'], ['alert', 'N']] },
+            { label: 'DIJADWALKAN', x: 610, y: 300, links: [['component', '1'], ['schedule', 'N']] },
+            { label: 'MEMILIKI', x: 280, y: 480, links: [['vehicle', '1'], ['log', 'N']] },
+            { label: 'MEMILIKI', x: 550, y: 470, links: [['vehicle', '1'], ['schedule', 'N']] },
+            { label: 'MENYELESAIKAN', x: 940, y: 430, links: [['user', '1'], ['schedule', 'N']] },
+            { label: 'ACKNOWLEDGE', x: 945, y: 235, links: [['user', '1'], ['alert', 'N']] }
+        ]
+    },
+    operasional: {
+        svgId: 'erd-operasional',
+        entities: [
+            { id: 'driver', label: 'DRIVER', x: 80, y: 120, attrs: [
+                ['id_driver', true, -40, -58], ['nik_driver', false, 42, -58], ['nama_driver', false, -62, 0], ['sim_type', false, 54, 0]
+            ]},
+            { id: 'vehicle', label: 'VEHICLE', x: 80, y: 390, attrs: [
+                ['id_vehicle', true, -42, -58], ['plate_number', false, 48, -58], ['type', false, -58, 0], ['status', false, 55, 0]
+            ]},
+            { id: 'customer', label: 'CUSTOMER', x: 390, y: 120, attrs: [
+                ['id_customer', true, -58, -58], ['nama_customer', false, 65, -58], ['email', false, -55, 0], ['phone', false, 52, 0]
+            ]},
+            { id: 'user', label: 'USER', x: 700, y: 120, attrs: [
+                ['id_user', true, -42, -58], ['nama_user', false, 50, -58], ['email', false, -55, 0], ['role', false, 50, 0]
+            ]},
+            { id: 'service', label: 'SERVICE_REPORT', x: 390, y: 390, w: 170, attrs: [
+                ['id_service_report', true, -78, -60], ['timestamp', false, 70, -60], ['description', false, -78, 0], ['status', false, 70, 0], ['approved_at', false, 0, 64]
+            ]},
+            { id: 'emergency', label: 'EMERGENCY_REPORT', x: 390, y: 650, w: 180, attrs: [
+                ['id_emergency', true, -66, -58], ['timestamp', false, 68, -58], ['description', false, -72, 0], ['follow_up_status', false, 84, 0]
+            ]},
+            { id: 'replacement', label: 'VEHICLE_REPLACEMENT', x: 730, y: 520, w: 190, attrs: [
+                ['id_replacement', true, -70, -58], ['status', false, 58, -58], ['start_date', false, -70, 0], ['end_date', false, 62, 0]
+            ]},
+            { id: 'attendance', label: 'ATTENDANCE', x: 80, y: 650, w: 150, attrs: [
+                ['id_attendance', true, -65, -58], ['time_in', false, 58, -58], ['time_out', false, -62, 0], ['speedo_akhir', false, 68, 0]
+            ]},
+            { id: 'transport', label: 'TRANSPORT_COST', x: 730, y: 720, w: 170, attrs: [
+                ['id_transport', true, -66, -58], ['trip_date', false, 60, -58], ['total_cost', false, -62, 0], ['approval_status', false, 78, 0]
+            ]}
+        ],
+        relationships: [
+            { label: 'MEMBUAT', x: 235, y: 265, links: [['driver', '1'], ['service', 'N']] },
+            { label: 'DILAPORKAN', x: 235, y: 390, links: [['vehicle', '1'], ['service', 'N']] },
+            { label: 'MENYETUJUI', x: 555, y: 260, links: [['customer', '1'], ['service', 'N']] },
+            { label: 'MEMPROSES', x: 690, y: 300, links: [['user', '1'], ['service', 'N']] },
+            { label: 'MELAPORKAN', x: 235, y: 650, links: [['driver', '1'], ['emergency', 'N']] },
+            { label: 'TERKAIT', x: 235, y: 520, links: [['vehicle', '1'], ['emergency', 'N']] },
+            { label: 'MENGHASILKAN', x: 570, y: 520, links: [['service', '1'], ['replacement', 'N']] },
+            { label: 'MEMILIKI', x: 390, y: 735, links: [['attendance', '1'], ['transport', '0..1']] },
+            { label: 'MENGAJUKAN', x: 570, y: 675, links: [['driver', '1'], ['transport', 'N']] },
+            { label: 'MENYETUJUI', x: 940, y: 620, links: [['user', '1'], ['transport', 'N']] }
+        ]
+    }
+};
+
+function renderDiagram(config) {
+    const svg = document.getElementById(config.svgId);
+    const ns = 'http://www.w3.org/2000/svg';
+    const entityMap = new Map(config.entities.map(entity => [entity.id, entity]));
+
+    function create(name, attrs = {}) {
+        const el = document.createElementNS(ns, name);
+        Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+        return el;
+    }
+
+    function center(entity) {
+        return {
+            x: entity.x + (entity.w || 150) / 2,
+            y: entity.y + 30
+        };
+    }
+
+    function line(x1, y1, x2, y2, className) {
+        svg.appendChild(create('line', { x1, y1, x2, y2, class: className }));
+    }
+
+    function text(x, y, value, className) {
+        const node = create('text', { x, y, class: className });
+        node.textContent = value;
+        svg.appendChild(node);
+        return node;
+    }
+
+    function diamond(rel) {
+        const w = Math.max(94, rel.label.length * 9);
+        const h = 58;
+        const points = [
+            [rel.x, rel.y - h / 2],
+            [rel.x + w / 2, rel.y],
+            [rel.x, rel.y + h / 2],
+            [rel.x - w / 2, rel.y]
+        ].map(point => point.join(',')).join(' ');
+
+        const group = create('g', { class: 'relationship' });
+        group.appendChild(create('polygon', { points }));
+        const label = create('text', { x: rel.x, y: rel.y });
+        label.textContent = rel.label;
+        group.appendChild(label);
+        svg.appendChild(group);
+
+        rel.links.forEach(([entityId, card]) => {
+            const entity = entityMap.get(entityId);
+            const c = center(entity);
+            line(rel.x, rel.y, c.x, c.y, 'rel-line');
+            const tx = c.x + (rel.x - c.x) * 0.25;
+            const ty = c.y + (rel.y - c.y) * 0.25;
+            text(tx, ty, card, 'cardinality');
+        });
+    }
+
+    function entity(entity) {
+        const w = entity.w || 150;
+        const h = entity.h || 60;
+        const cx = entity.x + w / 2;
+        const cy = entity.y + h / 2;
+
+        (entity.attrs || []).forEach(([label, pk, dx, dy]) => {
+            const ax = cx + dx;
+            const ay = cy + dy;
+            const aw = Math.max(74, label.length * 7.2);
+            line(cx, cy, ax, ay, 'line');
+
+            const group = create('g', { class: pk ? 'attribute pk' : 'attribute' });
+            group.appendChild(create('ellipse', { cx: ax, cy: ay, rx: aw / 2, ry: 22 }));
+            const labelNode = create('text', { x: ax, y: ay });
+            labelNode.textContent = label;
+            group.appendChild(labelNode);
+            svg.appendChild(group);
+        });
+
+        const group = create('g', { class: 'entity' });
+        group.appendChild(create('rect', { x: entity.x, y: entity.y, width: w, height: h }));
+        const label = create('text', { x: cx, y: cy });
+        label.textContent = entity.label;
+        group.appendChild(label);
+        svg.appendChild(group);
+    }
+
+    text(20, 28, 'PK digarisbawahi. Kardinalitas: 1, N, atau 0..1.', 'legend');
+    config.relationships.forEach(diamond);
+    config.entities.forEach(entity);
+}
+
+renderDiagram(diagrams.core);
+renderDiagram(diagrams.maintenance);
+renderDiagram(diagrams.operasional);
+</script>
+</body>
+</html>

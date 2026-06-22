@@ -99,6 +99,15 @@
             color: #f8fafc;
         }
 
+        [data-bs-theme="dark"] .topbar-user {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        [data-bs-theme="dark"] .topbar-user-name {
+            color: #f8fafc !important;
+        }
+
         [data-bs-theme="dark"] body,
         [data-bs-theme="dark"] .text-dark,
         [data-bs-theme="dark"] .text-muted,
@@ -698,11 +707,16 @@
 
         /* ========== TABLE RESPONSIVE ========== */
         @media (max-width: 992px) {
-            .table-responsive:not(.table-responsive-cards) .table {
+            .table-responsive:not(.table-responsive-cards) {
                 display: block !important;
                 width: 100% !important;
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch !important;
+            }
+
+            .table-responsive:not(.table-responsive-cards) .table {
+                min-width: 100%;
+                width: auto !important;
                 white-space: nowrap !important;
             }
 
@@ -923,11 +937,21 @@
 
                 {{-- 5. SERVICE DARURAT --}}
                 <li class="nav-item">
-                    <a href="{{ route('admin.service.index') }}"
-                        class="nav-link {{ request()->routeIs('admin.service.*') ? 'active' : '' }}">
-                        <i class="bi bi-tools"></i>
-                        <span>Service Darurat</span>
-                    </a>
+                    <button class="btn btn-toggle collapsed"
+                        data-bs-toggle="collapse" data-bs-target="#service-collapse"
+                        aria-expanded="{{ request()->routeIs('admin.service.*') ? 'true' : 'false' }}">
+                        <i class="bi bi-tools menu-icon"></i>
+                        <span class="menu-label">Service Darurat</span>
+                        <i class="bi bi-chevron-right toggle-chevron"></i>
+                    </button>
+                    <div class="collapse {{ request()->routeIs('admin.service.*') ? 'show' : '' }}"
+                        id="service-collapse">
+                        <ul class="btn-toggle-nav list-unstyled">
+                            <li><a href="{{ route('admin.service.index') }}" class="{{ request()->routeIs('admin.service.index', 'admin.service.show') ? 'active' : '' }}">Daftar Laporan</a></li>
+                            <li><a href="{{ route('admin.service.create') }}" class="{{ request()->routeIs('admin.service.create') ? 'active' : '' }}">Input Service Manual</a></li>
+                            <li><a href="{{ route('admin.service.customer_approvals') }}" class="{{ request()->routeIs('admin.service.customer_approvals') ? 'active' : '' }}">Approval Customer</a></li>
+                        </ul>
+                    </div>
                 </li>
                 @endif
 

@@ -173,6 +173,15 @@
                                         data-bs-target="#completeModal{{ $schedule->id }}">
                                         <i class="bi bi-check-circle"></i> Selesai
                                     </button>
+                                @elseif($schedule->status == 'completed')
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <a href="{{ route('admin.maintenance.schedules.finance_pdf.preview', $schedule->id) }}" class="btn-action-corp" target="_blank" title="Preview PDF Finance">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ route('admin.maintenance.schedules.finance_pdf.download', $schedule->id) }}" class="btn-primary-corp" title="Download PDF Finance">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    </div>
                                 @else
                                     <span class="text-muted small">-</span>
                                 @endif
@@ -180,10 +189,10 @@
                         </tr>
 
                         {{-- Complete Modal --}}
-                        <div class="modal fade" id="completeModal{{ $schedule->id }}" tabindex="-1">
+                        <div class="modal fade complete-maintenance-modal" id="completeModal{{ $schedule->id }}" tabindex="-1" data-schedule-id="{{ $schedule->id }}">
                             <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form action="{{ route('admin.maintenance.schedules.complete', $schedule) }}" method="POST">
+                                <div class="modal-content text-start">
+                                    <form action="{{ route('admin.maintenance.schedules.complete', $schedule) }}" method="POST" enctype="multipart/form-data" id="completeForm{{ $schedule->id }}">
                                         @csrf
                                         <div class="modal-header">
                                             <h5 class="modal-title">Selesaikan Maintenance</h5>
@@ -194,18 +203,46 @@
                                                 <strong>{{ $schedule->vehicle->plate_number }}</strong> - {{ $schedule->component->component_name ?? 'General' }}
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Biaya Aktual (Rp)</label>
+                                                <label class="form-label small fw-bold">Biaya Aktual (Rp) <span class="text-danger">*</span></label>
                                                 <input type="number" name="actual_cost" class="form-control" 
-                                                    value="{{ $schedule->estimated_cost }}" required>
+                                                    value="{{ $schedule->estimated_cost }}" required min="0">
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Catatan</label>
-                                                <textarea name="notes" class="form-control" rows="3">{{ $schedule->notes }}</textarea>
+                                                <label class="form-label small fw-bold">Foto Kuitansi / Bukti Pembayaran <span class="text-danger">*</span></label>
+                                                <input type="file" name="receipt_photo" class="form-control" accept="image/jpeg, image/png" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Foto Odometer / KM Setelah Servis <span class="text-danger">*</span></label>
+                                                <input type="file" name="odometer_photo" class="form-control" accept="image/jpeg, image/png" required>
+                                            </div>
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold">Nama Penanggung Jawab <span class="text-danger">*</span></label>
+                                                    <input type="text" name="signer_name" class="form-control" value="{{ Auth::user()->name }}" required>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold">Jabatan <span class="text-danger">*</span></label>
+                                                    <input type="text" name="signer_role" class="form-control" value="Admin Operasional" required>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small">Tanda Tangan Digital <span class="text-danger">*</span></label>
+                                                <div class="border rounded" style="position: relative; background-color: #f8f9fa; border: 2px dashed #dee2e6 !important; min-height: 150px;">
+                                                    <canvas id="signature-pad-{{ $schedule->id }}" class="signature-pad d-block" style="width: 100%; height: 150px; touch-action: none; cursor: crosshair;"></canvas>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary mt-2 clear-sig-btn" data-target="{{ $schedule->id }}">
+                                                    <i class="bi bi-eraser"></i> Hapus Tanda Tangan
+                                                </button>
+                                                <input type="hidden" name="signature" id="signature-input-{{ $schedule->id }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Catatan</label>
+                                                <textarea name="notes" class="form-control" rows="2">{{ $schedule->notes }}</textarea>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn-action-corp" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn-primary-corp">Selesai</button>
+                                            <button type="submit" class="btn-primary-corp submit-complete-btn" data-id="{{ $schedule->id }}">Selesai</button>
                                         </div>
                                     </form>
                                 </div>
@@ -309,31 +346,112 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script>
-document.getElementById('vehicleSelect').addEventListener('change', function() {
-    const vehicleId = this.value;
-    const componentSelect = document.getElementById('componentSelect');
-    
-    componentSelect.innerHTML = '<option value="">Loading...</option>';
-    
-    if (vehicleId) {
-        fetch(`/admin/api/vehicles/${vehicleId}/components`)
-            .then(response => response.json())
-            .then(data => {
-                componentSelect.innerHTML = '<option value="">General Maintenance</option>';
-                data.forEach(comp => {
-                    const option = document.createElement('option');
-                    option.value = comp.id;
-                    option.textContent = comp.component_name;
-                    componentSelect.appendChild(option);
-                });
-            })
-            .catch(() => {
-                componentSelect.innerHTML = '<option value="">General Maintenance</option>';
-            });
-    } else {
-        componentSelect.innerHTML = '<option value="">Pilih kendaraan dulu</option>';
+document.addEventListener("DOMContentLoaded", function() {
+    const vehicleSelect = document.getElementById('vehicleSelect');
+    if (vehicleSelect) {
+        vehicleSelect.addEventListener('change', function() {
+            const vehicleId = this.value;
+            const componentSelect = document.getElementById('componentSelect');
+            
+            componentSelect.innerHTML = '<option value="">Loading...</option>';
+            
+            if (vehicleId) {
+                fetch(`/admin/api/vehicles/${vehicleId}/components`)
+                    .then(response => response.json())
+                    .then(data => {
+                        componentSelect.innerHTML = '<option value="">General Maintenance</option>';
+                        data.forEach(comp => {
+                            const option = document.createElement('option');
+                            option.value = comp.id;
+                            option.textContent = comp.component_name;
+                            componentSelect.appendChild(option);
+                        });
+                    })
+                    .catch(() => {
+                        componentSelect.innerHTML = '<option value="">General Maintenance</option>';
+                    });
+            } else {
+                componentSelect.innerHTML = '<option value="">Pilih kendaraan dulu</option>';
+            }
+        });
     }
+
+    // Modal Signature Pads handling
+    const activeSignaturePads = {};
+
+    document.querySelectorAll('.complete-maintenance-modal').forEach(modal => {
+        modal.addEventListener('shown.bs.modal', function () {
+            const scheduleId = this.getAttribute('data-schedule-id');
+            const canvas = document.getElementById(`signature-pad-${scheduleId}`);
+            
+            if (canvas) {
+                if (!activeSignaturePads[scheduleId]) {
+                    const signaturePad = new SignaturePad(canvas, {
+                        backgroundColor: 'rgb(255, 255, 255)'
+                    });
+                    activeSignaturePads[scheduleId] = signaturePad;
+                }
+                
+                const signaturePad = activeSignaturePads[scheduleId];
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                
+                const wasEmpty = signaturePad.isEmpty();
+                const data = !wasEmpty ? signaturePad.toDataURL() : null;
+
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+
+                signaturePad.clear();
+                if (!wasEmpty && data) {
+                    signaturePad.fromDataURL(data);
+                }
+            }
+        });
+    });
+
+    // Clear signature canvas
+    document.querySelectorAll('.clear-sig-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const scheduleId = this.getAttribute('data-target');
+            const signaturePad = activeSignaturePads[scheduleId];
+            if (signaturePad) {
+                signaturePad.clear();
+            }
+        });
+    });
+
+    // Form submit validation
+    document.querySelectorAll('.complete-maintenance-modal form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const scheduleId = this.closest('.complete-maintenance-modal').getAttribute('data-schedule-id');
+            const signaturePad = activeSignaturePads[scheduleId];
+            
+            if (!signaturePad || signaturePad.isEmpty()) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tanda Tangan Diperlukan',
+                    text: 'Mohon berikan tanda tangan digital Anda sebelum menyelesaikan.',
+                    confirmButtonText: 'Oke',
+                    confirmButtonColor: '#0d6efd'
+                });
+                return;
+            }
+
+            document.getElementById(`signature-input-${scheduleId}`).value = signaturePad.toDataURL('image/png');
+
+            const submitBtn = this.querySelector('.submit-complete-btn');
+            if (submitBtn) {
+                setTimeout(function() {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memproses...';
+                }, 50);
+            }
+        });
+    });
 });
 </script>
 @endpush

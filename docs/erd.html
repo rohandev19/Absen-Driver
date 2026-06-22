@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERD - Sistem Absensi & Manajemen Armada Driver</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            overflow: hidden;
+        }
+
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+            border-bottom: 2px solid #e94560;
+        }
+
+        #header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        #header .subtitle {
+            font-size: 12px;
+            color: #a0a0c0;
+            margin-top: 2px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .controls button {
+            padding: 6px 14px;
+            border: 1px solid #e94560;
+            background: transparent;
+            color: #e94560;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .controls .zoom-info {
+            color: #a0a0c0;
+            font-size: 12px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            padding-top: 56px;
+            cursor: grab;
+            overflow: hidden;
+        }
+
+        #canvas-container.dragging {
+            cursor: grabbing;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Entity (Rectangle) */
+        .entity rect {
+            fill: #16213e;
+            stroke: #e94560;
+            stroke-width: 2;
+            rx: 3;
+            ry: 3;
+        }
+
+        .entity text {
+            fill: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .entity:hover rect {
+            fill: #1a2744;
+            stroke: #ff6b81;
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 8px rgba(233,69,96,0.4));
+        }
+
+        /* Attribute (Ellipse) */
+        .attribute ellipse {
+            fill: #0f3460;
+            stroke: #53a8b6;
+            stroke-width: 1.5;
+        }
+
+        .attribute text {
+            fill: #d0d0e0;
+            font-size: 10px;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .attribute.pk ellipse {
+            fill: #1a1a40;
+            stroke: #ffd700;
+            stroke-width: 2;
+        }
+
+        .attribute.pk text {
+            fill: #ffd700;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
+        .attribute.fk ellipse {
+            fill: #0d2137;
+            stroke: #4ecdc4;
+            stroke-width: 1.5;
+            stroke-dasharray: 5,3;
+        }
+
+        .attribute.fk text {
+            fill: #4ecdc4;
+            font-style: italic;
+        }
+
+        /* Relationship (Diamond) */
+        .relationship polygon {
+            fill: #2d132c;
+            stroke: #e94560;
+            stroke-width: 1.5;
+        }
+
+        .relationship text {
+            fill: #ffb6c1;
+            font-size: 9px;
+            font-weight: 600;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .relationship:hover polygon {
+            fill: #3d1f3c;
+            stroke: #ff6b81;
+            filter: drop-shadow(0 0 6px rgba(233,69,96,0.4));
+        }
+
+        /* Connection Lines */
+        .conn-line {
+            stroke: #3a3a5c;
+            stroke-width: 1.2;
+            fill: none;
+        }
+
+        .rel-line {
+            stroke: #e94560;
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        /* Cardinality labels */
+        .cardinality {
+            fill: #ffd700;
+            font-size: 12px;
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        /* Legend */
+        #legend {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(22,33,62,0.95);
+            border: 1px solid #3a3a5c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            z-index: 100;
+            font-size: 11px;
+        }
+
+        #legend h3 {
+            color: #e94560;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            color: #b0b0d0;
+        }
+
+        .legend-icon {
+            width: 20px;
+            height: 14px;
+            display: inline-block;
+            border-radius: 2px;
+        }
+
+        .legend-pk { background: transparent; border: 2px solid #ffd700; border-radius: 50%; width: 16px; height: 12px; }
+        .legend-fk { background: transparent; border: 1.5px dashed #4ecdc4; border-radius: 50%; width: 16px; height: 12px; }
+        .legend-entity { background: #16213e; border: 2px solid #e94560; }
+        .legend-rel { background: #2d132c; border: 1.5px solid #e94560; transform: rotate(45deg); width: 14px; height: 14px; border-radius: 0; }
+        .legend-attr { background: #0f3460; border: 1.5px solid #53a8b6; border-radius: 50%; width: 16px; height: 12px; }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div>
+            <h1>ERD - Sistem Absensi & Manajemen Armada Driver</h1>
+            <div class="subtitle">Notasi Chen • 16 Entitas • Laravel Backend</div>
+        </div>
+        <div class="controls">
+            <button onclick="zoomIn()">🔍+</button>
+            <span class="zoom-info" id="zoomLevel">100%</span>
+            <button onclick="zoomOut()">🔍−</button>
+            <button onclick="resetView()">⟲ Reset</button>
+            <button onclick="exportSVG()">📥 Export SVG</button>
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#e94560" />
+                </marker>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e1e3a" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <g id="viewport">
+                <rect x="-10000" y="-10000" width="20000" height="20000" fill="url(#grid)" />
+                <g id="connections"></g>
+                <g id="entities"></g>
+            </g>
+        </svg>
+    </div>
+
+    <div id="legend">
+        <h3>Legenda</h3>
+        <div class="legend-item"><span class="legend-icon legend-entity"></span> Entitas (Tabel)</div>
+        <div class="legend-item"><span class="legend-icon legend-rel"></span> Relasi</div>
+        <div class="legend-item"><span class="legend-icon legend-pk"></span> Primary Key (PK)</div>
+        <div class="legend-item"><span class="legend-icon legend-fk"></span> Foreign Key (FK)</div>
+        <div class="legend-item"><span class="legend-icon legend-attr"></span> Atribut Biasa</div>
+    </div>
+
+    <script>
+    // =========================================================
+    // DATA DEFINITION
+    // =========================================================
+    const entities = [
+        {
+            id: 'users', label: 'users', x: 250, y: 180,
+            pk: ['id'],
+            fk: ['customer_id'],
+            attrs: ['name', 'email', 'password', 'role', 'email_verified_at']
+        },
+        {
+            id: 'drivers', label: 'drivers', x: 700, y: 180,
+            pk: ['id'],
+            fk: ['project_id'],
+            attrs: ['driver_id_nik', 'full_name', 'nik_ktp', 'sim_expiry_date', 'sim_type', 'password', 'foto_sim', 'foto_ktp', 'profile_photo', 'fcm_token', 'is_on_duty', 'qr_code_path']
+        },
+        {
+            id: 'vehicles', label: 'vehicles', x: 1200, y: 180,
+            pk: ['id'],
+            fk: ['project_id'],
+            attrs: ['plate_number', 'type', 'tahun_pembuatan', 'status', 'current_km', 'service_interval_km', 'last_service_km', 'pajak_stnk_berlaku_sampai', 'kir_berlaku_sampai', 'is_temporary', 'verification_status', 'qr_code_path']
+        },
+        {
+            id: 'customers', label: 'customers', x: 50, y: 550,
+            pk: ['id'],
+            fk: [],
+            attrs: ['name', 'code', 'contact_person', 'email', 'phone', 'address']
+        },
+        {
+            id: 'projects', label: 'projects', x: 480, y: 500,
+            pk: ['id'],
+            fk: ['customer_id'],
+            attrs: ['name', 'code', 'description']
+        },
+        {
+            id: 'attendances', label: 'attendances', x: 950, y: 530,
+            pk: ['id'],
+            fk: ['driver_id', 'vehicle_id'],
+            attrs: ['time_in', 'time_out', 'gps_location_in', 'speedo_awal', 'speedo_akhir', 'selfie_photo_path', 'check_ban', 'check_lampu', 'check_rem', 'catatan', 'is_offline_recovery']
+        },
+        {
+            id: 'emergency_reports', label: 'emergency_reports', x: 1500, y: 400,
+            pk: ['id'],
+            fk: ['driver_id', 'vehicle_id', 'service_report_id', 'processed_by'],
+            attrs: ['timestamp', 'gps_location', 'description', 'proof_photo_path', 'follow_up_status']
+        },
+        {
+            id: 'service_reports', label: 'service_reports', x: 1500, y: 780,
+            pk: ['id'],
+            fk: ['driver_id', 'vehicle_id', 'customer_id', 'approved_by_admin_id', 'approved_by_customer_id'],
+            attrs: ['timestamp', 'gps_location', 'description', 'status', 'service_type', 'workshop_name', 'total_cost', 'admin_notes', 'ticket_number']
+        },
+        {
+            id: 'maintenance_logs', label: 'maintenance_logs', x: 1200, y: 900,
+            pk: ['id'],
+            fk: ['vehicle_id', 'recorded_by_user_id'],
+            attrs: ['service_date', 'km_at_service', 'description', 'workshop_name']
+        },
+        {
+            id: 'vehicle_components', label: 'vehicle_components', x: 1800, y: 180,
+            pk: ['id'],
+            fk: ['vehicle_id'],
+            attrs: ['component_name', 'category', 'replacement_interval_km', 'replacement_interval_days', 'last_replacement_km', 'next_replacement_km', 'cost_per_replacement', 'warning_threshold_km', 'status', 'notes']
+        },
+        {
+            id: 'maintenance_schedules', label: 'maintenance_schedules', x: 2050, y: 530,
+            pk: ['id'],
+            fk: ['vehicle_id', 'component_id', 'completed_by'],
+            attrs: ['scheduled_date', 'scheduled_km', 'type', 'priority', 'status', 'estimated_cost', 'actual_cost', 'workshop_name', 'notes', 'completed_at']
+        },
+        {
+            id: 'maintenance_alerts', label: 'maintenance_alerts', x: 2050, y: 900,
+            pk: ['id'],
+            fk: ['vehicle_id', 'component_id', 'acknowledged_by'],
+            attrs: ['alert_type', 'message', 'triggered_at', 'acknowledged_at', 'resolved_at', 'status']
+        },
+        {
+            id: 'transport_costs', label: 'transport_costs', x: 600, y: 850,
+            pk: ['id'],
+            fk: ['driver_id', 'vehicle_id', 'project_id', 'attendance_id', 'approved_by', 'created_by'],
+            attrs: ['trip_date', 'do_number', 'odometer_start', 'odometer_end', 'gasoline_cost', 'toll_cost', 'parking_cost', 'approval_status', 'overtime_hours']
+        },
+        {
+            id: 'vehicle_replacements', label: 'vehicle_replacements', x: 1850, y: 1200,
+            pk: ['id'],
+            fk: ['original_vehicle_id', 'replacement_vehicle_id', 'driver_id', 'service_report_id', 'created_by'],
+            attrs: ['start_at', 'end_at', 'reason', 'status', 'notes']
+        },
+        {
+            id: 'offline_recovery_logs', label: 'offline_recovery_logs', x: 700, y: 1150,
+            pk: ['id'],
+            fk: ['driver_id', 'attendance_id'],
+            attrs: ['offline_entry_id', 'device_timestamp', 'recovery_timestamp', 'delay_minutes', 'result', 'error_code', 'retry_count']
+        },
+        {
+            id: 'audit_histories', label: 'audit_histories', x: 150, y: 1000,
+            pk: ['id'],
+            fk: [],
+            attrs: ['report_id', 'type', 'status', 'total_findings', 'critical_count', 'high_count', 'medium_count', 'low_count', 'execution_time_seconds', 'triggered_by']
+        }
+    ];
+
+    // Relationships: [entity1, entity2, label, card1, card2]
+    const relationships = [
+        { from: 'customers', to: 'users', label: 'memiliki', card1: '1', card2: 'N' },
+        { from: 'customers', to: 'projects', label: 'memiliki', card1: '1', card2: 'N' },
+        { from: 'customers', to: 'service_reports', label: 'menerima', card1: '1', card2: 'N' },
+        { from: 'projects', to: 'drivers', label: 'menaungi', card1: '1', card2: 'N' },
+        { from: 'projects', to: 'vehicles', label: 'menggunakan', card1: '1', card2: 'N' },
+        { from: 'drivers', to: 'attendances', label: 'melakukan', card1: '1', card2: 'N' },
+        { from: 'vehicles', to: 'attendances', label: 'digunakan', card1: '1', card2: 'N' },
+        { from: 'drivers', to: 'emergency_reports', label: 'melaporkan', card1: '1', card2: 'N' },
+        { from: 'vehicles', to: 'emergency_reports', label: 'terkait', card1: '1', card2: 'N' },
+        { from: 'drivers', to: 'service_reports', label: 'mengajukan', card1: '1', card2: 'N' },
+        { from: 'vehicles', to: 'service_reports', label: 'diservis', card1: '1', card2: 'N' },
+        { from: 'vehicles', to: 'maintenance_logs', label: 'dicatat', card1: '1', card2: 'N' },
+        { from: 'users', to: 'maintenance_logs', label: 'mencatat', card1: '1', card2: 'N' },
+        { from: 'vehicles', to: 'vehicle_components', label: 'memiliki', card1: '1', card2: 'N' },
+        { from: 'vehicles', to: 'maintenance_schedules', label: 'dijadwalkan', card1: '1', card2: 'N' },
+        { from: 'vehicle_components', to: 'maintenance_schedules', label: 'untuk', card1: '1', card2: 'N' },
+        { from: 'vehicles', to: 'maintenance_alerts', label: 'memicu', card1: '1', card2: 'N' },
+        { from: 'vehicle_components', to: 'maintenance_alerts', label: 'menghasilkan', card1: '1', card2: 'N' },
+        { from: 'users', to: 'maintenance_alerts', label: 'mengakui', card1: '1', card2: 'N' },
+        { from: 'users', to: 'maintenance_schedules', label: 'menyelesaikan', card1: '1', card2: 'N' },
+        { from: 'attendances', to: 'transport_costs', label: 'menghasilkan', card1: '1', card2: '1' },
+        { from: 'drivers', to: 'transport_costs', label: 'memiliki_biaya', card1: '1', card2: 'N' },
+        { from: 'vehicles', to: 'transport_costs', label: 'dipakai', card1: '1', card2: 'N' },
+        { from: 'projects', to: 'transport_costs', label: 'membiayai', card1: '1', card2: 'N' },
+        { from: 'users', to: 'service_reports', label: 'menyetujui', card1: '1', card2: 'N' },
+        { from: 'emergency_reports', to: 'service_reports', label: 'ditindaklanjuti', card1: 'N', card2: '1' },
+        { from: 'service_reports', to: 'vehicle_replacements', label: 'memerlukan', card1: '1', card2: 'N' },
+        { from: 'drivers', to: 'vehicle_replacements', label: 'menerima', card1: '1', card2: 'N' },
+        { from: 'attendances', to: 'offline_recovery_logs', label: 'memiliki_log', card1: '1', card2: '1' },
+        { from: 'drivers', to: 'offline_recovery_logs', label: 'memiliki_recovery', card1: '1', card2: 'N' },
+    ];
+
+    // =========================================================
+    // RENDERING ENGINE
+    // =========================================================
+    const svg = document.getElementById('erd-svg');
+    const viewport = document.getElementById('viewport');
+    const connectionsGroup = document.getElementById('connections');
+    const entitiesGroup = document.getElementById('entities');
+
+    let viewBox = { x: -200, y: -50, w: 2800, h: 1500 };
+    let scale = 1;
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+
+    function updateViewBox() {
+        svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+        document.getElementById('zoomLevel').textContent = Math.round(100 / scale) + '%';
+    }
+
+    // Measure text width roughly
+    function textWidth(str, fontSize = 10) {
+        return str.length * fontSize * 0.58;
+    }
+
+    // Place attributes around entity in a radial pattern
+    function getAttributePositions(entity) {
+        const allAttrs = [];
+        entity.pk.forEach(a => allAttrs.push({ name: a, type: 'pk' }));
+        entity.fk.forEach(a => allAttrs.push({ name: a, type: 'fk' }));
+        entity.attrs.forEach(a => allAttrs.push({ name: a, type: 'normal' }));
+
+        const count = allAttrs.length;
+        const positions = [];
+        
+        // Calculate entity box dimensions
+        const entityW = Math.max(textWidth(entity.label, 13) + 30, 130);
+        const entityH = 32;
+
+        // Distribute attributes around the entity
+        const cols = Math.ceil(count / 2);
+        const attrSpacingX = 110;
+        const attrSpacingY = 28;
+        
+        // Left side attributes
+        const leftCount = Math.ceil(count / 2);
+        const rightCount = count - leftCount;
+
+        for (let i = 0; i < count; i++) {
+            let ax, ay;
+            if (i < leftCount) {
+                // Left side
+                ax = entity.x - entityW / 2 - 80;
+                ay = entity.y - (leftCount - 1) * attrSpacingY / 2 + i * attrSpacingY;
+            } else {
+                // Right side
+                const ri = i - leftCount;
+                ax = entity.x + entityW / 2 + 80;
+                ay = entity.y - (rightCount - 1) * attrSpacingY / 2 + ri * attrSpacingY;
+            }
+            positions.push({
+                ...allAttrs[i],
+                x: ax,
+                y: ay,
+                entityX: entity.x,
+                entityY: entity.y
+            });
+        }
+
+        return positions;
+    }
+
+    // Draw one entity with its attributes
+    function drawEntity(entity) {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.classList.add('entity');
+        g.setAttribute('data-id', entity.id);
+
+        const w = Math.max(textWidth(entity.label, 13) + 30, 130);
+        const h = 32;
+
+        // Entity rectangle
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', entity.x - w / 2);
+        rect.setAttribute('y', entity.y - h / 2);
+        rect.setAttribute('width', w);
+        rect.setAttribute('height', h);
+        g.appendChild(rect);
+
+        // Entity label
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', entity.x);
+        text.setAttribute('y', entity.y);
+        text.textContent = entity.label;
+        g.appendChild(text);
+
+        entitiesGroup.appendChild(g);
+
+        // Draw attributes
+        const attrPositions = getAttributePositions(entity);
+        attrPositions.forEach(attr => {
+            drawAttribute(attr);
+        });
+    }
+
+    function drawAttribute(attr) {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.classList.add('attribute');
+        if (attr.type === 'pk') g.classList.add('pk');
+        if (attr.type === 'fk') g.classList.add('fk');
+
+        const displayName = attr.type === 'pk' ? attr.name : attr.name;
+        const w = Math.max(textWidth(displayName, 10) + 16, 50);
+        const h = 18;
+
+        // Ellipse
+        const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        ellipse.setAttribute('cx', attr.x);
+        ellipse.setAttribute('cy', attr.y);
+        ellipse.setAttribute('rx', w / 2);
+        ellipse.setAttribute('ry', h / 2);
+        g.appendChild(ellipse);
+
+        // Text
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', attr.x);
+        text.setAttribute('y', attr.y);
+        text.textContent = displayName;
+        if (attr.type === 'pk') {
+            text.setAttribute('text-decoration', 'underline');
+        }
+        g.appendChild(text);
+
+        entitiesGroup.appendChild(g);
+
+        // Connection line from attribute to entity
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', attr.x);
+        line.setAttribute('y1', attr.y);
+        line.setAttribute('x2', attr.entityX);
+        line.setAttribute('y2', attr.entityY);
+        line.classList.add('conn-line');
+        connectionsGroup.appendChild(line);
+    }
+
+    // Draw relationship diamond and lines
+    function drawRelationship(rel) {
+        const fromEntity = entities.find(e => e.id === rel.from);
+        const toEntity = entities.find(e => e.id === rel.to);
+        if (!fromEntity || !toEntity) return;
+
+        // Position diamond at midpoint
+        const mx = (fromEntity.x + toEntity.x) / 2;
+        const my = (fromEntity.y + toEntity.y) / 2;
+
+        const dw = Math.max(textWidth(rel.label, 9) + 20, 70);
+        const dh = 30;
+
+        // Diamond
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.classList.add('relationship');
+
+        const diamond = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        diamond.setAttribute('points', 
+            `${mx},${my - dh / 2} ${mx + dw / 2},${my} ${mx},${my + dh / 2} ${mx - dw / 2},${my}`
+        );
+        g.appendChild(diamond);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', mx);
+        text.setAttribute('y', my);
+        text.textContent = rel.label;
+        g.appendChild(text);
+
+        entitiesGroup.appendChild(g);
+
+        // Lines from entities to diamond
+        const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line1.setAttribute('x1', fromEntity.x);
+        line1.setAttribute('y1', fromEntity.y);
+        line1.setAttribute('x2', mx);
+        line1.setAttribute('y2', my);
+        line1.classList.add('rel-line');
+        connectionsGroup.appendChild(line1);
+
+        const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line2.setAttribute('x1', mx);
+        line2.setAttribute('y1', my);
+        line2.setAttribute('x2', toEntity.x);
+        line2.setAttribute('y2', toEntity.y);
+        line2.classList.add('rel-line');
+        connectionsGroup.appendChild(line2);
+
+        // Cardinality labels
+        const card1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        const dx1 = mx - fromEntity.x;
+        const dy1 = my - fromEntity.y;
+        const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+        const offset1 = 22;
+        if (len1 > 0) {
+            card1.setAttribute('x', fromEntity.x + (dx1 / len1) * offset1 + (dy1 > 0 ? -10 : 10));
+            card1.setAttribute('y', fromEntity.y + (dy1 / len1) * offset1 + (dx1 > 0 ? -8 : 8));
+        }
+        card1.classList.add('cardinality');
+        card1.textContent = rel.card1;
+        entitiesGroup.appendChild(card1);
+
+        const card2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        const dx2 = mx - toEntity.x;
+        const dy2 = my - toEntity.y;
+        const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        const offset2 = 22;
+        if (len2 > 0) {
+            card2.setAttribute('x', toEntity.x + (dx2 / len2) * offset2 + (dy2 > 0 ? -10 : 10));
+            card2.setAttribute('y', toEntity.y + (dy2 / len2) * offset2 + (dx2 > 0 ? -8 : 8));
+        }
+        card2.classList.add('cardinality');
+        card2.textContent = rel.card2;
+        entitiesGroup.appendChild(card2);
+    }
+
+    // =========================================================
+    // RENDER ALL
+    // =========================================================
+    function renderAll() {
+        connectionsGroup.innerHTML = '';
+        entitiesGroup.innerHTML = '';
+
+        // Draw relationships first (lines behind)
+        relationships.forEach(drawRelationship);
+
+        // Draw entities on top
+        entities.forEach(drawEntity);
+    }
+
+    // =========================================================
+    // PAN & ZOOM
+    // =========================================================
+    const container = document.getElementById('canvas-container');
+
+    container.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+            isPanning = true;
+            panStart = { x: e.clientX, y: e.clientY };
+            container.classList.add('dragging');
+        }
+    });
+
+    container.addEventListener('mousemove', (e) => {
+        if (isPanning) {
+            const dx = (e.clientX - panStart.x) * scale;
+            const dy = (e.clientY - panStart.y) * scale;
+            viewBox.x -= dx;
+            viewBox.y -= dy;
+            panStart = { x: e.clientX, y: e.clientY };
+            updateViewBox();
+        }
+    });
+
+    container.addEventListener('mouseup', () => {
+        isPanning = false;
+        container.classList.remove('dragging');
+    });
+
+    container.addEventListener('mouseleave', () => {
+        isPanning = false;
+        container.classList.remove('dragging');
+    });
+
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
+        
+        const rect = svg.getBoundingClientRect();
+        const mouseX = viewBox.x + (e.clientX - rect.left) / rect.width * viewBox.w;
+        const mouseY = viewBox.y + (e.clientY - rect.top) / rect.height * viewBox.h;
+        
+        viewBox.w *= zoomFactor;
+        viewBox.h *= zoomFactor;
+        scale *= zoomFactor;
+        
+        viewBox.x = mouseX - (e.clientX - rect.left) / rect.width * viewBox.w;
+        viewBox.y = mouseY - (e.clientY - rect.top) / rect.height * viewBox.h;
+        
+        updateViewBox();
+    });
+
+    function zoomIn() {
+        const cx = viewBox.x + viewBox.w / 2;
+        const cy = viewBox.y + viewBox.h / 2;
+        viewBox.w *= 0.8;
+        viewBox.h *= 0.8;
+        scale *= 0.8;
+        viewBox.x = cx - viewBox.w / 2;
+        viewBox.y = cy - viewBox.h / 2;
+        updateViewBox();
+    }
+
+    function zoomOut() {
+        const cx = viewBox.x + viewBox.w / 2;
+        const cy = viewBox.y + viewBox.h / 2;
+        viewBox.w *= 1.25;
+        viewBox.h *= 1.25;
+        scale *= 1.25;
+        viewBox.x = cx - viewBox.w / 2;
+        viewBox.y = cy - viewBox.h / 2;
+        updateViewBox();
+    }
+
+    function resetView() {
+        viewBox = { x: -200, y: -50, w: 2800, h: 1500 };
+        scale = 1;
+        updateViewBox();
+    }
+
+    function exportSVG() {
+        const svgEl = document.getElementById('erd-svg');
+        const clone = svgEl.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        
+        // Add styles inline
+        const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        styleEl.textContent = `
+            .entity rect { fill: #16213e; stroke: #e94560; stroke-width: 2; rx: 3; }
+            .entity text { fill: #fff; font-size: 13px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-family: 'Segoe UI', sans-serif; }
+            .attribute ellipse { fill: #0f3460; stroke: #53a8b6; stroke-width: 1.5; }
+            .attribute text { fill: #d0d0e0; font-size: 10px; text-anchor: middle; dominant-baseline: central; font-family: 'Segoe UI', sans-serif; }
+            .attribute.pk ellipse { fill: #1a1a40; stroke: #ffd700; stroke-width: 2; }
+            .attribute.pk text { fill: #ffd700; font-weight: 700; }
+            .attribute.fk ellipse { fill: #0d2137; stroke: #4ecdc4; stroke-width: 1.5; stroke-dasharray: 5,3; }
+            .attribute.fk text { fill: #4ecdc4; font-style: italic; }
+            .relationship polygon { fill: #2d132c; stroke: #e94560; stroke-width: 1.5; }
+            .relationship text { fill: #ffb6c1; font-size: 9px; font-weight: 600; text-anchor: middle; dominant-baseline: central; font-family: 'Segoe UI', sans-serif; }
+            .conn-line { stroke: #3a3a5c; stroke-width: 1.2; }
+            .rel-line { stroke: #e94560; stroke-width: 1.5; }
+            .cardinality { fill: #ffd700; font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-family: 'Segoe UI', sans-serif; }
+        `;
+        clone.insertBefore(styleEl, clone.firstChild);
+        
+        const svgData = new XMLSerializer().serializeToString(clone);
+        const blob = new Blob([svgData], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ERD_Absen_Driver.svg';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // =========================================================
+    // INIT
+    // =========================================================
+    renderAll();
+    updateViewBox();
+    </script>
+</body>
+</html>

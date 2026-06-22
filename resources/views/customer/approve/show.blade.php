@@ -44,6 +44,51 @@
         </div>
     </div>
 
+    {{-- Stepper UI --}}
+    <div class="card border-0 shadow-sm mb-4 bg-white d-print-none">
+        <div class="card-body p-3 p-md-4 pt-4 pt-md-5 pb-3 pb-md-4">
+            <div class="stepper-wrapper {{ $report->status === 'approved_customer' ? 'step-3' : 'step-1' }} w-100 w-md-75 mx-auto">
+                <div class="stepper-progress">
+                    <div class="stepper-progress-bar"></div>
+                </div>
+                
+                @if($report->status === 'approved_customer')
+                    <div class="stepper-item completed">
+                        <div class="stepper-circle"><i class="bi bi-check-lg"></i></div>
+                        <div class="stepper-title">Periksa Laporan</div>
+                        <div class="stepper-subtitle">Selesai</div>
+                    </div>
+                    <div class="stepper-item completed">
+                        <div class="stepper-circle"><i class="bi bi-check-lg"></i></div>
+                        <div class="stepper-title">Konfirmasi & Tanda Tangan</div>
+                        <div class="stepper-subtitle">Selesai</div>
+                    </div>
+                    <div class="stepper-item completed">
+                        <div class="stepper-circle"><i class="bi bi-check-lg"></i></div>
+                        <div class="stepper-title">Selesai</div>
+                        <div class="stepper-subtitle">Selesai</div>
+                    </div>
+                @else
+                    <div class="stepper-item active">
+                        <div class="stepper-circle">1</div>
+                        <div class="stepper-title">Periksa Laporan</div>
+                        <div class="stepper-subtitle">Sedang Berlangsung</div>
+                    </div>
+                    <div class="stepper-item">
+                        <div class="stepper-circle">2</div>
+                        <div class="stepper-title">Konfirmasi & Tanda Tangan</div>
+                        <div class="stepper-subtitle">Menunggu</div>
+                    </div>
+                    <div class="stepper-item">
+                        <div class="stepper-circle">3</div>
+                        <div class="stepper-title">Selesai</div>
+                        <div class="stepper-subtitle">Menunggu</div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
     {{-- Info Card Bar --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">

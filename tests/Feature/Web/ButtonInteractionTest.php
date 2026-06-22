@@ -390,11 +390,18 @@ class ButtonInteractionTest extends TestCase
     /** @test */
     public function maintenance_complete_schedule_button_works()
     {
+        \Illuminate\Support\Facades\Storage::fake('public');
+
         $schedule = MaintenanceSchedule::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($this->admin)
             ->post('/admin/maintenance/schedules/' . $schedule->id . '/complete', [
                 'actual_cost' => 550000,
+                'receipt_photo' => \Illuminate\Http\UploadedFile::fake()->image('receipt.jpg'),
+                'odometer_photo' => \Illuminate\Http\UploadedFile::fake()->image('odometer.jpg'),
+                'signer_name' => 'John Doe',
+                'signer_role' => 'Operator',
+                'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
             ]);
 
         $response->assertRedirect();

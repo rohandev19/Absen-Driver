@@ -30,11 +30,15 @@ class ServiceReport extends Model
         'gps_location',
         'description',
         'ticket_number',
+        'report_source',
+        'location_source',
         'service_type',
         'problem_category',
         'odometer',
         'service_action',
         'unit_status_after_service',
+        'service_completed_at',
+        'completed_by_driver_id',
         'additional_notes',
         'before_service_photo_source',
         'before_service_photo_uploaded_at',
@@ -81,6 +85,7 @@ class ServiceReport extends Model
 
     protected $casts = [
         'timestamp' => 'datetime',
+        'service_completed_at' => 'datetime',
         'approved_at_admin' => 'datetime',
         'approved_at_customer' => 'datetime',
     ];
@@ -120,6 +125,11 @@ class ServiceReport extends Model
     public function approvedByAdmin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by_admin_id');
+    }
+
+    public function completedByDriver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'completed_by_driver_id');
     }
 
     /**

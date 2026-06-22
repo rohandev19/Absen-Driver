@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DriverGuidanceController;
 use App\Http\Controllers\Api\ServiceReportController;
 use App\Http\Controllers\Api\TransportCostController;
 use App\Http\Controllers\VehicleComponentController;
@@ -53,11 +54,14 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('/clock-out-offline', [AttendanceController::class, 'clockOutOffline']);
         Route::post('/submit-emergency-report', [AttendanceController::class, 'submitEmergencyReport']);
         Route::post('/submit-service-report', [ServiceReportController::class, 'submitServiceReport']);
+        Route::post('/submit-vehicle-damage-report', [ServiceReportController::class, 'submitVehicleDamageReport']);
+        Route::post('/service-reports/{serviceReport}/complete', [ServiceReportController::class, 'completeServiceReport']);
         Route::get('/service-reports', [ServiceReportController::class, 'index']);
         Route::get('/service-reports/{serviceReport}', [ServiceReportController::class, 'show']);
 
         // C. PENGAMBILAN DATA (GET)
         Route::get('/driver-details', [AttendanceController::class, 'getDriverDetails']);
+        Route::get('/driver/guidance', DriverGuidanceController::class);
         Route::get('/driver/status', [AttendanceController::class, 'checkDriverStatus']);
         Route::get('/attendance/duty-status', [AttendanceController::class, 'getDutyStatus']);
         Route::get('/driver/history', [AttendanceController::class, 'getAttendanceHistory']);

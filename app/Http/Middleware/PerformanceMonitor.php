@@ -43,8 +43,7 @@ class PerformanceMonitor
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip monitoring for audit and health check endpoints
-        if ($this->shouldSkip($request)) {
+        if ($this->shouldSkip($request) || ! config('audit.performance.middleware_enabled', ! app()->isProduction())) {
             return $next($request);
         }
 
@@ -136,8 +135,9 @@ class PerformanceMonitor
             return;
         }
 
-        // Debug: normal performance log
-        Log::debug('Request performance', $context);
+        if (! app()->isProduction()) {
+            Log::debug('Request performance', $context);
+        }
     }
 
     /**

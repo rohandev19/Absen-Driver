@@ -139,6 +139,8 @@ class ServiceReportPdfService
 
     private function makePdf(string $view, ServiceReport $report, array $extra = [])
     {
+        $isCustomerView = $view === 'pdf.service-report-customer';
+
         $report->loadMissing([
             'driver',
             'vehicle',
@@ -157,7 +159,7 @@ class ServiceReportPdfService
             'odometerPhoto' => $this->imageDataUri($report->odometer_photo_path ?? null),
 
             // Foto internal: hanya dipakai admin/finance.
-            'receiptPhoto' => $this->imageDataUri($report->receipt_photo_path),
+            'receiptPhoto' => $isCustomerView ? null : $this->imageDataUri($report->receipt_photo_path),
 
             // Signature.
             'adminSignature' => $this->imageDataUri($report->admin_signature_path),

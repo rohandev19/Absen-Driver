@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>ERD BW - Structured Chen</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#fff;font-family:"Segoe UI",Arial,sans-serif}
+#c{display:block;background:#fff}
+</style>
+</head>
+<body>
+<canvas id="c" width="3400" height="2350" style="width:3400px;height:2350px;"></canvas>
+<script>
+const W=3400,H=2350,c=document.getElementById('c'),g=c.getContext('2d');
+g.fillStyle='#fff';g.fillRect(0,0,W,H);
+
+function tw(s,f){return String(s).length*f*0.55}
+function ellipse(cx,cy,rx,ry){g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,Math.PI*2)}
+function diamond(cx,cy,hw,hh){g.beginPath();g.moveTo(cx,cy-hh);g.lineTo(cx+hw,cy);g.lineTo(cx,cy+hh);g.lineTo(cx-hw,cy);g.closePath()}
+function entitySize(e){return {w:Math.max(tw(e.l,14)+46,145),h:34}}
+
+g.fillStyle='#000';
+g.font='bold 30px "Segoe UI",Arial,sans-serif';
+g.textAlign='center';
+g.textBaseline='middle';
+g.fillText('ERD - Sistem Absensi & Manajemen Armada Driver (Notasi Chen)',W/2,42);
+g.font='16px "Segoe UI",Arial,sans-serif';
+g.fillStyle='#333';
+g.fillText('16 Entitas - 30 Relasi - Layout garis terstruktur',W/2,75);
+
+const E=[
+{id:'users',l:'users',x:360,y:300,pk:['id'],fk:['customer_id'],a:['name','email','password','role']},
+{id:'customers',l:'customers',x:360,y:760,pk:['id'],fk:[],a:['name','code','contact_person','email','phone','address']},
+{id:'projects',l:'projects',x:820,y:760,pk:['id'],fk:['customer_id'],a:['name','code','description']},
+{id:'drivers',l:'drivers',x:820,y:300,pk:['id'],fk:['project_id'],a:['driver_id_nik','full_name','nik_ktp','sim_expiry_date','sim_type','password','foto_sim','foto_ktp','profile_photo','fcm_token','is_on_duty']},
+{id:'vehicles',l:'vehicles',x:1320,y:300,pk:['id'],fk:['project_id'],a:['plate_number','type','tahun_pembuatan','status','current_km','service_interval_km','last_service_km','pajak_stnk_berlaku_sampai','kir_berlaku_sampai','is_temporary','verification_status','qr_code_path']},
+{id:'attendances',l:'attendances',x:1320,y:760,pk:['id'],fk:['driver_id','vehicle_id'],a:['time_in','time_out','gps_location_in','speedo_awal','speedo_akhir','selfie_photo_path','check_ban','check_lampu','check_rem','catatan','is_offline_recovery']},
+{id:'transport_costs',l:'transport_costs',x:820,y:1250,pk:['id'],fk:['driver_id','vehicle_id','project_id','attendance_id','approved_by','created_by'],a:['trip_date','do_number','odometer_start','odometer_end','gasoline_cost','toll_cost','parking_cost','approval_status','overtime_hours']},
+{id:'offline_recovery_logs',l:'offline_recovery_logs',x:1320,y:1660,pk:['id'],fk:['driver_id','attendance_id'],a:['offline_entry_id','device_timestamp','recovery_timestamp','delay_minutes','result','error_code','retry_count']},
+{id:'audit_histories',l:'audit_histories',x:360,y:1660,pk:['id'],fk:[],a:['report_id','type','status','total_findings','critical_count','high_count','medium_count','low_count','execution_time_seconds','triggered_by']},
+{id:'emergency_reports',l:'emergency_reports',x:1840,y:520,pk:['id'],fk:['driver_id','vehicle_id','service_report_id','processed_by'],a:['timestamp','gps_location','description','proof_photo_path','follow_up_status']},
+{id:'service_reports',l:'service_reports',x:1840,y:1030,pk:['id'],fk:['driver_id','vehicle_id','customer_id','approved_by_admin_id','approved_by_customer_id'],a:['timestamp','gps_location','description','status','service_type','workshop_name','total_cost','admin_notes','ticket_number']},
+{id:'maintenance_logs',l:'maintenance_logs',x:1600,y:1430,pk:['id'],fk:['vehicle_id','recorded_by_user_id'],a:['service_date','km_at_service','description','workshop_name']},
+{id:'vehicle_replacements',l:'vehicle_replacements',x:2240,y:1660,pk:['id'],fk:['original_vehicle_id','replacement_vehicle_id','driver_id','service_report_id','created_by'],a:['start_at','end_at','reason','status','notes']},
+{id:'vehicle_components',l:'vehicle_components',x:2260,y:300,pk:['id'],fk:['vehicle_id'],a:['component_name','category','replacement_interval_km','replacement_interval_days','last_replacement_km','next_replacement_km','cost_per_replacement','warning_threshold_km','status','notes']},
+{id:'maintenance_schedules',l:'maintenance_schedules',x:2880,y:720,pk:['id'],fk:['vehicle_id','component_id','completed_by'],a:['scheduled_date','scheduled_km','type','priority','status','estimated_cost','actual_cost','workshop_name','notes','completed_at']},
+{id:'maintenance_alerts',l:'maintenance_alerts',x:2880,y:1220,pk:['id'],fk:['vehicle_id','component_id','acknowledged_by'],a:['alert_type','message','triggered_at','acknowledged_at','resolved_at','status']}
+];
+
+const R=[
+{f:'customers',t:'users',l:'memiliki',c1:'1',c2:'N',d:[360,530],a:'vh',b:'vh'},
+{f:'customers',t:'projects',l:'memiliki',c1:'1',c2:'N',d:[590,760],a:'hv',b:'hv'},
+{f:'customers',t:'service_reports',l:'menerima',c1:'1',c2:'N',d:[1060,990],a:'hv',b:'hv'},
+{f:'projects',t:'drivers',l:'menaungi',c1:'1',c2:'N',d:[820,530],a:'vh',b:'vh'},
+{f:'projects',t:'vehicles',l:'menggunakan',c1:'1',c2:'N',d:[1070,760],a:'hv',b:'vh'},
+{f:'drivers',t:'attendances',l:'melakukan',c1:'1',c2:'N',d:[1070,530],a:'vh',b:'vh'},
+{f:'vehicles',t:'attendances',l:'digunakan',c1:'1',c2:'N',d:[1320,530],a:'vh',b:'vh'},
+{f:'drivers',t:'emergency_reports',l:'melaporkan',c1:'1',c2:'N',d:[1450,430],a:'vh',b:'hv'},
+{f:'vehicles',t:'emergency_reports',l:'terkait',c1:'1',c2:'N',d:[1600,430],a:'vh',b:'hv'},
+{f:'drivers',t:'service_reports',l:'mengajukan',c1:'1',c2:'N',d:[1450,940],a:'vh',b:'hv'},
+{f:'vehicles',t:'service_reports',l:'diservis',c1:'1',c2:'N',d:[1600,900],a:'vh',b:'hv'},
+{f:'vehicles',t:'maintenance_logs',l:'dicatat',c1:'1',c2:'N',d:[1440,1060],a:'vh',b:'vh'},
+{f:'users',t:'maintenance_logs',l:'mencatat',c1:'1',c2:'N',d:[1040,1428],a:'hvx',b:'hv'},
+{f:'vehicles',t:'vehicle_components',l:'memiliki',c1:'1',c2:'N',d:[1790,300],a:'hv',b:'hv'},
+{f:'vehicles',t:'maintenance_schedules',l:'dijadwalkan',c1:'1',c2:'N',d:[1940,700],a:'vh',b:'hv'},
+{f:'vehicle_components',t:'maintenance_schedules',l:'untuk',c1:'1',c2:'N',d:[2570,505],a:'vh',b:'hv'},
+{f:'vehicles',t:'maintenance_alerts',l:'memicu',c1:'1',c2:'N',d:[1940,1160],a:'vh',b:'hv'},
+{f:'vehicle_components',t:'maintenance_alerts',l:'menghasilkan',c1:'1',c2:'N',d:[2570,910],a:'vh',b:'hv'},
+{f:'users',t:'maintenance_alerts',l:'mengakui',c1:'1',c2:'N',d:[2360,1220],a:'hvy',b:'hv'},
+{f:'users',t:'maintenance_schedules',l:'menyelesaikan',c1:'1',c2:'N',d:[2360,720],a:'hvy',b:'hv'},
+{f:'attendances',t:'transport_costs',l:'menghasilkan',c1:'1',c2:'1',d:[1070,1010],a:'vh',b:'hv'},
+{f:'drivers',t:'transport_costs',l:'memiliki_biaya',c1:'1',c2:'N',d:[680,980],a:'vh',b:'vh'},
+{f:'vehicles',t:'transport_costs',l:'dipakai',c1:'1',c2:'N',d:[1130,1180],a:'vh',b:'hv'},
+{f:'projects',t:'transport_costs',l:'membiayai',c1:'1',c2:'N',d:[820,1005],a:'vh',b:'vh'},
+{f:'users',t:'service_reports',l:'menyetujui',c1:'1',c2:'N',d:[1060,1110],a:'hvy',b:'hv'},
+{f:'emergency_reports',t:'service_reports',l:'ditindaklanjuti',c1:'N',c2:'1',d:[1840,775],a:'vh',b:'vh'},
+{f:'service_reports',t:'vehicle_replacements',l:'memerlukan',c1:'1',c2:'N',d:[2040,1345],a:'vh',b:'hv'},
+{f:'drivers',t:'vehicle_replacements',l:'menerima',c1:'1',c2:'N',d:[1510,1660],a:'hvy',b:'hv'},
+{f:'attendances',t:'offline_recovery_logs',l:'memiliki_log',c1:'1',c2:'1',d:[1320,1205],a:'vh',b:'vh'},
+{f:'drivers',t:'offline_recovery_logs',l:'recovery',c1:'1',c2:'N',d:[1030,1660],a:'hvy',b:'hv'}
+];
+
+function ge(id){return E.find(e=>e.id===id)}
+function ep(e,to){
+    const s=entitySize(e),dx=to.x-e.x,dy=to.y-e.y;
+    if(Math.abs(dx)/s.w>Math.abs(dy)/s.h){
+        return {x:e.x+(dx>=0?s.w/2:-s.w/2),y:e.y};
+    }
+    return {x:e.x,y:e.y+(dy>=0?s.h/2:-s.h/2)};
+}
+function dp(d,to){
+    const dx=to.x-d.x,dy=to.y-d.y;
+    if(Math.abs(dx)>Math.abs(dy)) return {x:d.x+(dx>=0?d.hw:-d.hw),y:d.y};
+    return {x:d.x,y:d.y+(dy>=0?d.hh:-d.hh)};
+}
+function drawPath(points){
+    g.beginPath();
+    g.moveTo(points[0].x,points[0].y);
+    for(let i=1;i<points.length;i++)g.lineTo(points[i].x,points[i].y);
+    g.stroke();
+}
+function stepPath(a,b,mode){
+    const pts=[a];
+    if(mode==='hv') pts.push({x:b.x,y:a.y});
+    else if(mode==='vh') pts.push({x:a.x,y:b.y});
+    else if(mode==='hvx') pts.push({x:(a.x+b.x)/2,y:a.y},{x:(a.x+b.x)/2,y:b.y});
+    else if(mode==='hvy') pts.push({x:b.x,y:a.y});
+    else if(Math.abs(b.x-a.x)>Math.abs(b.y-a.y)) pts.push({x:b.x,y:a.y});
+    else pts.push({x:a.x,y:b.y});
+    pts.push(b);
+    drawPath(pts);
+}
+function cardText(start,end,value){
+    const dx=end.x-start.x,dy=end.y-start.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+    const px=-dy/len*13,py=dx/len*13;
+    g.fillStyle='#000';
+    g.font='bold 13px "Segoe UI",Arial,sans-serif';
+    g.textAlign='center';
+    g.textBaseline='middle';
+    g.fillText(value,start.x+(dx/len)*28+px,start.y+(dy/len)*28+py);
+}
+function attrPositions(e){
+    const all=[];
+    e.pk.forEach(n=>all.push({n,t:'pk'}));
+    e.fk.forEach(n=>all.push({n,t:'fk'}));
+    e.a.forEach(n=>all.push({n,t:'n'}));
+    const s=entitySize(e),left=Math.ceil(all.length/2),right=all.length-left,sy=26;
+    return all.map((a,i)=>{
+        if(i<left){
+            return {...a,x:e.x-s.w/2-102,y:e.y-(left-1)*sy/2+i*sy,ex:e.x,ey:e.y};
+        }
+        const ri=i-left;
+        return {...a,x:e.x+s.w/2+102,y:e.y-(right-1)*sy/2+ri*sy,ex:e.x,ey:e.y};
+    });
+}
+
+// Light module guide boxes for easier reading
+function moduleBox(x,y,w,h,label){
+    g.save();
+    g.strokeStyle='#ddd';
+    g.lineWidth=1;
+    g.setLineDash([8,8]);
+    g.strokeRect(x,y,w,h);
+    g.setLineDash([]);
+    g.fillStyle='#555';
+    g.font='bold 15px "Segoe UI",Arial,sans-serif';
+    g.textAlign='left';
+    g.fillText(label,x+12,y+18);
+    g.restore();
+}
+moduleBox(130,120,1450,1700,'Core Absensi dan Operasional');
+moduleBox(1630,120,720,1700,'Laporan');
+moduleBox(2380,120,860,1450,'Preventive Maintenance');
+
+// 1. Relationship lines
+g.strokeStyle='#000';
+g.lineWidth=1.15;
+R.forEach(r=>{
+    const f=ge(r.f),t=ge(r.t),dw=Math.max(tw(r.l,10)+20,60),dh=18;
+    const d={x:r.d[0],y:r.d[1],hw:dw/2,hh:dh};
+    const fs=ep(f,d),ts=ep(t,d),fd=dp(d,fs),td=dp(d,ts);
+    stepPath(fs,fd,r.a);
+    stepPath(td,ts,r.b);
+});
+
+// 2. Relationship diamonds + cardinality
+R.forEach(r=>{
+    const f=ge(r.f),t=ge(r.t),dw=Math.max(tw(r.l,10)+20,60),dh=18;
+    const d={x:r.d[0],y:r.d[1],hw:dw/2,hh:dh};
+    g.fillStyle='#fff';
+    g.strokeStyle='#000';
+    g.lineWidth=1.7;
+    diamond(d.x,d.y,d.hw,d.hh);
+    g.fill();g.stroke();
+    g.fillStyle='#000';
+    g.font='10px "Segoe UI",Arial,sans-serif';
+    g.textAlign='center';
+    g.textBaseline='middle';
+    g.fillText(r.l,d.x,d.y);
+    cardText(ep(f,d),dp(d,ep(f,d)),r.c1);
+    cardText(ep(t,d),dp(d,ep(t,d)),r.c2);
+});
+
+// 3. Attribute connector lines
+g.strokeStyle='#777';
+g.lineWidth=0.6;
+E.forEach(e=>attrPositions(e).forEach(a=>{
+    g.beginPath();
+    g.moveTo(a.x,a.y);
+    g.lineTo(a.ex,a.ey);
+    g.stroke();
+}));
+
+// 4. Attribute ellipses
+E.forEach(e=>attrPositions(e).forEach(a=>{
+    const aw=Math.max(tw(a.n,9.5)+18,52),ah=18;
+    g.fillStyle='#fff';
+    g.strokeStyle='#000';
+    g.lineWidth=a.t==='pk'?1.8:1;
+    g.setLineDash(a.t==='fk'?[4,3]:[]);
+    ellipse(a.x,a.y,aw/2,ah/2);
+    g.fill();g.stroke();
+    g.setLineDash([]);
+    g.fillStyle='#000';
+    g.textAlign='center';
+    g.textBaseline='middle';
+    g.font=a.t==='pk'?'bold 9.5px "Segoe UI",Arial,sans-serif':a.t==='fk'?'italic 9.5px "Segoe UI",Arial,sans-serif':'9.5px "Segoe UI",Arial,sans-serif';
+    g.fillText(a.n,a.x,a.y);
+    if(a.t==='pk'){
+        const w=g.measureText(a.n).width;
+        g.beginPath();
+        g.moveTo(a.x-w/2,a.y+6);
+        g.lineTo(a.x+w/2,a.y+6);
+        g.lineWidth=0.8;
+        g.stroke();
+    }
+}));
+
+// 5. Entity boxes
+E.forEach(e=>{
+    const s=entitySize(e);
+    g.fillStyle='#fff';
+    g.strokeStyle='#000';
+    g.lineWidth=2.4;
+    g.fillRect(e.x-s.w/2,e.y-s.h/2,s.w,s.h);
+    g.strokeRect(e.x-s.w/2,e.y-s.h/2,s.w,s.h);
+    g.fillStyle='#000';
+    g.font='bold 14px "Segoe UI",Arial,sans-serif';
+    g.textAlign='center';
+    g.textBaseline='middle';
+    g.fillText(e.l,e.x,e.y);
+});
+
+// 6. Legend
+const lx=70,ly=H-170;
+g.fillStyle='#fff';
+g.strokeStyle='#000';
+g.lineWidth=1.2;
+g.fillRect(lx,ly,330,125);
+g.strokeRect(lx,ly,330,125);
+g.fillStyle='#000';
+g.font='bold 14px "Segoe UI",Arial,sans-serif';
+g.textAlign='left';
+g.textBaseline='middle';
+g.fillText('Legenda:',lx+15,ly+18);
+g.lineWidth=2;
+g.strokeRect(lx+15,ly+38,28,16);
+g.font='12px "Segoe UI",Arial,sans-serif';
+g.fillText('Entitas / tabel',lx+55,ly+46);
+diamond(lx+29,ly+72,14,9);
+g.stroke();
+g.fillText('Relasi',lx+55,ly+72);
+g.lineWidth=1.8;
+ellipse(lx+29,ly+96,16,8);
+g.stroke();
+g.font='bold 12px "Segoe UI",Arial,sans-serif';
+g.fillText('Primary key digarisbawahi',lx+55,ly+96);
+g.lineWidth=1;
+g.setLineDash([4,3]);
+ellipse(lx+29,ly+116,16,8);
+g.stroke();
+g.setLineDash([]);
+g.font='italic 12px "Segoe UI",Arial,sans-serif';
+g.fillText('Foreign key garis putus',lx+55,ly+116);
+
+document.title='READY - ERD Canvas Structured';
+</script>
+</body>
+</html>

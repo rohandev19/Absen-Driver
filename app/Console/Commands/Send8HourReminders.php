@@ -44,10 +44,17 @@ class Send8HourReminders extends Command
             $driver = $attendance->driver;
             
             if ($driver && !empty($driver->fcm_token)) {
-                $title = "Peringatan Waktu Kerja";
-                $body = "Halo {$driver->full_name}, Anda sudah bertugas lebih dari 8 Jam hari ini. Jangan lupa istirahat yang cukup!";
-                
-                $success = $fcmService->sendToDevice($driver->fcm_token, $title, $body);
+                $title = "Jangan lupa akhiri tugas";
+                $body = "Halo {$driver->full_name}, Anda sudah bertugas lebih dari 8 jam. Jika pekerjaan selesai, buka aplikasi dan tekan Akhiri Tugas.";
+
+                $success = $fcmService->sendToDevice($driver->fcm_token, $title, $body, [
+                    'type' => 'clock_out_reminder',
+                    'severity' => 'warning',
+                    'action' => 'open_clock_out',
+                    'attendance_id' => (string) $attendance->id,
+                    'voice_text' => 'Anda sudah bertugas lebih dari delapan jam. Jika sudah selesai, silakan akhiri tugas.',
+                    'audio_key' => 'clock_out_reminder',
+                ]);
 
                 if ($success) {
                     $attendance->reminded_8_hours = true;

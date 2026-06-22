@@ -25,6 +25,12 @@ class MaintenanceSchedule extends Model
         'notes',
         'completed_at',
         'completed_by',
+        'receipt_photo_path',
+        'odometer_photo_path',
+        'finance_pdf_path',
+        'admin_signature_path',
+        'admin_signer_name',
+        'admin_signer_role',
     ];
 
     protected $casts = [
@@ -130,5 +136,29 @@ class MaintenanceSchedule extends Model
     public function scopeByType($query, string $type)
     {
         return $query->where('type', $type);
+    }
+
+    /**
+     * Get the receipt photo URL.
+     */
+    public function getReceiptPhotoUrlAttribute(): ?string
+    {
+        return $this->receipt_photo_path ? asset('storage/' . $this->receipt_photo_path) : null;
+    }
+
+    /**
+     * Get the odometer photo URL.
+     */
+    public function getOdometerPhotoUrlAttribute(): ?string
+    {
+        return $this->odometer_photo_path ? asset('storage/' . $this->odometer_photo_path) : null;
+    }
+
+    /**
+     * Get the finance PDF URL.
+     */
+    public function getFinancePdfUrlAttribute(): ?string
+    {
+        return $this->finance_pdf_path ? asset('storage/' . $this->finance_pdf_path) : null;
     }
 }

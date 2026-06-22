@@ -24,11 +24,11 @@
                     </h2>
                     <div id="collapseSatu" class="accordion-collapse collapse" data-bs-parent="#accordionPanduan">
                         <div class="accordion-body px-4 pb-4 pt-1 text-muted" style="font-size: 0.9rem;">
-                            <p>Halaman Dashboard memberikan Anda ringkasan singkat (overview) mengenai aktivitas penyewaan armada Anda.</p>
+                            <p>Halaman Dashboard memberikan ringkasan aktivitas penyewaan armada dan konfirmasi service yang perlu ditindaklanjuti.</p>
                             <ul>
                                 <li><strong>Total Unit Aktif:</strong> Jumlah kendaraan milik Hamada Logistik yang saat ini sedang Anda sewa/gunakan.</li>
-                                <li><strong>Unit Butuh Servis:</strong> Jumlah kendaraan yang saat ini sedang dalam proses perbaikan darurat atau pemeliharaan rutin.</li>
-                                <li><strong>Service Menunggu Approval:</strong> Jumlah laporan servis kendaraan yang membutuhkan Tanda Tangan/Persetujuan (Approval) dari Anda selaku penyewa.</li>
+                                <li><strong>Unit Butuh Servis:</strong> Jumlah kendaraan yang sedang perlu perhatian service atau pemeliharaan.</li>
+                                <li><strong>Service Menunggu Konfirmasi:</strong> Jumlah laporan service kendaraan yang membutuhkan review dan tanda tangan digital dari Anda selaku penyewa.</li>
                             </ul>
                         </div>
                     </div>
@@ -43,12 +43,12 @@
                     </h2>
                     <div id="collapseDua" class="accordion-collapse collapse" data-bs-parent="#accordionPanduan">
                         <div class="accordion-body px-4 pb-4 pt-1 text-muted" style="font-size: 0.9rem;">
-                            <p>Menu ini menampilkan seluruh detail kendaraan yang Anda sewa.</p>
+                            <p>Menu ini menampilkan seluruh detail kendaraan yang terhubung dengan perusahaan Anda.</p>
                             <ol>
                                 <li><strong>Daftar Unit:</strong> Anda dapat melihat informasi Plat Nomor, Merk/Tipe, dan Tahun Pembuatan armada.</li>
                                 <li><strong>Detail Kendaraan:</strong> Klik tombol <b>"Lihat Detail"</b> pada salah satu kendaraan untuk melihat informasi mendalam.</li>
                                 <li><strong>Sertifikat Layak Jalan:</strong> Di halaman Detail, Anda dapat mendownload Sertifikat Layak Jalan (PDF) yang membuktikan bahwa armada dalam kondisi prima sebelum diserahkan kepada Anda.</li>
-                                <li><strong>Riwayat Servis:</strong> Di halaman Detail, Anda juga dapat melihat kapan saja kendaraan tersebut masuk bengkel dan komponen apa saja yang diganti. Hal ini menjamin transparansi perawatan unit.</li>
+                                <li><strong>Riwayat Servis:</strong> Di halaman Detail, Anda juga dapat melihat riwayat perawatan kendaraan yang tersedia untuk unit tersebut.</li>
                             </ol>
                         </div>
                     </div>
@@ -63,17 +63,20 @@
                     </h2>
                     <div id="collapseTiga" class="accordion-collapse collapse" data-bs-parent="#accordionPanduan">
                         <div class="accordion-body px-4 pb-4 pt-1 text-muted" style="font-size: 0.9rem;">
-                            <p>Jika armada Anda mengalami masalah di jalan dan mekanik Hamada datang untuk memperbaikinya, Anda sebagai pihak penyewa akan diminta memberikan persetujuan Tanda Tangan atas layanan tersebut.</p>
+                            <p>Menu ini digunakan untuk meninjau laporan service yang sudah diverifikasi Admin Hamada sebelum Anda memberikan konfirmasi.</p>
                             <ol>
-                                <li>Buka menu <b>Approve Service</b>.</li>
-                                <li>Pilih laporan servis yang statusnya <span class="badge bg-warning text-dark">Menunggu Tanda Tangan Customer</span>.</li>
-                                <li>Klik <b>Review & Tanda Tangan</b>.</li>
-                                <li>Anda akan melihat rincian masalah, foto sebelum/sesudah perbaikan, dan keterangan teknisi.</li>
-                                <li>Gunakan fitur <b>E-Signature (Kanvas Tanda Tangan)</b> di layar untuk menandatangani dokumen menggunakan jari (di HP) atau mouse (di Laptop).</li>
-                                <li>Masukkan Nama Terang dan Jabatan Anda.</li>
-                                <li>Klik tombol <b>Simpan & Setujui Dokumen</b>.</li>
-                                <li>Setelah disetujui, Anda dapat mengunduh dokumen PDF lengkap yang sudah dibubuhi tanda tangan pihak Hamada maupun tanda tangan Anda.</li>
+                                <li>Buka menu <b>Approve Service</b> atau <b>Konfirmasi Service Unit</b>.</li>
+                                <li>Pilih laporan dengan status <span class="badge bg-warning text-dark">Menunggu Konfirmasi</span>.</li>
+                                <li>Klik detail laporan untuk meninjau kronologi kendala, tindakan penanganan, status akhir unit, foto sebelum service, foto setelah service, foto odometer, catatan admin, dan lokasi bila tersedia.</li>
+                                <li>Gunakan tombol <b>Download Draft PDF</b> bila perlu menyimpan dokumen draft sebelum konfirmasi.</li>
+                                <li>Jika data belum jelas, klik <b>Minta Klarifikasi</b> lalu tuliskan pesan yang perlu dijawab/diperbaiki oleh Admin Hamada.</li>
+                                <li>Jika laporan tidak dapat diterima, klik <b>Tolak Laporan</b> lalu isi alasan penolakan.</li>
+                                <li>Jika laporan sudah sesuai, klik <b>Konfirmasi Laporan</b>, isi Nama Lengkap dan Jabatan, centang pernyataan, lalu tanda tangani pada kanvas digital menggunakan jari atau mouse.</li>
+                                <li>Klik <b>Konfirmasi</b>. Setelah berhasil, status berubah menjadi terkonfirmasi dan PDF final dengan tanda tangan Hamada serta tanda tangan Anda dapat diunduh.</li>
                             </ol>
+                            <div class="alert alert-info border-0 rounded-3 mt-3 mb-0">
+                                <strong>Catatan:</strong> halaman customer tidak menampilkan biaya service, kuitansi, invoice bengkel, atau catatan finance internal. Konfirmasi ini bukan kuitansi tagihan.
+                            </div>
                         </div>
                     </div>
                 </div>

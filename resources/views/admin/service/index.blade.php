@@ -6,8 +6,15 @@
 <div class="container-fluid">
     {{-- Header --}}
     <div class="mb-4">
-        <h2 class="fw-bold mb-1 fs-4 text-dark"><i class="bi bi-tools text-primary me-2"></i>Service Darurat</h2>
-        <p class="text-muted small">Daftar laporan kendala dan service unit dari driver.</p>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h2 class="fw-bold mb-1 fs-4 text-dark"><i class="bi bi-tools text-primary me-2"></i>Service Darurat</h2>
+                <p class="text-muted small mb-0">Daftar laporan kendala dan service unit dari driver/admin.</p>
+            </div>
+            <a href="{{ route('admin.service.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-clipboard-plus me-1"></i> Input Service Manual
+            </a>
+        </div>
     </div>
 
     {{-- Stats Cards --}}
@@ -91,6 +98,7 @@
                             <option value="Semua Status" {{ request('status') == 'Semua Status' ? 'selected' : '' }}>Semua Status</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="pending_admin" {{ request('status') == 'pending_admin' ? 'selected' : '' }}>Pending Admin</option>
+                            <option value="waiting_completion" {{ request('status') == 'waiting_completion' ? 'selected' : '' }}>Menunggu Service Selesai</option>
                             <option value="pending_customer" {{ request('status') == 'pending_customer' ? 'selected' : '' }}>Menunggu Customer</option>
                             <option value="approved_customer" {{ request('status') == 'approved_customer' ? 'selected' : '' }}>Disetujui Customer</option>
                             <option value="revision_requested" {{ request('status') == 'revision_requested' ? 'selected' : '' }}>Revisi Diminta</option>
@@ -113,8 +121,86 @@
                 </div>
             </form>
 
-            {{-- Table --}}
-            <div class="table-responsive">
+            {{-- Mobile Card View --}}
+            <div class="d-block d-md-none">
+                @forelse($reports as $report)
+                    <div class="card border mb-3 shadow-sm rounded-3">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                                <div>
+                                    <span class="fw-bold text-primary d-block" style="font-size: 0.95rem;">{{ $report->ticket_number ?? 'N/A' }}</span>
+                                    <span class="badge bg-secondary mt-1">{{ $report->vehicle->plate_number ?? 'N/A' }}</span>
+                                </div>
+                                <div class="text-end">
+                                    @php
+                                        $statusBadge = match($report->status) {
+                                            'pending', 'pending_admin' => 'bg-warning text-dark border-warning bg-opacity-10',
+                                            'waiting_completion' => 'bg-info text-dark border-info bg-opacity-10',
+                                            'approved_admin', 'pending_customer' => 'bg-primary text-primary border-primary bg-opacity-10',
+                                            'approved_customer' => 'bg-success text-success border-success bg-opacity-10',
+                                            'revision_requested' => 'bg-danger text-danger border-danger bg-opacity-10',
+                                            'rejected', 'rejected_admin', 'rejected_customer' => 'bg-danger text-danger border-danger bg-opacity-10',
+                                            default => 'bg-secondary text-secondary border-secondary bg-opacity-10'
+                                        };
+                                        $statusText = match($report->status) {
+                                            'pending', 'pending_admin' => 'Menunggu Admin',
+                                            'waiting_completion' => 'Menunggu Kelengkapan',
+                                            'approved_admin', 'pending_customer' => 'Menunggu Customer',
+                                            'approved_customer' => 'Selesai',
+                                            'revision_requested' => 'Klarifikasi Customer',
+                                            'rejected', 'rejected_admin' => 'Ditolak Admin',
+                                            'rejected_customer' => 'Ditolak Customer',
+                                            default => $report->status
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $statusBadge }} border px-2 py-1" style="font-size: 0.7rem;">
+                                        {{ $statusText }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="small mt-2 pt-2 border-top">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Driver:</span>
+                                    <span class="fw-semibold text-dark">{{ $report->driver->full_name ?? $report->driver->name ?? 'N/A' }}</span>
+                                </div>
+                                @if($report->customer)
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Customer:</span>
+                                    <span class="fw-semibold text-dark">{{ $report->customer->name }}</span>
+                                </div>
+                                @endif
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Tanggal:</span>
+                                    <span class="text-dark">{{ $report->timestamp->format('d M Y H:i') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top gap-2">
+                                <div>
+                                    @if($report->customer_word_path)
+                                        <a href="{{ asset('storage/' . $report->customer_word_path) }}" 
+                                           class="btn btn-sm btn-outline-success rounded-pill px-3" download>
+                                            <i class="bi bi-file-earmark-word"></i> Word
+                                        </a>
+                                    @endif
+                                </div>
+                                <a href="{{ route('admin.service.show', $report->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                                    Detail <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-5 text-muted border rounded bg-light">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        Belum ada laporan service.
+                    </div>
+                @endforelse
+            </div>
+
+            {{-- Desktop Table View --}}
+            <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
@@ -138,7 +224,7 @@
                                     <span class="text-muted" style="font-size: 0.75rem;">{{ $report->timestamp->format('H:i') }} WIB</span>
                                 </td>
                                 <td>
-                                    <span class="d-block fw-semibold small">{{ $report->driver->name ?? 'N/A' }}</span>
+                                    <span class="d-block fw-semibold small">{{ $report->driver->full_name ?? $report->driver->name ?? 'N/A' }}</span>
                                 </td>
                                 <td class="d-none d-lg-table-cell">
                                     <span class="badge bg-secondary mb-1">{{ $report->vehicle->plate_number ?? 'N/A' }}</span>

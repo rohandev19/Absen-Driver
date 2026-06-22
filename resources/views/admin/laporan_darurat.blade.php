@@ -97,6 +97,13 @@
             color: white;
         }
 
+        .action-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 160px;
+        }
+
         /* === 4. MOBILE RESPONSIVE (FIXED LAYOUT) === */
         @media (max-width: 768px) {
             .table-corporate thead {
@@ -181,6 +188,18 @@
                 <div>{{ session('error') }}</div>
             </div>
         @endif
+        @if (session('success'))
+            <div class="alert alert-success border-0 shadow-sm d-flex align-items-center mb-4">
+                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+        @endif
+        @if (session('info'))
+            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                <div>{{ session('info') }}</div>
+            </div>
+        @endif
 
         {{-- HEADER --}}
         <div class="d-flex justify-content-between align-items-end mb-4">
@@ -194,11 +213,21 @@
                 <div class="card-metric py-2 px-4">
                     <div>
                         <div class="text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Total Kasus</div>
-                        <div class="fs-4 fw-bold text-danger">{{ count($laporanMasalah) }}</div>
+                        <div class="fs-4 fw-bold text-danger">{{ $laporanMasalahRaw->total() }}</div>
+                        <div class="small text-muted">
+                            Baru: {{ $countNew }} | Service: {{ $countServiceCreated }} | Selesai: {{ $countInfoResolved }}
+                        </div>
                     </div>
                     <i class="bi bi-shield-exclamation text-danger opacity-25 fs-2 ms-3"></i>
                 </div>
             </div>
+        </div>
+
+        <div class="alert alert-info border-0 rounded-3 mb-4">
+            <div class="fw-bold mb-1"><i class="bi bi-info-circle me-2"></i>Alur Laporan Darurat</div>
+            Laporan darurat adalah kanal respons cepat. Jika kasusnya kendaraan rusak/service, klik
+            <strong>Jadikan Service</strong> agar masuk ke workflow service resmi. Jika hanya info/koordinasi lapangan,
+            klik <strong>Tandai Selesai</strong>.
         </div>
 
         {{-- TABLE DATA --}}
@@ -222,11 +251,21 @@
                                 <th>Pelapor</th>
                                 <th>Kendaraan</th>
                                 <th style="width: 40%;">Deskripsi Masalah</th>
+                                <th>Status</th>
                                 <th class="text-center pe-4">Tindakan</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($laporanMasalah as $laporan)
+                                @php
+                                    $status = $laporan['follow_up_status'] ?? 'new';
+                                    $statusMap = [
+                                        'new' => ['label' => 'Baru', 'class' => 'bg-danger'],
+                                        'service_created' => ['label' => 'Jadi Laporan Service', 'class' => 'bg-primary'],
+                                        'info_resolved' => ['label' => 'Selesai - Info', 'class' => 'bg-success'],
+                                    ];
+                                    $statusMeta = $statusMap[$status] ?? $statusMap['new'];
+                                @endphp
                                 <tr>
                                     {{-- 1. WAKTU --}}
                                     <td class="ps-4" data-label="Waktu">
@@ -256,9 +295,28 @@
                                         </div>
                                     </td>
 
+                                    <td data-label="Status">
+                                        <span class="badge {{ $statusMeta['class'] }} px-2 py-1">
+                                            {{ $statusMeta['label'] }}
+                                        </span>
+                                        @if ($laporan['processed_at'])
+                                            <div class="small text-muted mt-2">
+                                                {{ \Carbon\Carbon::parse($laporan['processed_at'])->format('d M Y, H:i') }}
+                                                @if ($laporan['processed_by_name'])
+                                                    <br>oleh {{ $laporan['processed_by_name'] }}
+                                                @endif
+                                            </div>
+                                        @endif
+                                        @if ($laporan['follow_up_notes'])
+                                            <div class="small text-muted mt-2 fst-italic">
+                                                "{{ $laporan['follow_up_notes'] }}"
+                                            </div>
+                                        @endif
+                                    </td>
+
                                     {{-- 5. AKSI --}}
                                     <td class="text-center pe-4" data-label="">
-                                        <div class="action-wrapper">
+                                        <div class="action-wrapper flex-column">
                                             <a href="{{ $laporan['lokasi_gps'] }}" target="_blank"
                                                 class="btn-action btn-action-map" title="Lihat Lokasi">
                                                 <i class="bi bi-geo-alt-fill"></i> Lokasi
@@ -267,12 +325,35 @@
                                                 class="btn-action btn-action-photo" title="Lihat Bukti Foto">
                                                 <i class="bi bi-image"></i> Foto
                                             </a>
+                                            @if ($status === 'new')
+                                                <form method="POST"
+                                                    action="{{ route('admin.laporan_darurat.create_service', $laporan['id']) }}"
+                                                    class="form-create-service">
+                                                    @csrf
+                                                    <input type="hidden" name="follow_up_notes" value="Dibuat menjadi laporan service resmi dari laporan darurat.">
+                                                    <button type="submit" class="btn-action btn btn-primary">
+                                                        <i class="bi bi-tools"></i> Jadikan Service
+                                                    </button>
+                                                </form>
+                                                <button class="btn-action btn btn-success" type="button"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#resolveEmergencyModal{{ $laporan['id'] }}">
+                                                    <i class="bi bi-check2-circle"></i> Tandai Selesai
+                                                </button>
+                                            @elseif ($status === 'service_created' && $laporan['service_report_id'])
+                                                <a href="{{ route('admin.service.show', $laporan['service_report_id']) }}"
+                                                    class="btn-action btn btn-primary">
+                                                    <i class="bi bi-file-earmark-text"></i>
+                                                    {{ $laporan['service_ticket_number'] ?? 'Lihat Service' }}
+                                                </a>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
+
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-5">
+                                    <td colspan="6" class="text-center py-5">
                                         <div class="py-4 opacity-50">
                                             <i class="bi bi-shield-check display-1 text-success mb-3"></i>
                                             <h5 class="text-dark fw-bold">Aman</h5>
@@ -286,5 +367,74 @@
                 </div>
             </div>
         </div>
+
+        <div class="mt-3">
+            {{ $laporanMasalahRaw->links() }}
+        </div>
+
+        @foreach ($laporanMasalah as $laporan)
+            @if (($laporan['follow_up_status'] ?? 'new') === 'new')
+                <div class="modal fade" id="resolveEmergencyModal{{ $laporan['id'] }}" tabindex="-1"
+                    aria-labelledby="resolveEmergencyModalLabel{{ $laporan['id'] }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 rounded-4">
+                            <form method="POST" action="{{ route('admin.laporan_darurat.resolve_info', $laporan['id']) }}">
+                                @csrf
+                                <div class="modal-header">
+                                    <h5 class="modal-title fs-6 fw-bold" id="resolveEmergencyModalLabel{{ $laporan['id'] }}">
+                                        Tandai Laporan Darurat Selesai
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                                </div>
+                                <div class="modal-body text-start">
+                                    <p class="small text-muted">
+                                        Gunakan opsi ini jika laporan hanya info/koordinasi dan tidak perlu masuk workflow service customer.
+                                    </p>
+                                    <label class="form-label fw-semibold">Catatan tindak lanjut</label>
+                                    <textarea name="follow_up_notes" class="form-control" rows="4" required
+                                        placeholder="Contoh: Driver sudah dihubungi dan diarahkan kembali ke pool."></textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check2-circle me-1"></i> Simpan Status
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endforeach
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('.form-create-service');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Jadikan Laporan Service?',
+                        text: "Laporan darurat ini akan dibuat menjadi laporan service resmi untuk unit terkait.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0d6efd',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, Jadikan Service',
+                        cancelButtonText: 'Batal',
+                        customClass: {
+                            popup: 'rounded-4 border-0 shadow'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    @endpush
 @endsection

@@ -64,8 +64,8 @@
                     <img src="{{ asset('storage/' . $report->vehicle_condition_photo_path) }}" 
                          alt="Kondisi Kendaraan" 
                          class="img-fluid rounded shadow mb-2"
-                         style="max-height: 350px; cursor: pointer; width: 100%; object-fit: contain;"
-                         onclick="window.open(this.src, '_blank')">
+                         style="max-height: 350px; cursor: zoom-in; width: 100%; object-fit: contain;"
+                         onclick="viewImage(this.src)">
                     <p class="text-muted mt-2 small mb-0">Sumber Foto: <strong>{{ ucfirst($report->before_service_photo_source ?? 'Kamera') }}</strong></p>
                 </div>
             </div>
@@ -78,8 +78,8 @@
                 <div class="card-body text-center p-2 p-md-3">
                     <img src="{{ asset('storage/' . $report->after_service_photo_path) }}" 
                          class="img-fluid rounded shadow"
-                         style="max-height: 350px; cursor: pointer; width: 100%; object-fit: contain;"
-                         onclick="window.open(this.src, '_blank')">
+                         style="max-height: 350px; cursor: zoom-in; width: 100%; object-fit: contain;"
+                         onclick="viewImage(this.src)">
                 </div>
             </div>
             @endif
@@ -92,23 +92,30 @@
                 <div class="card-body text-center p-2 p-md-3">
                     <img src="{{ asset('storage/' . $report->odometer_photo_path) }}" 
                          class="img-fluid rounded shadow"
-                         style="max-height: 350px; cursor: pointer; width: 100%; object-fit: contain;"
-                         onclick="window.open(this.src, '_blank')">
+                         style="max-height: 350px; cursor: zoom-in; width: 100%; object-fit: contain;"
+                         onclick="viewImage(this.src)">
                 </div>
             </div>
             @endif
 
             <div class="card mb-3 border-0 shadow-sm">
                 <div class="card-header bg-transparent border-bottom py-3">
-                    <h5 class="mb-0 fs-6 fw-bold text-dark"><i class="bi bi-receipt text-warning me-2"></i>Foto Kuitansi</h5>
+                    <h5 class="mb-0 fs-6 fw-bold text-dark"><i class="bi bi-receipt text-warning me-2"></i>Foto Kuitansi Internal</h5>
                 </div>
                 <div class="card-body text-center p-2 p-md-3">
-                    <img src="{{ asset('storage/' . $report->receipt_photo_path) }}" 
-                         alt="Kuitansi" 
-                         class="img-fluid rounded shadow"
-                         style="max-height: 350px; cursor: pointer; width: 100%; object-fit: contain;"
-                         onclick="window.open(this.src, '_blank')">
-                    <p class="text-muted mt-2 small mb-0">Klik untuk memperbesar</p>
+                    @if($report->receipt_photo_path)
+                        <img src="{{ asset('storage/' . $report->receipt_photo_path) }}"
+                             alt="Kuitansi"
+                             class="img-fluid rounded shadow"
+                             style="max-height: 350px; cursor: zoom-in; width: 100%; object-fit: contain;"
+                             onclick="viewImage(this.src)">
+                        <p class="text-muted mt-2 small mb-0">Klik untuk memperbesar. Dokumen ini hanya untuk internal/finance.</p>
+                    @else
+                        <div class="alert alert-warning mb-0 text-start">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Kuitansi belum diunggah. Laporan belum boleh dikirim ke customer sebelum data service selesai lengkap.
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -254,15 +261,64 @@
                 </div>
             </div>
 
+            @if($report->status === 'waiting_completion')
+                <div class="alert alert-info border-0 shadow-sm">
+                    <div class="fw-bold mb-1"><i class="bi bi-hourglass-split me-1"></i>Menunggu Service Selesai</div>
+                    <div class="small">
+                        Laporan ini adalah laporan kendaraan rusak awal. Tunggu driver/admin mengisi data service selesai sebelum dikirim ke customer.
+                    </div>
+                </div>
+            @endif
+
             {{-- Actions Card --}}
-            @if(in_array($report->status, ['pending', 'pending_admin', 'revision_requested']))
+            @if(in_array($report->status, ['pending', 'pending_admin', 'revision_requested', 'waiting_completion']))
                     <div class="card mb-3 border-0 shadow-sm">
                         <div class="card-header bg-transparent border-bottom py-3">
                             <h5 class="mb-0 fs-6 fw-bold text-dark"><i class="bi bi-check-circle-fill text-success me-2"></i>Aksi Admin</h5>
                         </div>
                         <div class="card-body p-4 bg-light bg-opacity-50">
-                            <form action="{{ route('admin.service.approve', $report->id) }}" method="POST" id="approvalForm" enctype="multipart/form-data">
+                            <form action="{{ $report->status === 'waiting_completion' ? route('admin.service.complete_by_admin', $report->id) : route('admin.service.approve', $report->id) }}" method="POST" id="approvalForm" enctype="multipart/form-data">
                                 @csrf
+                                @if($report->status === 'waiting_completion')
+                                    <div class="bg-white p-3 rounded border border-info border-opacity-25 mb-4 text-dark">
+                                        <h6 class="fw-bold text-info mb-3"><i class="bi bi-info-circle me-1"></i>Ambil Alih Kelengkapan Laporan (Admin)</h6>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Tindakan Perbaikan (Wajib)</label>
+                                            <textarea name="service_action" class="form-control" rows="3" required placeholder="Contoh: Mengganti ban depan kiri yang pecah dengan ban cadangan."></textarea>
+                                        </div>
+
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-12 col-sm-6">
+                                                <label class="form-label small fw-bold">Kondisi Akhir Unit (Wajib)</label>
+                                                <select name="unit_status_after_service" class="form-select" required>
+                                                    <option value="Aman, Siap Jalan" selected>Aman, Siap Jalan</option>
+                                                    <option value="Servis">Masih Perlu Servis</option>
+                                                    <option value="Rusak">Rusak / Tidak Bisa Jalan</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-12 col-sm-6">
+                                                <label class="form-label small fw-bold">KM Odometer (Opsional)</label>
+                                                <input type="number" name="odometer" class="form-control" min="0" placeholder="Contoh: 125000">
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-12 col-sm-6">
+                                                <label class="form-label small fw-bold">Foto Setelah Service (Wajib)</label>
+                                                <input type="file" name="after_service_photo" class="form-control" accept="image/jpeg, image/png" required>
+                                            </div>
+                                            <div class="col-12 col-sm-6">
+                                                <label class="form-label small fw-bold">Foto Kuitansi / Bon (Wajib)</label>
+                                                <input type="file" name="receipt_photo" class="form-control" accept="image/jpeg, image/png" required>
+                                            </div>
+                                            <div class="col-12 col-sm-6">
+                                                <label class="form-label small fw-bold">Foto Odometer / KM (Opsional)</label>
+                                                <input type="file" name="odometer_photo" class="form-control" accept="image/jpeg, image/png">
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                                 <div class="row g-2 mb-3">
                                     <div class="col-12 col-sm-6">
                                         <label class="form-label small fw-bold">Nama Penandatangan</label>
@@ -365,7 +421,7 @@
                                     <div class="form-check d-flex align-items-start mb-0">
                                         <input class="form-check-input flex-shrink-0 mt-1 shadow-sm border-primary" type="checkbox" id="adminConsentCheck" required style="width: 1.5rem; height: 1.5rem; cursor: pointer;">
                                         <label class="form-check-label small fw-semibold text-dark ms-3" for="adminConsentCheck" style="cursor: pointer; line-height: 1.6;">
-                                            Saya menyatakan bahwa seluruh rincian laporan, dokumen, dan biaya di atas telah diperiksa kebenarannya dan siap untuk diteruskan ke Customer.
+                                            Saya menyatakan bahwa laporan publik untuk customer sudah diperiksa. Data biaya dan kuitansi hanya digunakan untuk internal/finance dan tidak ditampilkan ke customer.
                                         </label>
                                     </div>
                                 </div>
@@ -376,9 +432,11 @@
                                     </button>
                                 </div>
                             </form>
+                            @if($report->status !== 'waiting_completion')
                             <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal" style="min-height:44px;">
                                 <i class="bi bi-x-circle"></i> Tolak Laporan
                             </button>
+                            @endif
                         </div>
                     </div>
             @endif
@@ -630,5 +688,27 @@
         });
     }
 });
+</script>
+
+{{-- Image Viewer Modal --}}
+<div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true" style="z-index: 1080;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 justify-content-end p-2 position-absolute w-100" style="z-index: 10;">
+                <button type="button" class="btn-close btn-close-white bg-dark rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.8;"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="viewerImage" src="" class="img-fluid rounded shadow-lg" style="max-height: 85vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewImage(src) {
+        document.getElementById('viewerImage').src = src;
+        var imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
+        imageModal.show();
+    }
 </script>
 @endpush

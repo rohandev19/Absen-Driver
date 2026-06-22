@@ -142,35 +142,48 @@ class AuthController extends Controller
     public function updateProfilePhoto(Request $request)
     {
         try {
-            $request->validate([
-                'photo' => 'required|image|mimes:jpeg,png,jpg|max:10240', // Max 10MB as requested (no compression needed)
-            ]);
+            $photo = $request->file('photo')
+                ?? $request->file('profile_photo')
+                ?? $request->file('image')
+                ?? $request->file('file');
+
+            if (! $photo) {
+                return response()->json(['status' => 'error', 'message' => 'Tidak ada file foto yang dikirim.'], 422);
+            }
+
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                ['photo' => $photo],
+                ['photo' => 'required|image|mimes:jpeg,png,jpg|max:4096']
+            );
+
+            if ($validator->fails()) {
+                return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
+            }
 
             $driver = $request->user();
 
-            if ($request->hasFile('photo')) {
-                // Hapus foto lama jika ada
-                if ($driver->profile_photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($driver->profile_photo)) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($driver->profile_photo);
-                }
-
-                // Simpan foto baru
-                $path = $request->file('photo')->store('profile_photos', 'public');
-                $driver->profile_photo = $path;
-                $driver->save();
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Foto profil berhasil diubah.',
-                    'profile_photo_url' => asset('storage/' . $path)
-                ]);
+            if ($driver->profile_photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($driver->profile_photo)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($driver->profile_photo);
             }
 
-            return response()->json(['status' => 'error', 'message' => 'Tidak ada file foto yang dikirim.'], 400);
+            $path = app(\App\Services\ImageProcessingService::class)->optimize($photo, 'profile_photos');
+            $driver->profile_photo = $path;
+            $driver->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto profil berhasil diubah.',
+                'profile_photo_url' => asset('storage/' . $path)
+            ]);
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->validator->errors()->first()], 422);
         } catch (\Exception $e) {
-            Log::error("Update Profile Photo Error: " . $e->getMessage());
+            Log::error('Update Profile Photo Error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'driver' => $request->user()?->id,
+            ]);
             return response()->json(['status' => 'error', 'message' => 'Gagal mengubah foto profil.'], 500);
         }
     }

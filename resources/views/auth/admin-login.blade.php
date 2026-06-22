@@ -227,6 +227,38 @@
             color: var(--text-muted);
             font-size: 0.825rem;
         }
+
+        /* ── Mobile Responsiveness ── */
+        @media (max-width: 576px) {
+            body {
+                padding: 15px;
+            }
+            .login-card {
+                border-radius: 16px;
+            }
+            .login-header {
+                padding: 2rem 1.5rem 1rem;
+            }
+            .login-body {
+                padding: 1.5rem;
+            }
+            .logo-icon {
+                font-size: 2rem;
+            }
+            .logo-text .brand {
+                font-size: 1.4rem;
+            }
+            .logo-text .tagline {
+                font-size: 0.65rem;
+            }
+            .section-title {
+                margin-bottom: 1.5rem;
+                font-size: 0.95rem;
+            }
+            .form-control {
+                padding: 0.65rem 1rem;
+            }
+        }
     </style>
 </head>
 

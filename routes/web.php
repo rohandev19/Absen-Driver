@@ -77,6 +77,10 @@ Route::middleware(['auth', 'role:master,service_admin', 'throttle:60,1'])->prefi
         Route::get('/report/driver/export', 'exportRiwayatDriver')->name('admin.riwayat_driver.export');
         Route::get('/riwayat-unit', 'riwayatUnit')->name('admin.riwayat_unit');
         Route::get('/laporan-darurat', 'laporanDarurat')->name('admin.laporan_darurat');
+        Route::middleware('throttle:30,1')->group(function () {
+            Route::post('/laporan-darurat/{emergencyReport}/create-service', 'createServiceFromEmergency')->name('admin.laporan_darurat.create_service');
+            Route::post('/laporan-darurat/{emergencyReport}/resolve-info', 'resolveEmergencyInfo')->name('admin.laporan_darurat.resolve_info');
+        });
         Route::get('/rekap-harian', 'rekapHarian')->name('admin.rekap_harian');
 
         // B. Rekap Bulanan
@@ -169,6 +173,8 @@ Route::middleware(['auth', 'role:master,service_admin', 'throttle:60,1'])->prefi
             Route::post('/maintenance/schedules/store', 'store')->name('admin.maintenance.schedules.store');
             Route::post('/maintenance/schedules/{schedule}/complete', 'complete')->name('admin.maintenance.schedules.complete');
             Route::get('/maintenance/export/schedules', 'export')->name('admin.maintenance.export.schedules');
+            Route::get('/maintenance/schedules/{schedule}/finance-pdf/preview', 'previewFinancePdf')->name('admin.maintenance.schedules.finance_pdf.preview');
+            Route::get('/maintenance/schedules/{schedule}/finance-pdf/download', 'downloadFinancePdf')->name('admin.maintenance.schedules.finance_pdf.download');
         });
         
 
@@ -207,9 +213,12 @@ Route::middleware(['auth', 'role:master,service_admin', 'throttle:60,1'])->prefi
         Route::get('/', 'index')->name('admin.service.index');
         // SECURITY FIX: Rute statis HARUS dideklarasikan SEBELUM rute {id} wildcard
         Route::get('/customer-approvals/list', 'customerApprovalsView')->name('admin.service.customer_approvals');
+        Route::get('/manual/create', 'createManual')->name('admin.service.create');
+        Route::middleware('throttle:30,1')->post('/manual', 'storeManual')->name('admin.service.store_manual');
         Route::get('/{id}', 'show')->name('admin.service.show');
         Route::middleware('throttle:30,1')->post('/{id}/approve', 'approve')->name('admin.service.approve');
         Route::middleware('throttle:10,1')->post('/{id}/reject', 'reject')->name('admin.service.reject');
+        Route::middleware('throttle:30,1')->post('/{id}/complete-by-admin', 'completeByAdmin')->name('admin.service.complete_by_admin');
         Route::get('/{id}/customer-pdf/preview', 'previewCustomerPdf')->name('admin.service.customer_pdf.preview');
         Route::get('/{id}/customer-pdf/download', 'downloadCustomerPdf')->name('admin.service.customer_pdf.download');
         Route::get('/{id}/internal-pdf/preview', 'previewAdminInternalPdf')->name('admin.service.internal_pdf.preview');

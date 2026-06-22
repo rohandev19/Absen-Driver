@@ -2,66 +2,7 @@
 
 @section('title', 'Konfirmasi Selesai')
 
-@push('styles')
-<style>
-    /* Stepper Styles */
-    .stepper-wrapper {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 2rem;
-        position: relative;
-    }
-    .stepper-wrapper::before {
-        content: '';
-        position: absolute;
-        top: 24px;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: #e9ecef;
-        z-index: 1;
-    }
-    .stepper-item {
-        position: relative;
-        z-index: 2;
-        text-align: center;
-        flex: 1;
-    }
-    .stepper-circle {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: #fff;
-        border: 2px solid #e9ecef;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 10px;
-        font-weight: bold;
-        color: #6c757d;
-        transition: all 0.3s;
-    }
-    .stepper-item.completed .stepper-circle {
-        background: var(--bs-primary);
-        border-color: var(--bs-primary);
-        color: #fff;
-    }
-    .stepper-item.active .stepper-circle {
-        border-color: var(--bs-primary);
-        color: var(--bs-primary);
-        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
-    }
-    .stepper-title {
-        font-weight: 600;
-        font-size: 0.9rem;
-        color: #495057;
-    }
-    .stepper-subtitle {
-        font-size: 0.75rem;
-        color: #6c757d;
-    }
-</style>
-@endpush
+
 
 @section('content')
 <div class="container-fluid mb-5">
@@ -93,22 +34,25 @@
     </div>
 
     {{-- Stepper UI --}}
-    <div class="card border-0 shadow-sm mb-4 bg-white">
-        <div class="card-body p-4 pt-5 pb-4">
-            <div class="stepper-wrapper w-75 mx-auto">
+    <div class="card border-0 shadow-sm mb-4 bg-white d-print-none">
+        <div class="card-body p-3 p-md-4 pt-4 pt-md-5 pb-3 pb-md-4">
+            <div class="stepper-wrapper step-3 w-100 w-md-75 mx-auto">
+                <div class="stepper-progress">
+                    <div class="stepper-progress-bar"></div>
+                </div>
                 <div class="stepper-item completed">
                     <div class="stepper-circle"><i class="bi bi-check-lg"></i></div>
-                    <div class="stepper-title">1. Periksa Laporan</div>
+                    <div class="stepper-title">Periksa Laporan</div>
                     <div class="stepper-subtitle">Selesai</div>
                 </div>
                 <div class="stepper-item completed">
                     <div class="stepper-circle"><i class="bi bi-check-lg"></i></div>
-                    <div class="stepper-title">2. Konfirmasi & Tanda Tangan</div>
+                    <div class="stepper-title">Konfirmasi & Tanda Tangan</div>
                     <div class="stepper-subtitle">Selesai</div>
                 </div>
-                <div class="stepper-item active">
-                    <div class="stepper-circle">3</div>
-                    <div class="stepper-title text-primary">3. Selesai</div>
+                <div class="stepper-item completed">
+                    <div class="stepper-circle"><i class="bi bi-check-lg"></i></div>
+                    <div class="stepper-title">Selesai</div>
                     <div class="stepper-subtitle">Selesai</div>
                 </div>
             </div>

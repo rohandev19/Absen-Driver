@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -12,6 +14,7 @@ use App\Models\Attendance;
 use App\Models\Driver;
 use App\Models\Project;
 use App\Models\EmergencyReport;
+use App\Models\ServiceReport;
 use App\Exports\RekapAbsensiChecklistExport;
 use App\Exports\RiwayatDriverExport;
 use App\Traits\FormatAttendance;
@@ -224,23 +227,140 @@ class ReportController extends Controller
     }
     public function laporanDarurat()
     {
-        $laporanMasalahRaw = EmergencyReport::with(['driver', 'vehicle'])
+        $laporanMasalahRaw = EmergencyReport::with(['driver', 'vehicle', 'processedBy', 'serviceReport'])
             ->orderBy('timestamp', 'desc')
             ->paginate(50);
 
         $laporanMasalah = $laporanMasalahRaw->getCollection()->map(function ($laporan) {
             $mapsUrl = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($laporan->gps_location);
             return [
+                'id' => $laporan->id,
                 'timestamp' => Carbon::parse($laporan->timestamp)->format('Y-m-d H:i:s'),
                 'driver_name' => $laporan->driver->full_name ?? 'N/A',
                 'plate_number' => $laporan->vehicle->plate_number ?? 'N/A',
                 'deskripsi' => $laporan->description,
                 'lokasi_gps' => $mapsUrl,
                 'link_foto' => $laporan->proof_photo_path ? Storage::url($laporan->proof_photo_path) : '#',
+                'follow_up_status' => $laporan->follow_up_status ?? EmergencyReport::STATUS_NEW,
+                'follow_up_notes' => $laporan->follow_up_notes,
+                'processed_by_name' => $laporan->processedBy->name ?? null,
+                'processed_at' => $laporan->processed_at ? $laporan->processed_at->format('Y-m-d H:i:s') : null,
+                'service_report_id' => $laporan->service_report_id,
+                'service_ticket_number' => $laporan->serviceReport->ticket_number ?? null,
             ];
         });
 
-        return view('admin.laporan_darurat', compact('laporanMasalah', 'laporanMasalahRaw'));
+        $countNew = EmergencyReport::where(function ($query) {
+            $query->whereNull('follow_up_status')
+                ->orWhere('follow_up_status', EmergencyReport::STATUS_NEW);
+        })->count();
+        $countServiceCreated = EmergencyReport::where('follow_up_status', EmergencyReport::STATUS_SERVICE_CREATED)->count();
+        $countInfoResolved = EmergencyReport::where('follow_up_status', EmergencyReport::STATUS_INFO_RESOLVED)->count();
+
+        return view('admin.laporan_darurat', compact(
+            'laporanMasalah',
+            'laporanMasalahRaw',
+            'countNew',
+            'countServiceCreated',
+            'countInfoResolved'
+        ));
+    }
+
+    public function createServiceFromEmergency(Request $request, EmergencyReport $emergencyReport)
+    {
+        $validated = $request->validate([
+            'follow_up_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $emergencyReport->load(['driver', 'vehicle.project', 'serviceReport']);
+
+        if ($emergencyReport->service_report_id && $emergencyReport->serviceReport) {
+            return redirect()
+                ->route('admin.service.show', $emergencyReport->service_report_id)
+                ->with('info', 'Laporan darurat ini sudah pernah dijadikan laporan service.');
+        }
+
+        $vehicle = $emergencyReport->vehicle;
+
+        $serviceReport = DB::transaction(function () use ($emergencyReport, $vehicle, $validated) {
+            $serviceReport = ServiceReport::create([
+                'ticket_number' => $this->generateServiceTicketNumber(),
+                'driver_id' => $emergencyReport->driver_id,
+                'vehicle_id' => $emergencyReport->vehicle_id,
+                'customer_id' => $vehicle?->project?->customer_id,
+                'timestamp' => $emergencyReport->timestamp,
+                'gps_location' => $emergencyReport->gps_location,
+                'location_source' => 'gps',
+                'description' => $emergencyReport->description,
+                'report_source' => 'emergency_report',
+                'service_type' => 'Darurat',
+                'problem_category' => 'Darurat',
+                'additional_notes' => $validated['follow_up_notes'] ?? null,
+                'before_service_photo_source' => 'driver_emergency_report',
+                'before_service_photo_uploaded_at' => $emergencyReport->created_at,
+                'vehicle_condition_photo_path' => $emergencyReport->proof_photo_path,
+                'status' => ServiceReport::STATUS_WAITING_COMPLETION,
+            ]);
+
+            if ($vehicle) {
+                $vehicle->update(['status' => 'Rusak']);
+            }
+
+            $emergencyReport->update([
+                'follow_up_status' => EmergencyReport::STATUS_SERVICE_CREATED,
+                'follow_up_notes' => $validated['follow_up_notes'] ?? 'Dibuat menjadi laporan service resmi.',
+                'service_report_id' => $serviceReport->id,
+                'processed_by' => Auth::id(),
+                'processed_at' => now(),
+            ]);
+
+            return $serviceReport;
+        });
+
+        return redirect()
+            ->route('admin.service.show', $serviceReport->id)
+            ->with('success', 'Laporan darurat berhasil dijadikan laporan service. Lengkapi data service selesai sebelum dikirim ke customer.');
+    }
+
+    public function resolveEmergencyInfo(Request $request, EmergencyReport $emergencyReport)
+    {
+        $validated = $request->validate([
+            'follow_up_notes' => 'required|string|max:1000',
+        ]);
+
+        if ($emergencyReport->service_report_id) {
+            return redirect()
+                ->route('admin.service.show', $emergencyReport->service_report_id)
+                ->with('info', 'Laporan darurat ini sudah ditindaklanjuti sebagai laporan service.');
+        }
+
+        $emergencyReport->update([
+            'follow_up_status' => EmergencyReport::STATUS_INFO_RESOLVED,
+            'follow_up_notes' => $validated['follow_up_notes'],
+            'processed_by' => Auth::id(),
+            'processed_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('admin.laporan_darurat')
+            ->with('success', 'Laporan darurat ditandai selesai sebagai info non-service.');
+    }
+
+    private function generateServiceTicketNumber(): string
+    {
+        $year = date('Y');
+        $latestReport = ServiceReport::whereYear('created_at', $year)
+            ->where('ticket_number', 'like', "LS-{$year}-%")
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($latestReport && preg_match('/LS-' . $year . '-(\d+)/', $latestReport->ticket_number, $matches)) {
+            $nextId = intval($matches[1]) + 1;
+        } else {
+            $nextId = 1;
+        }
+
+        return 'LS-' . $year . '-' . str_pad((string) $nextId, 6, '0', STR_PAD_LEFT);
     }
 
     public function rekapHarian(Request $request)
@@ -248,7 +368,7 @@ class ReportController extends Controller
         $selectedDate = $request->input('tanggal', Carbon::now()->format('Y-m-d'));
         $rekapDataRaw = Attendance::with(['driver', 'vehicle'])
             ->whereNotNull('time_out')
-            ->whereDate('time_out', Carbon::parse($selectedDate))
+            ->whereDate('time_in', Carbon::parse($selectedDate))
             ->orderBy('time_in', 'asc')
             ->get();
         $rekapData = $rekapDataRaw->map(fn($item) => $this->formatAttendanceData($item));

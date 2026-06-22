@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UML Diagrams - Skripsi Bab 4.1.3</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #253449;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav a:hover {
+            color: var(--text-primary);
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .diagram-section {
+            margin-bottom: 3rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .diagram-section:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .diagram-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(167, 139, 250, 0.05));
+        }
+
+        .diagram-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .diagram-number {
+            background: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-export:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-export:active {
+            transform: translateY(0);
+        }
+
+        .diagram-body {
+            padding: 2rem;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .diagram-body .mermaid {
+            width: 100%;
+        }
+
+        .diagram-body svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .diagram-description {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .export-all-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-export-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-export-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--success);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Print styles */
+        @media print {
+            .header, .nav, .export-all-bar, .btn-export, .toast { display: none; }
+            .diagram-section { break-inside: avoid; page-break-inside: avoid; border: 1px solid #ccc; margin-bottom: 2rem; }
+            body { background: white; color: black; }
+            .diagram-body { background: white; }
+            .diagram-header { background: #f8f9fa; }
+        }
+
+        /* Bottom padding for fixed bar */
+        .container { padding-bottom: 5rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📐 UML Diagrams — Skripsi Bab 4.1.3</h1>
+        <p>Sistem Absensi Driver & Preventive Maintenance Armada</p>
+    </div>
+
+    <nav class="nav">
+        <a href="#d1">4.1.3.1 Use Case</a>
+        <a href="#d2">4.1.3.2 Activity Check-In/Out</a>
+        <a href="#d3">4.1.3.3 Activity Maintenance</a>
+        <a href="#d4">4.1.3.4 Activity Sinkronisasi</a>
+        <a href="#d5">4.1.3.5 Seq Check-Out → KM</a>
+        <a href="#d6">4.1.3.6 Seq Generate Alert</a>
+        <a href="#d7">4.1.3.7 Seq Penyelesaian</a>
+        <a href="#d8">4.1.3.8 Class Diagram</a>
+        <a href="#d9">4.1.3.9 Deployment</a>
+    </nav>
+
+    <div class="container">
+
+        <!-- 4.1.3.1 Use Case Diagram -->
+        <div class="diagram-section" id="d1">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.1</span> Use Case Diagram</h2>
+                <button class="btn-export" onclick="exportDiagram('d1', '4.1.3.1_Use_Case_Diagram')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+graph LR
+    subgraph Aktor
+        D((Driver))
+        A((Admin / Master))
+        SA((Service Admin))
+        C((Customer))
+        S((Scheduler / Cron))
+    end
+
+    subgraph "Sistem Absensi Driver & Preventive Maintenance Armada"
+        UC1["Login / Autentikasi"]
+        UC2["Check-In<br/>(Absen Masuk)"]
+        UC3["Check-Out<br/>(Absen Pulang)"]
+        UC4["Check-Out Offline"]
+        UC5["Sinkronisasi Data Offline"]
+        UC6["Lihat Riwayat Absensi"]
+        UC7["Laporan Darurat"]
+        UC8["Input Biaya Transportasi"]
+        UC9["Laporan Service Kendaraan"]
+        UC10["Kelola Driver"]
+        UC11["Kelola Kendaraan / Aset"]
+        UC12["Kelola Komponen Kendaraan"]
+        UC13["Kelola Jadwal Maintenance"]
+        UC14["Selesaikan Maintenance"]
+        UC15["Lihat Dashboard Maintenance"]
+        UC16["Generate Maintenance Alert"]
+        UC17["Update Status Komponen"]
+        UC18["Generate Jadwal Otomatis"]
+        UC19["Approval Service Report"]
+        UC20["Lihat Dashboard Admin"]
+        UC21["Export Laporan"]
+        UC22["Scan QR Code Kendaraan"]
+        UC23["Lihat Panduan Driver"]
+        UC24["Ganti Password"]
+        UC25["Notifikasi Push FCM"]
+    end
+
+    D --- UC1
+    D --- UC2
+    D --- UC3
+    D --- UC4
+    D --- UC5
+    D --- UC6
+    D --- UC7
+    D --- UC8
+    D --- UC9
+    D --- UC22
+    D --- UC23
+    D --- UC24
+
+    A --- UC1
+    A --- UC10
+    A --- UC11
+    A --- UC12
+    A --- UC13
+    A --- UC14
+    A --- UC15
+    A --- UC19
+    A --- UC20
+    A --- UC21
+
+    SA --- UC1
+    SA --- UC14
+    SA --- UC19
+
+    C --- UC1
+    C --- UC19
+
+    S --- UC16
+    S --- UC17
+    S --- UC18
+    S --- UC25
+                </div>
+            </div>
+            <div class="diagram-description">
+                <strong>5 Aktor:</strong> Driver (mobile app), Admin/Master (web dashboard), Service Admin, Customer, dan Scheduler (cron). Total <strong>25 use case</strong> yang mencakup absensi, maintenance, pelaporan, dan manajemen aset.
+            </div>
+        </div>
+
+        <!-- 4.1.3.2 Activity Diagram Check-In -->
+        <div class="diagram-section" id="d2a">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.2a</span> Activity Diagram — Check-In Driver</h2>
+                <button class="btn-export" onclick="exportDiagram('d2a', '4.1.3.2a_Activity_CheckIn')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+flowchart TD
+    A([Start]) --> B[Driver membuka aplikasi]
+    B --> C{Driver sudah login?}
+    C -- Tidak --> D[Tampilkan halaman login]
+    D --> E[Driver input NIK & password]
+    E --> F{Autentikasi berhasil?}
+    F -- Tidak --> D
+    F -- Ya --> G[Tampilkan Home Screen]
+    C -- Ya --> G
+
+    G --> H[Driver tekan tombol Check-In]
+    H --> I{Pilih metode input kendaraan}
+    I -- QR Code --> J[Scan QR Code kendaraan]
+    I -- Manual --> K[Input plat nomor manual + alasan + foto bukti]
+    J --> L[Ambil plat nomor dari QR]
+    K --> L2[Validasi input manual]
+    L2 --> L
+
+    L --> M[Ambil lokasi GPS]
+    M --> N[Ambil foto selfie]
+    N --> O[Ambil foto speedometer]
+    O --> P[Input KM speedometer manual]
+    P --> Q[Ambil foto kondisi kendaraan opsional]
+    Q --> R{Koneksi internet tersedia?}
+
+    R -- Ya --> S[Kirim data ke server via API]
+    S --> T{Server: Driver sudah on duty?}
+    T -- Ya --> U[Tampilkan error: Sudah clock-in]
+    T -- Tidak --> V{Server: Kendaraan valid?}
+    V -- Tidak valid --> W[Error: Kendaraan tidak ditemukan]
+    V -- Manual baru --> X[Buat record kendaraan baru]
+    X --> Y
+    V -- Valid --> Y[Simpan Attendance - DB Transaction]
+    Y --> Z[Update Driver is_on_duty = true]
+    Z --> AA[Clear cache driver]
+    AA --> AB[Tampilkan pesan sukses]
+
+    R -- Tidak --> AC[Simpan ke local storage Sembast]
+    AC --> AD[Masukkan ke offline queue]
+    AD --> AE[Tampilkan: Data tersimpan offline]
+
+    AB --> AF([End])
+    AE --> AF
+    U --> AF
+    W --> AF
+                </div>
+            </div>
+            <div class="diagram-description">
+                Alur Check-In mendukung <strong>2 metode input kendaraan</strong> (QR Code & Manual) dan <strong>offline-first architecture</strong> — data tersimpan di Sembast saat tidak ada internet.
+            </div>
+        </div>
+
+        <!-- Activity Diagram Check-Out -->
+        <div class="diagram-section" id="d2b">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.2b</span> Activity Diagram — Check-Out Driver</h2>
+                <button class="btn-export" onclick="exportDiagram('d2b', '4.1.3.2b_Activity_CheckOut')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+flowchart TD
+    A([Start]) --> B[Driver tekan tombol Check-Out]
+    B --> C[Input KM speedometer akhir]
+    C --> D[Ambil foto speedometer akhir]
+    D --> E[Checklist kondisi kendaraan]
+    E --> F["Check Ban: Aman / Bermasalah"]
+    F --> G["Check Lampu: Aman / Bermasalah"]
+    G --> H["Check Rem: Aman / Bermasalah"]
+    H --> I[Input catatan opsional]
+    I --> J{Koneksi internet tersedia?}
+
+    J -- Ya --> K[Kirim data ke server via API]
+    K --> L{Server: Ada attendance aktif?}
+    L -- Tidak --> M[Error: Tidak ada tugas aktif]
+    L -- Ya --> N[Update Attendance record - DB Transaction]
+    N --> O["Set time_out, speedo_akhir, kondisi kendaraan"]
+    O --> P[Update Driver is_on_duty = false]
+    P --> Q[Clear cache driver]
+    Q --> R["Hitung summary: durasi, total KM, status"]
+    R --> S[Tampilkan Duty Summary Screen]
+
+    J -- Tidak --> T[Simpan ke local storage Sembast]
+    T --> U["Simpan ke Offline Queue + UUID"]
+    U --> V[Catat device_timestamp]
+    V --> W[Tampilkan: Data tersimpan offline]
+
+    S --> X([End])
+    W --> X
+    M --> X
+                </div>
+            </div>
+            <div class="diagram-description">
+                Check-Out mencatat <strong>KM akhir</strong> (untuk kalkulasi jarak tempuh) dan <strong>checklist P2H</strong> (Ban, Lampu, Rem). Offline clock-out menggunakan <strong>device_timestamp preservation</strong> dan <strong>idempotency via UUID</strong>.
+            </div>
+        </div>
+
+        <!-- 4.1.3.3 Activity Diagram Preventive Maintenance -->
+        <div class="diagram-section" id="d3">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.3</span> Activity Diagram — Preventive Maintenance Armada</h2>
+                <button class="btn-export" onclick="exportDiagram('d3', '4.1.3.3_Activity_Preventive_Maintenance')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+flowchart TD
+    A([Start]) --> B["Scheduler Cron trigger harian jam 00:00"]
+
+    B --> C["Jalankan: maintenance:update-component-status"]
+    C --> D[Ambil semua VehicleComponent]
+    D --> E{Untuk setiap komponen}
+
+    E --> F["Hitung next_replacement_km =<br/>last_replacement_km + interval_km"]
+    F --> G["Hitung next_replacement_date =<br/>last_replacement_date + interval_days"]
+    G --> H["Hitung km_remaining =<br/>next_replacement_km − current_km"]
+
+    H --> I{"km_remaining ≤ 0?"}
+    I -- Ya --> J["Set status = overdue"]
+    I -- Tidak --> K{"km_remaining ≤ critical_threshold?"}
+    K -- Ya --> L["Set status = critical"]
+    K -- Tidak --> M{"km_remaining ≤ warning_threshold?"}
+    M -- Ya --> N["Set status = warning"]
+    M -- Tidak --> O["Set status = healthy"]
+
+    J --> P[Simpan status komponen]
+    L --> P
+    N --> P
+    O --> P
+
+    P --> Q{Masih ada komponen lain?}
+    Q -- Ya --> E
+    Q -- Tidak --> R["Jalankan: maintenance:generate-alerts<br/>(setiap 6 jam)"]
+
+    R --> S["Cek komponen berstatus<br/>warning / critical / overdue"]
+    S --> T{Ada komponen perlu alert?}
+    T -- Ya --> U[Generate MaintenanceAlert record]
+    U --> V["Set alert_type sesuai status"]
+    V --> W[Kirim notifikasi ke Admin]
+    T -- Tidak --> X[Tidak ada alert baru]
+
+    W --> Y["Jalankan: maintenance:generate-schedules<br/>(harian jam 01:00)"]
+    X --> Y
+    Y --> Z["Generate MaintenanceSchedule otomatis"]
+    Z --> AA["Set priority berdasarkan status komponen"]
+    AA --> AB([End])
+                </div>
+            </div>
+            <div class="diagram-description">
+                Sistem preventive maintenance berjalan otomatis via <strong>3 artisan command</strong> terjadwal: update status komponen (harian), generate alert (6 jam), generate jadwal (harian 01:00). Status ditentukan berdasarkan <strong>threshold KM</strong>.
+            </div>
+        </div>
+
+        <!-- 4.1.3.4 Activity Diagram Sinkronisasi Offline -->
+        <div class="diagram-section" id="d4">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.4</span> Activity Diagram — Sinkronisasi Offline</h2>
+                <button class="btn-export" onclick="exportDiagram('d4', '4.1.3.4_Activity_Sinkronisasi_Offline')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+flowchart TD
+    A([Start]) --> B{Trigger sinkronisasi}
+    B --> C1["Connectivity listener:<br/>Offline → Online"]
+    B --> C2["Timer periodik<br/>setiap 2 menit"]
+    B --> C3["App baru dibuka"]
+    B --> C4["Manual sync dari UI"]
+
+    C1 --> D
+    C2 --> D
+    C3 --> D
+    C4 --> D
+
+    D{"Cek koneksi internet"} --> |Tidak ada| E[Sync ditunda]
+    D --> |Ada koneksi| F{Ada data pending?}
+    F -- Tidak --> G["Nothing to sync"]
+    F -- Ya --> H["Acquire sync lock"]
+
+    H --> I[Hitung total item pending]
+    I --> J[Mulai progress tracker]
+
+    J --> K["Queue 1: Check-In<br/>→ /submit-attendance"]
+    K --> L["Queue 2: Check-Out<br/>→ /submit-end-of-duty"]
+    L --> M["Queue 3: Emergency Report<br/>→ /submit-emergency-report"]
+    M --> N["Queue 4: Service Report<br/>→ /submit-service-report"]
+    N --> O["Queue 5: Offline Clock-Out<br/>→ /clock-out-offline"]
+
+    O --> P{Untuk setiap item dalam queue}
+    P --> Q{Masih dalam backoff?}
+    Q -- Ya --> R[Skip item]
+    Q -- Tidak --> S[Build MultipartRequest + foto]
+    S --> T[Kirim ke server]
+
+    T --> U{Response status}
+    U -- "200/201 Success" --> V[Hapus dari local DB]
+    U -- "409 Duplicate" --> W[Idempotent: hapus dari queue]
+    U -- "404 Not Found" --> X[Tugas tidak ada: hapus]
+    U -- "401 Auth Expired" --> Y[Catat failure: auth expired]
+    U -- "5xx Server Error" --> Z{Retry count >= 3?}
+    Z -- Ya --> AA[Mark sebagai FAILED]
+    Z -- Tidak --> AB[Increment retry + exponential backoff]
+
+    V --> AC{Masih ada item?}
+    W --> AC
+    X --> AC
+    R --> AC
+    Y --> AC
+    AA --> AC
+    AB --> AC
+
+    AC -- Ya --> P
+    AC -- Tidak --> AD[Finish progress tracker]
+    AD --> AE[Release sync lock]
+    AE --> AF([End])
+    E --> AF
+    G --> AF
+                </div>
+            </div>
+            <div class="diagram-description">
+                <strong>5 queue</strong> diproses berurutan. Mendukung <strong>exponential backoff</strong>, <strong>idempotency (409 handling)</strong>, dan <strong>auto-retry</strong> hingga 3 kali. Trigger dari 4 sumber: connectivity change, timer periodik, app startup, dan manual sync.
+            </div>
+        </div>
+
+        <!-- 4.1.3.5 Sequence Diagram Check-Out sampai Update KM -->
+        <div class="diagram-section" id="d5">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.5</span> Sequence Diagram — Check-Out sampai Update KM</h2>
+                <button class="btn-export" onclick="exportDiagram('d5', '4.1.3.5_Sequence_CheckOut_UpdateKM')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+sequenceDiagram
+    actor Driver
+    participant App as Flutter Mobile App
+    participant API as Laravel API Server
+    participant AttCtrl as AttendanceController
+    participant DB as MySQL Database
+    participant Cache as Cache Store
+
+    Driver->>App: Tekan tombol Check-Out
+    App->>App: Tampilkan End of Duty Screen
+    Driver->>App: Input KM akhir, foto speedo, checklist
+    App->>App: Validasi input lokal
+
+    App->>API: POST /api/submit-end-of-duty
+    Note over App,API: Body: speedometer_manual_akhir,<br/>timestamp, check_ban, check_lampu,<br/>check_rem, catatan, foto
+
+    API->>AttCtrl: submitEndOfDutyReport(Request)
+    AttCtrl->>AttCtrl: Validasi input server-side
+    AttCtrl->>DB: SELECT FROM drivers WHERE id = ?
+    DB-->>AttCtrl: Driver record
+
+    AttCtrl->>DB: SELECT FROM attendances WHERE driver_id = ? AND time_out IS NULL
+    DB-->>AttCtrl: Active Attendance
+
+    alt Tidak ada attendance aktif
+        AttCtrl-->>App: 404 Tidak ada tugas aktif
+        App-->>Driver: Tampilkan error
+    else Ada attendance aktif
+        AttCtrl->>AttCtrl: Optimize foto via ImageProcessingService
+        AttCtrl->>DB: BEGIN TRANSACTION
+        AttCtrl->>DB: UPDATE attendances SET time_out, speedo_akhir, cek kondisi
+        Note over DB: speedo_akhir = KM akhir driver
+        AttCtrl->>DB: UPDATE drivers SET is_on_duty = false
+        AttCtrl->>DB: COMMIT TRANSACTION
+        Note over DB: Vehicle.computed_km otomatis<br/>mengambil speedo_akhir dari<br/>latestAttendance via Accessor
+        AttCtrl->>Cache: DELETE driver_status_{id}, attendance_history_{id}
+        AttCtrl->>AttCtrl: Hitung durasi kerja & total KM
+        AttCtrl-->>API: 200 OK + Summary
+        API-->>App: JSON Response
+        App-->>Driver: Tampilkan Duty Summary
+    end
+                </div>
+            </div>
+            <div class="diagram-description">
+                KM kendaraan di-update secara <strong>implisit</strong> melalui <code>Vehicle.computed_km</code> accessor yang membaca <code>speedo_akhir</code> dari attendance terakhir. Proses berjalan dalam <strong>DB Transaction</strong> untuk konsistensi data.
+            </div>
+        </div>
+
+        <!-- 4.1.3.6 Sequence Diagram Generate Maintenance Alert -->
+        <div class="diagram-section" id="d6">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.6</span> Sequence Diagram — Generate Maintenance Alert</h2>
+                <button class="btn-export" onclick="exportDiagram('d6', '4.1.3.6_Sequence_Generate_Alert')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+sequenceDiagram
+    participant Cron as Laravel Scheduler
+    participant Cmd as Artisan Command
+    participant AlertSvc as MaintenanceAlertService
+    participant CompModel as VehicleComponent
+    participant VehModel as Vehicle
+    participant AlertModel as MaintenanceAlert
+    participant DB as MySQL Database
+
+    Note over Cron: Setiap 6 jam via console.php
+    Cron->>Cmd: maintenance:generate-alerts
+
+    Cmd->>AlertSvc: generateAlerts()
+    AlertSvc->>DB: SELECT FROM vehicle_components WITH vehicle
+    DB-->>AlertSvc: Daftar komponen kendaraan
+
+    loop Untuk setiap VehicleComponent
+        AlertSvc->>CompModel: Ambil data komponen
+        CompModel->>VehModel: Ambil current_km kendaraan
+        VehModel-->>CompModel: current_km
+
+        CompModel->>CompModel: km_remaining = next_replacement_km − current_km
+
+        alt km_remaining <= 0
+            AlertSvc->>DB: Cek alert overdue aktif?
+            DB-->>AlertSvc: Tidak ada
+
+            AlertSvc->>AlertModel: Create alert_type = overdue
+            AlertModel->>DB: INSERT INTO maintenance_alerts
+            DB-->>AlertModel: Alert ID
+
+        else km_remaining <= critical_threshold
+            AlertSvc->>DB: Cek alert critical aktif?
+            DB-->>AlertSvc: Tidak ada
+
+            AlertSvc->>AlertModel: Create alert_type = critical
+            AlertModel->>DB: INSERT INTO maintenance_alerts
+
+        else km_remaining <= warning_threshold
+            AlertSvc->>DB: Cek alert warning aktif?
+            DB-->>AlertSvc: Tidak ada
+
+            AlertSvc->>AlertModel: Create alert_type = warning
+            AlertModel->>DB: INSERT INTO maintenance_alerts
+        end
+    end
+
+    AlertSvc-->>Cmd: Proses selesai
+    Cmd->>Cmd: Log jumlah alert baru
+                </div>
+            </div>
+            <div class="diagram-description">
+                Alert di-generate berdasarkan <strong>3 level threshold</strong>: warning, critical, dan overdue. Sistem mengecek alert aktif yang sudah ada untuk <strong>menghindari duplikasi</strong>. Berjalan otomatis <strong>setiap 6 jam</strong>.
+            </div>
+        </div>
+
+        <!-- 4.1.3.7 Sequence Diagram Penyelesaian Maintenance -->
+        <div class="diagram-section" id="d7">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.7</span> Sequence Diagram — Penyelesaian Maintenance</h2>
+                <button class="btn-export" onclick="exportDiagram('d7', '4.1.3.7_Sequence_Penyelesaian_Maintenance')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+sequenceDiagram
+    actor Admin
+    participant Browser as Web Browser
+    participant SchCtrl as MaintenanceScheduleController
+    participant ImgSvc as ImageProcessingService
+    participant PdfSvc as MaintenanceSchedulePdfService
+    participant SchModel as MaintenanceSchedule
+    participant CompModel as VehicleComponent
+    participant DB as MySQL Database
+    participant Storage as File Storage
+
+    Admin->>Browser: Buka halaman Jadwal Maintenance
+    Browser->>SchCtrl: GET /admin/maintenance/schedules
+    SchCtrl->>DB: SELECT schedules WITH vehicle, component
+    DB-->>SchCtrl: Daftar jadwal
+    SchCtrl-->>Browser: Render view
+
+    Admin->>Browser: Klik Selesaikan pada jadwal
+    Browser->>Browser: Tampilkan modal form
+
+    Note over Browser: Input: biaya aktual, foto kuitansi,<br/>foto odometer, nama & jabatan<br/>penandatangan, tanda tangan digital
+
+    Admin->>Browser: Submit form
+    Browser->>SchCtrl: POST /schedules/{id}/complete
+    SchCtrl->>DB: FindOrFail MaintenanceSchedule
+    DB-->>SchCtrl: Schedule record
+
+    SchCtrl->>SchCtrl: Validasi input
+    SchCtrl->>SchCtrl: Decode base64 signature
+    SchCtrl->>Storage: Simpan signature PNG
+    Storage-->>SchCtrl: signature path
+
+    SchCtrl->>ImgSvc: optimize receipt_photo
+    ImgSvc-->>SchCtrl: receipt path
+    SchCtrl->>ImgSvc: optimize odometer_photo
+    ImgSvc-->>SchCtrl: odometer path
+
+    SchCtrl->>DB: UPDATE schedule: status=completed
+    Note over DB: completed_at, completed_by,<br/>actual_cost, photo paths, signature
+
+    SchCtrl->>CompModel: Update last_replacement
+    Note over CompModel: last_replacement_date = now<br/>last_replacement_km = computed_km
+    CompModel->>CompModel: Recalculate next replacement
+    CompModel->>DB: UPDATE vehicle_components
+
+    SchCtrl->>PdfSvc: generateFinanceSubmission
+    PdfSvc->>Storage: Simpan PDF
+    Storage-->>PdfSvc: PDF path
+
+    SchCtrl->>DB: UPDATE schedule finance_pdf_path
+
+    SchCtrl-->>Browser: Redirect + success
+    Browser-->>Admin: Jadwal berhasil diselesaikan
+                </div>
+            </div>
+            <div class="diagram-description">
+                Penyelesaian maintenance melibatkan <strong>5 langkah utama</strong>: validasi, penyimpanan foto & tanda tangan, update jadwal, update komponen (trigger recalculate), dan <strong>auto-generate PDF finance</strong>.
+            </div>
+        </div>
+
+        <!-- 4.1.3.8 Class Diagram -->
+        <div class="diagram-section" id="d8">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.8</span> Class Diagram</h2>
+                <button class="btn-export" onclick="exportDiagram('d8', '4.1.3.8_Class_Diagram')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+classDiagram
+    class User {
+        +int id
+        +string name
+        +string email
+        +string password
+        +string role
+        +int customer_id
+        +isMaster() bool
+        +isServiceAdmin() bool
+        +isCustomer() bool
+        +customer() BelongsTo
+    }
+
+    class Driver {
+        +int id
+        +string full_name
+        +string driver_id_nik
+        +string nik_ktp
+        +date sim_expiry_date
+        +string sim_type
+        +string password
+        +int project_id
+        +string fcm_token
+        +bool is_on_duty
+        +string qr_code_path
+        +isOnDuty() bool
+        +attendances() HasMany
+        +project() BelongsTo
+        +transportCosts() HasMany
+    }
+
+    class Vehicle {
+        +int id
+        +string plate_number
+        +string type
+        +int project_id
+        +string status
+        +int current_km
+        +int service_interval_km
+        +int last_service_km
+        +date pajak_stnk_berlaku_sampai
+        +date kir_berlaku_sampai
+        +getComputedKmAttribute() int
+        +getSisaKmAttribute() int
+        +getHealthStatusCodeAttribute() string
+        +components() HasMany
+        +maintenanceSchedules() HasMany
+        +maintenanceAlerts() HasMany
+    }
+
+    class Attendance {
+        +int id
+        +int driver_id
+        +int vehicle_id
+        +string vehicle_entry_method
+        +datetime time_in
+        +datetime time_out
+        +string gps_location_in
+        +int speedo_awal
+        +int speedo_akhir
+        +string check_ban
+        +string check_lampu
+        +string check_rem
+        +bool is_offline_recovery
+        +string offline_entry_id
+        +driver() BelongsTo
+        +vehicle() BelongsTo
+        +transportCost() HasOne
+        +offlineRecoveryLog() HasOne
+    }
+
+    class Project {
+        +int id
+        +string name
+        +string code
+        +string description
+        +int customer_id
+        +drivers() HasMany
+        +vehicles() HasMany
+        +customer() BelongsTo
+    }
+
+    class Customer {
+        +int id
+        +string name
+        +string code
+        +string contact_person
+        +string email
+        +string phone
+        +users() HasMany
+        +projects() HasMany
+        +serviceReports() HasMany
+    }
+
+    class VehicleComponent {
+        +int id
+        +int vehicle_id
+        +string component_name
+        +string category
+        +int replacement_interval_km
+        +int replacement_interval_days
+        +int last_replacement_km
+        +date last_replacement_date
+        +int next_replacement_km
+        +string status
+        +calculateNextReplacement() void
+        +updateStatus() void
+        +needsMaintenance() bool
+        +getHealthScoreAttribute() float
+    }
+
+    class MaintenanceSchedule {
+        +int id
+        +int vehicle_id
+        +int component_id
+        +date scheduled_date
+        +string type
+        +string priority
+        +string status
+        +decimal estimated_cost
+        +decimal actual_cost
+        +string finance_pdf_path
+        +string admin_signature_path
+        +datetime completed_at
+        +markAsCompleted() void
+        +isOverdue() bool
+    }
+
+    class MaintenanceAlert {
+        +int id
+        +int vehicle_id
+        +int component_id
+        +string alert_type
+        +string message
+        +datetime triggered_at
+        +string status
+        +acknowledge() void
+        +resolve() void
+        +dismiss() void
+    }
+
+    class TransportCost {
+        +int id
+        +int driver_id
+        +int vehicle_id
+        +int project_id
+        +int attendance_id
+        +date trip_date
+        +decimal gasoline_cost
+        +decimal toll_cost
+        +decimal parking_cost
+        +string approval_status
+    }
+
+    class ServiceReport {
+        +int id
+        +int driver_id
+        +int vehicle_id
+        +int customer_id
+        +string ticket_number
+        +string service_type
+        +string status
+        +decimal total_cost
+        +string finance_pdf_path
+    }
+
+    class OfflineRecoveryLog {
+        +int id
+        +int driver_id
+        +int attendance_id
+        +string offline_entry_id
+        +datetime device_timestamp
+        +datetime recovery_timestamp
+        +int delay_minutes
+        +string result
+        +int retry_count
+    }
+
+    class EmergencyReport {
+        +int id
+        +int driver_id
+        +int vehicle_id
+        +datetime timestamp
+        +string gps_location
+        +string description
+        +string follow_up_status
+    }
+
+    class VehicleReplacement {
+        +int id
+        +int original_vehicle_id
+        +int replacement_vehicle_id
+        +int driver_id
+        +int service_report_id
+        +string status
+    }
+
+    Customer "1" --> "*" Project
+    Customer "1" --> "*" User
+    Project "1" --> "*" Driver
+    Project "1" --> "*" Vehicle
+    Driver "1" --> "*" Attendance
+    Vehicle "1" --> "*" Attendance
+    Attendance "1" --> "0..1" TransportCost
+    Attendance "1" --> "0..1" OfflineRecoveryLog
+    Driver "1" --> "*" TransportCost
+    Driver "1" --> "*" ServiceReport
+    Vehicle "1" --> "*" VehicleComponent
+    VehicleComponent "1" --> "*" MaintenanceSchedule
+    VehicleComponent "1" --> "*" MaintenanceAlert
+    Vehicle "1" --> "*" MaintenanceSchedule
+    Vehicle "1" --> "*" MaintenanceAlert
+    ServiceReport "1" --> "*" VehicleReplacement
+    Vehicle "1" --> "*" EmergencyReport
+    Driver "1" --> "*" EmergencyReport
+                </div>
+            </div>
+            <div class="diagram-description">
+                <strong>13 class/model</strong> dengan relasi Eloquent lengkap. Arsitektur mengikuti pattern <strong>Active Record</strong> (Laravel Eloquent ORM). Relasi utama: Customer → Project → Driver/Vehicle → Attendance → TransportCost.
+            </div>
+        </div>
+
+        <!-- 4.1.3.9 Deployment Diagram -->
+        <div class="diagram-section" id="d9">
+            <div class="diagram-header">
+                <h2><span class="diagram-number">4.1.3.9</span> Deployment Diagram</h2>
+                <button class="btn-export" onclick="exportDiagram('d9', '4.1.3.9_Deployment_Diagram')">📥 Export PNG</button>
+            </div>
+            <div class="diagram-body">
+                <div class="mermaid">
+graph TB
+    subgraph "📱 Client Layer"
+        subgraph "Mobile Device - Android"
+            FlutterApp["Flutter Mobile App<br/>───────────<br/>Dart / Flutter Framework<br/>Provider State Mgmt<br/>Sembast Local DB<br/>Connectivity Plus<br/>GPS / Camera / QR"]
+        end
+
+        subgraph "Desktop / Laptop"
+            WebDashboard["Web Dashboard<br/>───────────<br/>Laravel Blade Templates<br/>Bootstrap / JavaScript<br/>Chart.js / FullCalendar<br/>Signature Pad"]
+        end
+    end
+
+    subgraph "⚙️ Server Layer - VPS / Cloud"
+        subgraph "Web Server"
+            Nginx["Nginx / Apache<br/>───────────<br/>Reverse Proxy<br/>SSL / HTTPS<br/>Static Files"]
+        end
+
+        subgraph "Application Server"
+            Laravel["Laravel 11 - PHP 8.2+<br/>───────────<br/>Sanctum Auth - API<br/>Session Auth - Web<br/>RESTful API JSON<br/>Blade View Engine<br/>Artisan Commands"]
+        end
+
+        subgraph "Background Services"
+            Scheduler["Laravel Scheduler<br/>───────────<br/>update-component-status daily<br/>generate-alerts 6h<br/>generate-schedules daily 01:00<br/>notify:8-hours 15min<br/>notify:sim-expiry daily"]
+        end
+    end
+
+    subgraph "🗄️ Data Layer"
+        MySQL["MySQL / MariaDB<br/>───────────<br/>16 tabel utama<br/>Eloquent ORM<br/>DB Transactions<br/>Migration & Seeder"]
+
+        FileStorage["Laravel Storage<br/>───────────<br/>Foto Selfie & Speedo<br/>Foto Kondisi & Kuitansi<br/>Tanda Tangan Digital<br/>Dokumen PDF Finance"]
+    end
+
+    subgraph "☁️ External Services"
+        FCM["Firebase Cloud Messaging<br/>───────────<br/>Push Notifications"]
+
+        GoogleMaps["Google Maps API<br/>───────────<br/>GPS Location Display"]
+    end
+
+    FlutterApp -- "HTTPS REST API<br/>JSON + Multipart" --> Nginx
+    WebDashboard -- "HTTPS<br/>HTML + AJAX" --> Nginx
+    Nginx -- "Reverse Proxy" --> Laravel
+    Laravel -- "Eloquent ORM" --> MySQL
+    Laravel -- "Storage Facade" --> FileStorage
+    Laravel -- "HTTP / FCM SDK" --> FCM
+    Laravel --> Scheduler
+    FlutterApp -- "FCM SDK" --> FCM
+    FlutterApp -. "Maps SDK" .-> GoogleMaps
+
+    style FlutterApp fill:#1565C0,color:#fff
+    style WebDashboard fill:#2E7D32,color:#fff
+    style Nginx fill:#009688,color:#fff
+    style Laravel fill:#FF5722,color:#fff
+    style MySQL fill:#00796B,color:#fff
+    style FileStorage fill:#EF6C00,color:#fff
+    style FCM fill:#FFC107,color:#000
+    style GoogleMaps fill:#4CAF50,color:#fff
+    style Scheduler fill:#7B1FA2,color:#fff
+                </div>
+            </div>
+            <div class="diagram-description">
+                Arsitektur <strong>3-tier</strong>: Client (Flutter + Web Browser) → Server (Nginx + Laravel + Scheduler) → Data (MySQL + File Storage). External services: <strong>FCM</strong> (notifikasi) dan <strong>Google Maps</strong> (lokasi GPS).
+            </div>
+        </div>
+
+    </div>
+
+    <div class="export-all-bar">
+        <button class="btn-export-all" onclick="exportAllDiagrams()">📦 Export Semua Diagram (PNG)</button>
+        <button class="btn-export-all" onclick="window.print()" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">🖨️ Print / Save PDF</button>
+    </div>
+
+    <div class="toast" id="toast">✅ Diagram berhasil di-export!</div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#3b82f6',
+                primaryTextColor: '#f1f5f9',
+                primaryBorderColor: '#475569',
+                lineColor: '#64748b',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#0f172a',
+                background: '#1e293b',
+                mainBkg: '#1e293b',
+                nodeBorder: '#475569',
+                clusterBkg: '#0f172a',
+                clusterBorder: '#334155',
+                titleColor: '#f1f5f9',
+                edgeLabelBackground: '#1e293b',
+                actorBkg: '#3b82f6',
+                actorBorder: '#2563eb',
+                actorTextColor: '#ffffff',
+                actorLineColor: '#64748b',
+                signalColor: '#94a3b8',
+                signalTextColor: '#f1f5f9',
+                labelBoxBkgColor: '#1e293b',
+                labelBoxBorderColor: '#475569',
+                labelTextColor: '#f1f5f9',
+                loopTextColor: '#94a3b8',
+                activationBorderColor: '#3b82f6',
+                activationBkgColor: '#1e3a5f',
+                sequenceNumberColor: '#ffffff',
+                noteBkgColor: '#1e293b',
+                noteTextColor: '#f1f5f9',
+                noteBorderColor: '#475569',
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis',
+            },
+            sequence: {
+                useMaxWidth: true,
+                mirrorActors: false,
+                actorMargin: 80,
+                messageMargin: 40,
+            },
+            class: {
+                useMaxWidth: true,
+            },
+        });
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function exportDiagram(sectionId, filename) {
+            const section = document.getElementById(sectionId);
+            const svg = section.querySelector('.diagram-body svg');
+
+            if (!svg) {
+                showToast('⚠️ Diagram belum selesai di-render');
+                return;
+            }
+
+            try {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(svgBlob);
+
+                const img = new Image();
+                img.onload = function () {
+                    const scale = 2;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.scale(scale, scale);
+                    ctx.drawImage(img, 0, 0);
+
+                    const link = document.createElement('a');
+                    link.download = filename + '.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+
+                    URL.revokeObjectURL(url);
+                    showToast('✅ ' + filename + '.png berhasil di-download!');
+                };
+                img.src = url;
+            } catch (e) {
+                showToast('❌ Gagal export: ' + e.message);
+            }
+        }
+
+        async function exportAllDiagrams() {
+            const diagrams = [
+                ['d1', '4.1.3.1_Use_Case_Diagram'],
+                ['d2a', '4.1.3.2a_Activity_CheckIn'],
+                ['d2b', '4.1.3.2b_Activity_CheckOut'],
+                ['d3', '4.1.3.3_Activity_Preventive_Maintenance'],
+                ['d4', '4.1.3.4_Activity_Sinkronisasi_Offline'],
+                ['d5', '4.1.3.5_Sequence_CheckOut_UpdateKM'],
+                ['d6', '4.1.3.6_Sequence_Generate_Alert'],
+                ['d7', '4.1.3.7_Sequence_Penyelesaian_Maintenance'],
+                ['d8', '4.1.3.8_Class_Diagram'],
+                ['d9', '4.1.3.9_Deployment_Diagram'],
+            ];
+
+            for (let i = 0; i < diagrams.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await exportDiagram(diagrams[i][0], diagrams[i][1]);
+            }
+
+            showToast('📦 Semua 10 diagram berhasil di-export!');
+        }
+    </script>
+</body>
+</html>

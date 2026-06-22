@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Use Case Diagram Bersih - Sistem Absensi dan Manajemen Armada</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #f3f4f6;
+            color: #111;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        header {
+            padding: 16px 26px;
+            background: #fff;
+            border-bottom: 1px solid #d1d5db;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        h1 {
+            margin: 0;
+            font-size: 21px;
+        }
+        .hint {
+            margin-top: 6px;
+            color: #555;
+            font-size: 13px;
+        }
+        .page {
+            width: 1120px;
+            margin: 24px auto;
+            padding: 18px;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+        }
+        .page-title {
+            margin: 0 0 12px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #fff;
+        }
+        .boundary {
+            fill: #fff;
+            stroke: #000;
+            stroke-width: 2;
+        }
+        .boundary-label {
+            font-size: 15px;
+            font-weight: 700;
+            text-anchor: middle;
+        }
+        .actor-line,
+        .assoc-line,
+        .dep-line {
+            stroke: #000;
+            fill: none;
+        }
+        .actor-line { stroke-width: 2; }
+        .assoc-line { stroke-width: 1.35; }
+        .dep-line {
+            stroke-width: 1.25;
+            stroke-dasharray: 6 4;
+            marker-end: url(#arrow);
+        }
+        .usecase ellipse {
+            fill: #fff;
+            stroke: #000;
+            stroke-width: 1.5;
+        }
+        .usecase text {
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .actor-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-anchor: middle;
+        }
+        .relation-label {
+            font-size: 11px;
+            font-style: italic;
+            fill: #111;
+            text-anchor: middle;
+        }
+        @media print {
+            body { background: #fff; }
+            header { display: none; }
+            .page {
+                width: 100%;
+                margin: 0;
+                border: none;
+                box-shadow: none;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Use Case Diagram Visual Bersih</h1>
+    <div class="hint">Versi ini dipecah menjadi 4 halaman agar garis tidak saling silang dan mudah dimasukkan ke skripsi.</div>
+</header>
+
+<section class="page">
+    <h2 class="page-title">Use Case Diagram Driver</h2>
+    <svg viewBox="0 0 1080 680" aria-label="Use Case Diagram Driver">
+        <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                <path d="M0,0 L10,4 L0,8 Z" fill="#000"></path>
+            </marker>
+        </defs>
+        <rect class="boundary" x="250" y="50" width="710" height="580"></rect>
+        <text class="boundary-label" x="605" y="82">Sistem Absensi Mobile Driver</text>
+
+        <g transform="translate(115 310)">
+            <circle class="actor-line" cx="0" cy="0" r="16"></circle>
+            <line class="actor-line" x1="0" y1="16" x2="0" y2="70"></line>
+            <line class="actor-line" x1="-35" y1="38" x2="35" y2="38"></line>
+            <line class="actor-line" x1="0" y1="70" x2="-30" y2="112"></line>
+            <line class="actor-line" x1="0" y1="70" x2="30" y2="112"></line>
+            <text class="actor-label" x="0" y="140">Driver</text>
+        </g>
+
+        <g class="usecase"><ellipse cx="430" cy="135" rx="100" ry="28"></ellipse><text x="430" y="135">Login Mobile</text></g>
+        <g class="usecase"><ellipse cx="430" cy="205" rx="100" ry="28"></ellipse><text x="430" y="205">Check-In</text></g>
+        <g class="usecase"><ellipse cx="430" cy="275" rx="100" ry="28"></ellipse><text x="430" y="275">Check-Out</text></g>
+        <g class="usecase"><ellipse cx="430" cy="345" rx="115" ry="28"></ellipse><text x="430" y="345">Check-Out Offline</text></g>
+        <g class="usecase"><ellipse cx="705" cy="345" rx="120" ry="28"></ellipse><text x="705" y="345">Sinkronisasi Offline</text></g>
+        <g class="usecase"><ellipse cx="430" cy="415" rx="125" ry="28"></ellipse><text x="430" y="415">Lihat Riwayat Absensi</text></g>
+        <g class="usecase"><ellipse cx="430" cy="485" rx="115" ry="28"></ellipse><text x="430" y="485">Scan QR Kendaraan</text></g>
+        <g class="usecase"><ellipse cx="705" cy="205" rx="115" ry="28"></ellipse><text x="705" y="205">Lapor Darurat</text></g>
+        <g class="usecase"><ellipse cx="705" cy="275" rx="125" ry="28"></ellipse><text x="705" y="275">Buat Service Report</text></g>
+        <g class="usecase"><ellipse cx="705" cy="485" rx="125" ry="28"></ellipse><text x="705" y="485">Ajukan Transport Cost</text></g>
+
+        <line class="assoc-line" x1="150" y1="348" x2="330" y2="135"></line>
+        <line class="assoc-line" x1="150" y1="348" x2="330" y2="205"></line>
+        <line class="assoc-line" x1="150" y1="348" x2="330" y2="275"></line>
+        <line class="assoc-line" x1="150" y1="348" x2="315" y2="345"></line>
+        <line class="assoc-line" x1="150" y1="348" x2="305" y2="415"></line>
+        <line class="assoc-line" x1="150" y1="348" x2="315" y2="485"></line>
+        <line class="assoc-line" x1="150" y1="348" x2="590" y2="205"></line>
+        <line class="assoc-line" x1="150" y1="348" x2="580" y2="275"></line>
+        <line class="assoc-line" x1="150" y1="348" x2="580" y2="485"></line>
+
+        <line class="dep-line" x1="545" y1="345" x2="585" y2="345"></line>
+        <text class="relation-label" x="625" y="326">&lt;&lt;include&gt;&gt;</text>
+    </svg>
+</section>
+
+<section class="page">
+    <h2 class="page-title">Use Case Diagram Customer</h2>
+    <svg viewBox="0 0 1080 560" aria-label="Use Case Diagram Customer">
+        <rect class="boundary" x="250" y="50" width="680" height="450"></rect>
+        <text class="boundary-label" x="590" y="82">Sistem Customer Portal</text>
+
+        <g transform="translate(115 250)">
+            <circle class="actor-line" cx="0" cy="0" r="16"></circle>
+            <line class="actor-line" x1="0" y1="16" x2="0" y2="70"></line>
+            <line class="actor-line" x1="-35" y1="38" x2="35" y2="38"></line>
+            <line class="actor-line" x1="0" y1="70" x2="-30" y2="112"></line>
+            <line class="actor-line" x1="0" y1="70" x2="30" y2="112"></line>
+            <text class="actor-label" x="0" y="140">Customer</text>
+        </g>
+
+        <g class="usecase"><ellipse cx="440" cy="135" rx="105" ry="28"></ellipse><text x="440" y="135">Login Customer</text></g>
+        <g class="usecase"><ellipse cx="440" cy="205" rx="135" ry="28"></ellipse><text x="440" y="205">Lihat Dashboard Customer</text></g>
+        <g class="usecase"><ellipse cx="440" cy="275" rx="115" ry="28"></ellipse><text x="440" y="275">Lihat Kendaraan</text></g>
+        <g class="usecase"><ellipse cx="440" cy="345" rx="140" ry="28"></ellipse><text x="440" y="345">Lihat Riwayat Maintenance</text></g>
+        <g class="usecase"><ellipse cx="720" cy="205" rx="130" ry="28"></ellipse><text x="720" y="205">Review Service Report</text></g>
+        <g class="usecase"><ellipse cx="720" cy="275" rx="130" ry="28"></ellipse><text x="720" y="275">Approve Service Report</text></g>
+        <g class="usecase"><ellipse cx="720" cy="345" rx="125" ry="28"></ellipse><text x="720" y="345">Tanda Tangan Dokumen</text></g>
+        <g class="usecase"><ellipse cx="720" cy="415" rx="115" ry="28"></ellipse><text x="720" y="415">Download Dokumen</text></g>
+
+        <line class="assoc-line" x1="150" y1="288" x2="335" y2="135"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="305" y2="205"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="325" y2="275"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="300" y2="345"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="590" y2="205"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="590" y2="275"></line>
+
+        <line class="dep-line" x1="720" y1="303" x2="720" y2="317"></line>
+        <text class="relation-label" x="810" y="318">&lt;&lt;include&gt;&gt;</text>
+        <line class="dep-line" x1="720" y1="303" x2="720" y2="387"></line>
+        <text class="relation-label" x="810" y="382">&lt;&lt;include&gt;&gt;</text>
+    </svg>
+</section>
+
+<section class="page">
+    <h2 class="page-title">Use Case Diagram Admin</h2>
+    <svg viewBox="0 0 1080 760" aria-label="Use Case Diagram Admin">
+        <rect class="boundary" x="250" y="50" width="690" height="650"></rect>
+        <text class="boundary-label" x="595" y="82">Sistem Admin Web</text>
+
+        <g transform="translate(115 250)">
+            <circle class="actor-line" cx="0" cy="0" r="16"></circle>
+            <line class="actor-line" x1="0" y1="16" x2="0" y2="70"></line>
+            <line class="actor-line" x1="-35" y1="38" x2="35" y2="38"></line>
+            <line class="actor-line" x1="0" y1="70" x2="-30" y2="112"></line>
+            <line class="actor-line" x1="0" y1="70" x2="30" y2="112"></line>
+            <text class="actor-label" x="0" y="140">Master Admin</text>
+        </g>
+
+        <g transform="translate(115 505)">
+            <circle class="actor-line" cx="0" cy="0" r="16"></circle>
+            <line class="actor-line" x1="0" y1="16" x2="0" y2="70"></line>
+            <line class="actor-line" x1="-35" y1="38" x2="35" y2="38"></line>
+            <line class="actor-line" x1="0" y1="70" x2="-30" y2="112"></line>
+            <line class="actor-line" x1="0" y1="70" x2="30" y2="112"></line>
+            <text class="actor-label" x="0" y="140">Service Admin</text>
+        </g>
+
+        <g class="usecase"><ellipse cx="430" cy="135" rx="90" ry="28"></ellipse><text x="430" y="135">Login Web</text></g>
+        <g class="usecase"><ellipse cx="430" cy="205" rx="115" ry="28"></ellipse><text x="430" y="205">Lihat Dashboard</text></g>
+        <g class="usecase"><ellipse cx="430" cy="275" rx="100" ry="28"></ellipse><text x="430" y="275">Kelola Driver</text></g>
+        <g class="usecase"><ellipse cx="430" cy="345" rx="110" ry="28"></ellipse><text x="430" y="345">Kelola Kendaraan</text></g>
+        <g class="usecase"><ellipse cx="430" cy="415" rx="105" ry="28"></ellipse><text x="430" y="415">Kelola Project</text></g>
+        <g class="usecase"><ellipse cx="430" cy="485" rx="110" ry="28"></ellipse><text x="430" y="485">Kelola Customer</text></g>
+        <g class="usecase"><ellipse cx="430" cy="555" rx="90" ry="28"></ellipse><text x="430" y="555">Kelola User</text></g>
+        <g class="usecase"><ellipse cx="430" cy="625" rx="115" ry="28"></ellipse><text x="430" y="625">Monitoring Absensi</text></g>
+
+        <g class="usecase"><ellipse cx="725" cy="170" rx="140" ry="28"></ellipse><text x="725" y="170">Kelola Komponen Kendaraan</text></g>
+        <g class="usecase"><ellipse cx="725" cy="240" rx="130" ry="28"></ellipse><text x="725" y="240">Kelola Alert Maintenance</text></g>
+        <g class="usecase"><ellipse cx="725" cy="310" rx="135" ry="28"></ellipse><text x="725" y="310">Kelola Jadwal Maintenance</text></g>
+        <g class="usecase"><ellipse cx="725" cy="380" rx="125" ry="28"></ellipse><text x="725" y="380">Selesaikan Maintenance</text></g>
+        <g class="usecase"><ellipse cx="725" cy="450" rx="135" ry="28"></ellipse><text x="725" y="450">Generate PDF Finance</text></g>
+        <g class="usecase"><ellipse cx="725" cy="520" rx="125" ry="28"></ellipse><text x="725" y="520">Proses Service Report</text></g>
+        <g class="usecase"><ellipse cx="725" cy="590" rx="125" ry="28"></ellipse><text x="725" y="590">Kelola Laporan Darurat</text></g>
+
+        <line class="assoc-line" x1="150" y1="288" x2="340" y2="135"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="315" y2="205"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="330" y2="275"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="320" y2="345"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="325" y2="415"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="320" y2="485"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="340" y2="555"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="315" y2="625"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="585" y2="170"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="595" y2="240"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="590" y2="310"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="600" y2="380"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="600" y2="520"></line>
+        <line class="assoc-line" x1="150" y1="288" x2="600" y2="590"></line>
+
+        <line class="assoc-line" x1="150" y1="543" x2="340" y2="135"></line>
+        <line class="assoc-line" x1="150" y1="543" x2="315" y2="205"></line>
+        <line class="assoc-line" x1="150" y1="543" x2="315" y2="625"></line>
+        <line class="assoc-line" x1="150" y1="543" x2="585" y2="170"></line>
+        <line class="assoc-line" x1="150" y1="543" x2="595" y2="240"></line>
+        <line class="assoc-line" x1="150" y1="543" x2="590" y2="310"></line>
+        <line class="assoc-line" x1="150" y1="543" x2="600" y2="380"></line>
+        <line class="assoc-line" x1="150" y1="543" x2="600" y2="520"></line>
+        <line class="assoc-line" x1="150" y1="543" x2="600" y2="590"></line>
+
+        <line class="dep-line" x1="725" y1="408" x2="725" y2="422"></line>
+        <text class="relation-label" x="825" y="421">&lt;&lt;include&gt;&gt;</text>
+    </svg>
+</section>
+
+<section class="page">
+    <h2 class="page-title">Use Case Diagram Scheduler</h2>
+    <svg viewBox="0 0 1080 500" aria-label="Use Case Diagram Scheduler">
+        <rect class="boundary" x="250" y="50" width="650" height="380"></rect>
+        <text class="boundary-label" x="575" y="82">Proses Otomatis Sistem</text>
+
+        <g transform="translate(115 215)">
+            <circle class="actor-line" cx="0" cy="0" r="16"></circle>
+            <line class="actor-line" x1="0" y1="16" x2="0" y2="70"></line>
+            <line class="actor-line" x1="-35" y1="38" x2="35" y2="38"></line>
+            <line class="actor-line" x1="0" y1="70" x2="-30" y2="112"></line>
+            <line class="actor-line" x1="0" y1="70" x2="30" y2="112"></line>
+            <text class="actor-label" x="0" y="140">Scheduler</text>
+        </g>
+
+        <g class="usecase"><ellipse cx="520" cy="145" rx="130" ry="28"></ellipse><text x="520" y="145">Update Status Komponen</text></g>
+        <g class="usecase"><ellipse cx="520" cy="225" rx="135" ry="28"></ellipse><text x="520" y="225">Generate Maintenance Alert</text></g>
+        <g class="usecase"><ellipse cx="520" cy="305" rx="135" ry="28"></ellipse><text x="520" y="305">Generate Jadwal Preventive</text></g>
+        <g class="usecase"><ellipse cx="520" cy="385" rx="105" ry="28"></ellipse><text x="520" y="385">Kirim Reminder</text></g>
+
+        <line class="assoc-line" x1="150" y1="253" x2="390" y2="145"></line>
+        <line class="assoc-line" x1="150" y1="253" x2="385" y2="225"></line>
+        <line class="assoc-line" x1="150" y1="253" x2="385" y2="305"></line>
+        <line class="assoc-line" x1="150" y1="253" x2="415" y2="385"></line>
+    </svg>
+</section>
+</body>
+</html>
