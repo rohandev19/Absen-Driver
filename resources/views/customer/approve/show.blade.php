@@ -66,7 +66,7 @@
         </a>
         <div class="d-flex gap-2">
             <a href="{{ route('customer.approve.download', $report->id) }}" class="btn btn-white border text-primary shadow-sm fw-semibold">
-                <i class="bi bi-download me-2"></i> Download Draft PDF
+                <i class="bi bi-download me-2"></i> {{ $report->status === 'approved_customer' ? 'Download PDF Final' : 'Download Draft PDF' }}
             </a>
             <button type="button" class="btn btn-primary shadow-sm fw-semibold" onclick="window.print()">
                 <i class="bi bi-printer me-2"></i> Cetak Ringkasan
@@ -407,13 +407,23 @@
     <div class="print-signatures d-none">
         <div class="print-signature-block">
             <div class="sig-label">PT Hamada Global Jaya</div>
+            <div class="sig-image-container my-2" style="height: 60px;">
+                @if($report->admin_signature_path)
+                    <img src="{{ asset('storage/' . $report->admin_signature_path) }}" alt="Admin Signature" style="max-height: 60px; max-width: 150px;">
+                @endif
+            </div>
             <div class="sig-line">{{ $report->admin_signer_name ?? 'Admin Operasional' }}</div>
             <div class="sig-role">Admin Operasional</div>
         </div>
         <div class="print-signature-block">
             <div class="sig-label">Pihak Customer</div>
-            <div class="sig-line">{{ $report->customer->name ?? Auth::user()->name }}</div>
-            <div class="sig-role">{{ $report->customer->name ?? 'Customer' }}</div>
+            <div class="sig-image-container my-2" style="height: 60px;">
+                @if($report->customer_signature_path)
+                    <img src="{{ asset('storage/' . $report->customer_signature_path) }}" alt="Customer Signature" style="max-height: 60px; max-width: 150px;">
+                @endif
+            </div>
+            <div class="sig-line">{{ $report->customer_signer_name ?? $report->customer->name ?? Auth::user()->name }}</div>
+            <div class="sig-role">{{ $report->customer_signer_role ?? 'Customer' }}</div>
         </div>
     </div>
 
