@@ -7,7 +7,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <h4 class="fw-bold text-dark mb-1">Panduan Penggunaan Portal Customer</h4>
-            <p class="text-muted" style="font-size: 0.9rem;">Pelajari cara menggunakan berbagai fitur yang tersedia di portal Hamada Logistik khusus untuk pelanggan.</p>
+            <p class="text-muted" style="font-size: 0.9rem;">Pelajari cara menggunakan berbagai fitur yang tersedia di portal Hamada Global Jaya khusus untuk pelanggan.</p>
         </div>
     </div>
 
@@ -26,7 +26,7 @@
                         <div class="accordion-body px-4 pb-4 pt-1 text-muted" style="font-size: 0.9rem;">
                             <p>Halaman Dashboard memberikan ringkasan aktivitas penyewaan armada dan konfirmasi service yang perlu ditindaklanjuti.</p>
                             <ul>
-                                <li><strong>Total Unit Aktif:</strong> Jumlah kendaraan milik Hamada Logistik yang saat ini sedang Anda sewa/gunakan.</li>
+                                <li><strong>Total Unit Aktif:</strong> Jumlah kendaraan milik Hamada Global Jaya yang saat ini sedang Anda sewa/gunakan.</li>
                                 <li><strong>Unit Butuh Servis:</strong> Jumlah kendaraan yang sedang perlu perhatian service atau pemeliharaan.</li>
                                 <li><strong>Service Menunggu Konfirmasi:</strong> Jumlah laporan service kendaraan yang membutuhkan review dan tanda tangan digital dari Anda selaku penyewa.</li>
                             </ul>

@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>PT Hamada Logistik</h1>
+        <h1>PT Hamada Global Jaya</h1>
         <p>Divisi Keuangan & Operasional</p>
     </div>
 

@@ -4,58 +4,39 @@ Dokumen ini berisi sequence diagram untuk alur preventive maintenance pada modul
 
 ## 1. Generate Jadwal Preventive Otomatis
 
-Diagram ini menggambarkan alur command `maintenance:generate-schedules` saat sistem membuat jadwal preventive berdasarkan status komponen kendaraan.
+Diagram ini menggambarkan alur scheduler membuat jadwal preventive berdasarkan status komponen kendaraan.
 
 ```mermaid
 sequenceDiagram
     participant Scheduler as Laravel Scheduler
-    participant Command as GenerateMaintenanceSchedules
-    participant Vehicle as Vehicle Model
-    participant Component as VehicleComponent Model
-    participant Schedule as MaintenanceSchedule Model
+    participant Command as GenerateSchedules
     participant DB as Database
 
-    Scheduler->>Command: Run maintenance:generate-schedules
-    Command->>Vehicle: Query vehicles with components
-    Vehicle->>DB: SELECT vehicles + vehicle_components
-    DB-->>Vehicle: Vehicle collection
-    Vehicle-->>Command: Vehicles with components
+    Scheduler->>Command: Jalankan maintenance:generate-schedules
+    Command->>DB: Ambil data kendaraan beserta komponen
+    DB-->>Command: Daftar kendaraan dan komponen
 
-    loop Setiap kendaraan
-        Command->>Command: Proses vehicle
+    loop Setiap komponen kendaraan
+        Command->>Command: Hitung status komponen (KM / tanggal)
 
-        loop Setiap komponen kendaraan
-            Command->>Component: needsMaintenance()
-            Component-->>Command: true / false
+        alt Komponen tidak perlu maintenance
+            Command->>Command: Lewati
+        else Komponen perlu maintenance
+            Command->>DB: Cek jadwal pending atau scheduled
+            DB-->>Command: Jadwal aktif / tidak ada
 
-            alt Komponen tidak perlu maintenance
-                Command->>Command: Lewati komponen
-            else Komponen perlu maintenance
-                Command->>Schedule: Cek jadwal pending/scheduled
-                Schedule->>DB: SELECT maintenance_schedules by vehicle_id, component_id, status
-                DB-->>Schedule: Existing schedule / null
-                Schedule-->>Command: Hasil pengecekan
-
-                alt Jadwal aktif sudah ada
-                    Command->>Command: Skip agar tidak duplikat
-                else Belum ada jadwal aktif
-                    Command->>Command: Tentukan priority dari status komponen
-                    Note over Command: overdue = critical<br/>critical = high<br/>warning = medium
-
-                    Command->>Command: Hitung scheduled_date
-                    Note over Command: overdue/critical dijadwalkan H+2<br/>warning dihitung dari sisa KM
-
-                    Command->>Schedule: Create preventive schedule
-                    Schedule->>DB: INSERT maintenance_schedules
-                    Note over DB: type=preventive<br/>status=pending<br/>scheduled_km=next_replacement_km
-                    DB-->>Schedule: Schedule created
-                    Schedule-->>Command: OK
-                end
+            alt Jadwal aktif sudah ada
+                Command->>Command: Lewati agar tidak duplikat
+            else Belum ada jadwal
+                Command->>Command: Tentukan prioritas dan tanggal jadwal
+                Note over Command: overdue → critical<br/>critical → high<br/>warning → medium
+                Command->>DB: Buat jadwal preventive (status pending)
+                DB-->>Command: Jadwal tersimpan
             end
         end
     end
 
-    Command-->>Scheduler: Return summary created/skipped
+    Command-->>Scheduler: Ringkasan jadwal dibuat / dilewati
 ```
 
 ## 2. Buat Jadwal Preventive Manual

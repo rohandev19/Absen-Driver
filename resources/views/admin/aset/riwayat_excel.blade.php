@@ -15,7 +15,7 @@
         </tr>
         <tr>
             <td colspan="6" style="text-align: center;">
-                PT Hamada Logistik
+                PT Hamada Global Jaya
             </td>
         </tr>
         <tr>

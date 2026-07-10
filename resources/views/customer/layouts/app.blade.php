@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Portal monitoring armada pelanggan PT Hamada Logistik Internasional. Transparansi penuh atas keandalan dan kesehatan unit kendaraan sewa.">
+    <meta name="description" content="Portal monitoring armada pelanggan PT Hamada Global Jaya. Transparansi penuh atas keandalan dan kesehatan unit kendaraan sewa.">
 
-    <title>@yield('title', 'Portal Customer') - {{ Auth::user()->customer->name ?? 'Hamada Logistik' }}</title>
+    <title>@yield('title', 'Portal Customer') - {{ Auth::user()->customer->name ?? 'Hamada Global Jaya' }}</title>
 
     <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -937,11 +937,11 @@
             {{-- Logo & Brand --}}
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <img src="{{ asset('images/hamada-logo.png') }}" alt="Hamada Logistik">
+                    <img src="{{ asset('images/hamada-logo.png') }}" alt="Hamada Global Jaya">
                     <div class="sidebar-brand">
                         <div class="sidebar-brand-name">
                             <span class="brand-h">H</span><span class="brand-rest">amada</span>
-                            <span class="brand-rest">Logistik</span>
+                            <span class="brand-rest">Global Jaya</span>
                         </div>
                         <div class="sidebar-brand-tagline">Transport & Logistics</div>
                     </div>
@@ -1023,7 +1023,7 @@
                     </button>
                 </form>
                 <div class="sidebar-version">
-                    &copy; {{ date('Y') }} Hamada Logistik
+                    &copy; {{ date('Y') }} Hamada Global Jaya
                 </div>
             </div>
         </nav>

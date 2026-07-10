@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>PT Hamada Logistik</h1>
+        <h1>PT Hamada Global Jaya</h1>
         <p>Jl. Contoh Alamat No. 123, Kota, Indonesia | Telp: (021) 1234567</p>
     </div>
 
@@ -79,7 +79,7 @@
     <table class="signatures">
         <tr>
             <td>
-                <strong>PIHAK PERTAMA</strong><br>PT Hamada Logistik
+                <strong>PIHAK PERTAMA</strong><br>PT Hamada Global Jaya
                 <div class="sign-box">
                     @if($report->admin_signature_path && file_exists(storage_path('app/public/' . $report->admin_signature_path)))
                         <img src="{{ storage_path('app/public/' . $report->admin_signature_path) }}" class="sign-img">

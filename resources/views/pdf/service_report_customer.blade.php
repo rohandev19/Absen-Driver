@@ -20,7 +20,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>PT HAMADA LOGISTIK</h1>
+        <h1>PT HAMADA GLOBAL JAYA</h1>
         <p>Laporan Service Kendaraan (Customer)</p>
     </div>
 

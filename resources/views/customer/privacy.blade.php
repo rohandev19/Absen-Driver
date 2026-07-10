@@ -251,7 +251,7 @@
                     <div class="p-3 rounded-3" style="background: #fef2f2; border-left: 4px solid #dc2626;">
                         <div class="d-flex align-items-start">
                             <i class="bi bi-x-circle-fill text-danger me-2 mt-1"></i>
-                            <p class="text-secondary mb-0" style="line-height: 1.8;" data-en="We do <strong class='text-danger'>NOT</strong> sell, trade, or share your personal data with any third parties. Your data is only used for the internal service needs of PT Hamada Logistik." data-id="Kami <strong class='text-danger'>TIDAK</strong> menjual, memperdagangkan, atau membagikan data pribadi Anda kepada pihak ketiga mana pun. Data Anda hanya digunakan untuk keperluan layanan internal PT Hamada Logistik.">We do <strong class="text-danger">NOT</strong> sell, trade, or share your personal data with any third parties. Your data is only used for the internal service needs of PT Hamada Logistik.</p>
+                            <p class="text-secondary mb-0" style="line-height: 1.8;" data-en="We do <strong class='text-danger'>NOT</strong> sell, trade, or share your personal data with any third parties. Your data is only used for the internal service needs of PT Hamada Global Jaya." data-id="Kami <strong class='text-danger'>TIDAK</strong> menjual, memperdagangkan, atau membagikan data pribadi Anda kepada pihak ketiga mana pun. Data Anda hanya digunakan untuk keperluan layanan internal PT Hamada Global Jaya.">We do <strong class="text-danger">NOT</strong> sell, trade, or share your personal data with any third parties. Your data is only used for the internal service needs of PT Hamada Global Jaya.</p>
                         </div>
                     </div>
                 </div>

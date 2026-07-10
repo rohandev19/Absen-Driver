@@ -11,7 +11,7 @@ $token = config('services.wa.gateway_token', env('WA_GATEWAY_TOKEN'));
 $gatewayUrl = config('services.wa.gateway_url', env('WA_GATEWAY_URL'));
 
 $customerPhone = '6285817535645';
-$message = "Halo! Ini adalah pesan uji coba (Test Local) perbaikan notifikasi WhatsApp Gateway PT Hamada Logistik. Jika Anda menerima pesan ini, berarti perbaikan telah berhasil.\n\nTerima kasih!";
+$message = "Halo! Ini adalah pesan uji coba (Test Local) perbaikan notifikasi WhatsApp Gateway PT Hamada Global Jaya. Jika Anda menerima pesan ini, berarti perbaikan telah berhasil.\n\nTerima kasih!";
 
 echo "Mengirim WA ke: $customerPhone\n";
 echo "Token: " . substr($token, 0, 5) . "...\n";

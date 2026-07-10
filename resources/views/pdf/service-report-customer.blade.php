@@ -44,7 +44,7 @@
 <table class="header">
     <tr>
         <td style="width: 56%;">
-            <div class="company">PT Hamada Logistik</div>
+            <div class="company">PT Hamada Global Jaya</div>
             <div class="subtitle">Dokumen persetujuan laporan service kendaraan</div>
         </td>
         <td class="right" style="width: 44%;">

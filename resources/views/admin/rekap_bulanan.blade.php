@@ -131,7 +131,7 @@
     <div class="container-fluid p-0">
         {{-- PRINT HEADER --}}
         <div class="d-none d-print-block text-center mb-4">
-            <h2 class="fw-bold mb-1" style="color: #000; font-size: 24px; text-transform: uppercase;">PT HAMADA LOGISTIK</h2>
+            <h2 class="fw-bold mb-1" style="color: #000; font-size: 24px; text-transform: uppercase;">PT HAMADA GLOBAL JAYA</h2>
             <p class="mb-0" style="font-size: 14px; color: #000; border-bottom: 2px solid #000; padding-bottom: 10px;">Laporan Rekap Bulanan - Periode: {{ \Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }}</p>
         </div>
 

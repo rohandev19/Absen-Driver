@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>ERD Preventive Maintenance</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@page{size:A4 portrait;margin:0}
+html,body{background:#f2f2f2;font-family:"Segoe UI",Arial,sans-serif}
+body{min-height:100vh;padding:18px}
+#c{display:block;margin:0 auto;background:#fff;width:min(100%,794px);height:auto;box-shadow:0 2px 18px rgba(0,0,0,.18)}
+@media print{
+  html,body{background:#fff;padding:0;width:210mm;height:297mm}
+  #c{width:210mm;height:297mm;box-shadow:none;page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<canvas id="c" width="1240" height="1754"></canvas>
+<script>
+const W=1240,H=1754,c=document.getElementById('c'),g=c.getContext('2d');
+const LINE=1.35;
+g.fillStyle='#fff';g.fillRect(0,0,W,H);
+
+function tw(s,f){return String(s).length*f*0.54}
+function ellipse(cx,cy,rx,ry){g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,Math.PI*2)}
+function diamond(cx,cy,hw,hh){g.beginPath();g.moveTo(cx,cy-hh);g.lineTo(cx+hw,cy);g.lineTo(cx,cy+hh);g.lineTo(cx-hw,cy);g.closePath()}
+function entitySize(e){return {w:Math.max(tw(e.l,13)+42,145),h:32}}
+
+g.strokeStyle='#000';
+g.lineWidth=LINE;
+g.strokeRect(32,32,W-64,H-64);
+g.strokeRect(58,92,W-116,H-162);
+
+g.fillStyle='#000';
+g.font='bold 21px "Segoe UI",Arial,sans-serif';
+g.textAlign='center';
+g.textBaseline='middle';
+g.fillText('ERD Preventive Maintenance Kendaraan',W/2,52);
+g.font='11px "Segoe UI",Arial,sans-serif';
+g.fillText('Fokus modul maintenance: jadwal, alert, komponen, dan riwayat service',W/2,74);
+
+const E=[
+{id:'users',l:'users',x:205,y:885,side:'left',gap:95,step:21,pk:['id'],fk:[],a:['name','email','role']},
+{id:'vehicles',l:'vehicles',x:620,y:245,side:'both',gap:150,step:21,pk:['id'],fk:[],a:['plate_number','type','status','current_km','service_interval_km','last_service_km']},
+{id:'vehicle_components',l:'vehicle_components',x:990,y:520,side:'right',gap:112,step:20,pk:['id'],fk:['vehicle_id'],a:['component_name','category','replacement_interval_km','last_replacement_km','next_replacement_km','status','notes']},
+{id:'maintenance_schedules',l:'maintenance_schedules',x:620,y:810,side:'both',gap:150,step:20,pk:['id'],fk:['vehicle_id','component_id','completed_by'],a:['scheduled_date','scheduled_km','type','priority','status','estimated_cost','actual_cost','completed_at']},
+{id:'maintenance_alerts',l:'maintenance_alerts',x:990,y:1110,side:'right',gap:112,step:20,pk:['id'],fk:['vehicle_id','component_id','acknowledged_by'],a:['alert_type','message','triggered_at','acknowledged_at','resolved_at','status']},
+{id:'maintenance_logs',l:'maintenance_logs',x:620,y:1370,side:'both',gap:150,step:21,pk:['id'],fk:['vehicle_id','recorded_by_user_id'],a:['service_date','km_at_service','description','workshop_name']}
+];
+
+const R=[
+{f:'vehicles',t:'vehicle_components',l:'memiliki',c1:'1',c2:'N',d:[790,385],p1:[[692,250],[790,250],[790,368]],p2:[[790,402],[790,520],[914,520]]},
+{f:'vehicles',t:'maintenance_schedules',l:'dijadwalkan',c1:'1',c2:'N',d:[620,525],p1:[[620,261],[620,508]],p2:[[620,542],[620,794]]},
+{f:'vehicle_components',t:'maintenance_schedules',l:'untuk',c1:'1',c2:'N',d:[835,665],p1:[[914,520],[835,548],[835,648]],p2:[[835,682],[835,810],[715,810]]},
+{f:'vehicles',t:'maintenance_alerts',l:'memicu',c1:'1',c2:'N',d:[835,890],p1:[[694,260],[760,260],[760,890],[800,890]],p2:[[870,890],[925,890],[925,1110]]},
+{f:'vehicle_components',t:'maintenance_alerts',l:'menghasilkan',c1:'1',c2:'N',d:[990,805],p1:[[990,536],[990,788]],p2:[[990,822],[990,1094]]},
+{f:'maintenance_schedules',t:'maintenance_logs',l:'menjadi_log',c1:'1',c2:'N',d:[620,1095],p1:[[620,826],[620,1078]],p2:[[620,1112],[620,1354]]},
+{f:'vehicles',t:'maintenance_logs',l:'dicatat',c1:'1',c2:'N',d:[385,1180],p1:[[548,250],[385,250],[385,1163]],p2:[[385,1197],[385,1378],[543,1378]]},
+{f:'users',t:'maintenance_schedules',l:'menyelesaikan',c1:'1',c2:'N',d:[390,760],p1:[[278,885],[390,885],[390,777]],p2:[[390,743],[525,743],[525,810]]},
+{f:'users',t:'maintenance_alerts',l:'menanggapi',c1:'1',c2:'N',d:[390,1040],p1:[[278,900],[390,900],[390,1023]],p2:[[390,1057],[906,1057],[906,1110]]},
+{f:'users',t:'maintenance_logs',l:'mencatat',c1:'1',c2:'N',d:[390,1320],p1:[[278,895],[320,895],[320,1320],[355,1320]],p2:[[425,1320],[500,1320],[500,1362],[543,1362]]}
+];
+
+function ge(id){return E.find(e=>e.id===id)}
+function drawPath(points){
+    g.beginPath();
+    g.moveTo(points[0][0],points[0][1]);
+    for(let i=1;i<points.length;i++)g.lineTo(points[i][0],points[i][1]);
+    g.stroke();
+}
+function cardAt(points,value,forward=true){
+    const a=points[0],b=points[1]||points[0];
+    const x=forward?a[0]+(b[0]-a[0])*.18:a[0]-(b[0]-a[0])*.18;
+    const y=forward?a[1]+(b[1]-a[1])*.18:a[1]-(b[1]-a[1])*.18;
+    g.fillStyle='#000';
+    g.font='bold 10px "Segoe UI",Arial,sans-serif';
+    g.textAlign='center';
+    g.textBaseline='middle';
+    g.fillText(value,x,y-8);
+}
+function attrList(e){
+    const out=[];
+    e.pk.forEach(n=>out.push({n,t:'pk'}));
+    e.fk.forEach(n=>out.push({n,t:'fk'}));
+    e.a.forEach(n=>out.push({n,t:'n'}));
+    return out;
+}
+function stackAttrs(e,items,x){
+    const step=e.step||20,start=e.y-(items.length-1)*step/2;
+    return items.map((a,i)=>({...a,x,y:start+i*step,ex:e.x,ey:e.y}));
+}
+function attrPositions(e){
+    const all=attrList(e),gap=e.gap||120;
+    if(e.side==='left')return stackAttrs(e,all,e.x-gap);
+    if(e.side==='right')return stackAttrs(e,all,e.x+gap);
+    const half=Math.ceil(all.length/2);
+    return stackAttrs(e,all.slice(0,half),e.x-gap).concat(stackAttrs(e,all.slice(half),e.x+gap));
+}
+
+// Relationship lines first.
+g.strokeStyle='#000';
+g.lineWidth=LINE;
+R.forEach(r=>{
+    drawPath(r.p1);
+    drawPath(r.p2);
+});
+
+// Relationship diamonds.
+R.forEach(r=>{
+    const hw=Math.max(tw(r.l,10)+34,62)/2,hh=19;
+    g.fillStyle='#fff';
+    g.strokeStyle='#000';
+    g.lineWidth=LINE;
+    diamond(r.d[0],r.d[1],hw,hh);
+    g.fill();g.stroke();
+    g.fillStyle='#000';
+    g.font='bold 10px "Segoe UI",Arial,sans-serif';
+    g.textAlign='center';
+    g.textBaseline='middle';
+    g.fillText(r.l,r.d[0],r.d[1]);
+    cardAt(r.p1,r.c1,true);
+    cardAt(r.p2,r.c2,true);
+});
+
+// Attribute connector lines.
+g.strokeStyle='#000';
+g.lineWidth=LINE;
+E.forEach(e=>attrPositions(e).forEach(a=>{
+    g.beginPath();
+    g.moveTo(a.x,a.y);
+    g.lineTo(a.ex,a.ey);
+    g.stroke();
+}));
+
+// Attribute ellipses.
+E.forEach(e=>attrPositions(e).forEach(a=>{
+    const aw=Math.max(tw(a.n,8.8)+16,48),ah=16;
+    g.fillStyle='#fff';
+    g.strokeStyle='#000';
+    g.lineWidth=LINE;
+    ellipse(a.x,a.y,aw/2,ah/2);
+    g.fill();g.stroke();
+    g.fillStyle='#000';
+    g.font=a.t==='pk'?'bold 8.8px "Segoe UI",Arial,sans-serif':a.t==='fk'?'italic 8.8px "Segoe UI",Arial,sans-serif':'8.8px "Segoe UI",Arial,sans-serif';
+    g.textAlign='center';
+    g.textBaseline='middle';
+    g.fillText(a.n,a.x,a.y);
+    if(a.t==='pk'){
+        const w=g.measureText(a.n).width;
+        g.beginPath();
+        g.moveTo(a.x-w/2,a.y+5);
+        g.lineTo(a.x+w/2,a.y+5);
+        g.stroke();
+    }
+}));
+
+// Entity boxes.
+E.forEach(e=>{
+    const s=entitySize(e);
+    g.fillStyle='#fff';
+    g.strokeStyle='#000';
+    g.lineWidth=LINE;
+    g.fillRect(e.x-s.w/2,e.y-s.h/2,s.w,s.h);
+    g.strokeRect(e.x-s.w/2,e.y-s.h/2,s.w,s.h);
+    g.fillStyle='#000';
+    g.font='bold 13px "Segoe UI",Arial,sans-serif';
+    g.textAlign='center';
+    g.textBaseline='middle';
+    g.fillText(e.l,e.x,e.y);
+});
+
+document.title='READY - ERD Preventive Maintenance';
+</script>
+</body>
+</html>

@@ -203,6 +203,8 @@ class TransportCostTest extends TestCase
             'vehicle_id' => $vehicle->id,
             'speedo_awal' => 50000,
             'speedo_akhir' => 50150, // 150 KM
+            'time_in' => Carbon::today()->setHour(8),
+            'time_out' => Carbon::today()->setHour(17),
         ]);
 
         $response = $this->actingAs($driver, 'sanctum')
@@ -237,6 +239,8 @@ class TransportCostTest extends TestCase
             'vehicle_id' => $vehicle->id,
             'speedo_awal' => 50000,
             'speedo_akhir' => 50150,
+            'time_in' => Carbon::today()->setHour(8),
+            'time_out' => Carbon::today()->setHour(20),
         ]);
 
         $response = $this->actingAs($driver, 'sanctum')

@@ -84,7 +84,7 @@ class WhatsAppNotificationService
         $message = "📋 PERSETUJUAN SERVICE KENDARAAN\n";
         $message .= "─────────────────────────\n";
         $message .= "Yth. {$contactPerson},\n\n";
-        $message .= "PT Hamada Logistik telah menyelesaikan\n";
+        $message .= "PT Hamada Global Jaya telah menyelesaikan\n";
         $message .= "service untuk unit {$plateNumber}.\n";
         $message .= "Mohon kesediaan Bapak/Ibu untuk\n";
         $message .= "meninjau dan menyetujui:\n\n";

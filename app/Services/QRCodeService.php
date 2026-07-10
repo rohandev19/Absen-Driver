@@ -15,7 +15,7 @@ use Carbon\Carbon;
 class QRCodeService
 {
     const SIZE = 300;
-    const ERROR_CORRECTION = 'H';
+    const ERROR_CORRECTION = 'L';
     const EXPIRY_YEARS = 1;
 
     /**
@@ -53,11 +53,11 @@ class QRCodeService
     {
         try {
             $identifier = "DRV-{$driver->driver_id_nik}";
-            $payload = $this->createDriverPayload($driver);
-            $encryptedData = Crypt::encryptString(json_encode($payload));
+            $timestamp = now()->timestamp;
+            $signature = substr(hash_hmac('sha256', "{$identifier}|{$timestamp}", config('app.key')), 0, 16);
             $path = "qrcodes/drivers/{$driver->id}.svg";
 
-            $qrString = "{$identifier}|{$encryptedData}";
+            $qrString = "{$identifier}|{$timestamp}|{$signature}";
             $this->generateAndSaveQRImage($qrString, $path);
 
             $driver->qr_code_identifier = $identifier;
@@ -78,11 +78,11 @@ class QRCodeService
     {
         try {
             $identifier = "CAR-{$vehicle->plate_number}";
-            $payload = $this->createVehiclePayload($vehicle);
-            $encryptedData = Crypt::encryptString(json_encode($payload));
+            $timestamp = now()->timestamp;
+            $signature = substr(hash_hmac('sha256', "{$identifier}|{$timestamp}", config('app.key')), 0, 16);
             $path = "qrcodes/vehicles/{$vehicle->id}.svg";
 
-            $qrString = "{$identifier}|{$encryptedData}";
+            $qrString = "{$identifier}|{$timestamp}|{$signature}";
             $this->generateAndSaveQRImage($qrString, $path);
 
             $vehicle->qr_code_identifier = $identifier;
@@ -128,8 +128,31 @@ class QRCodeService
     /**
      * Decrypt and validate the payload
      */
-    public function decryptAndValidatePayload(string $encryptedData): array
+    public function decryptAndValidatePayload(string $encryptedData, string $identifier = ''): array
     {
+        // Support new lightweight HMAC format: timestamp|signature
+        if (str_contains($encryptedData, '|')) {
+            $parts = explode('|', $encryptedData);
+            if (count($parts) === 2) {
+                $timestamp = $parts[0];
+                $signature = $parts[1];
+                
+                $expectedSignature = substr(hash_hmac('sha256', "{$identifier}|{$timestamp}", config('app.key')), 0, 16);
+                
+                if (!hash_equals($expectedSignature, $signature)) {
+                    throw new InvalidQRCodeException("QR code tidak valid atau telah dimodifikasi", 400);
+                }
+                
+                $generatedAt = Carbon::createFromTimestamp($timestamp);
+                if ($generatedAt->diffInYears(now()) >= self::EXPIRY_YEARS) {
+                    throw new InvalidQRCodeException("QR code sudah kadaluarsa, silakan generate ulang", 400);
+                }
+                
+                return ['timestamp' => $timestamp];
+            }
+        }
+
+        // Fallback to old format
         try {
             $decrypted = Crypt::decryptString($encryptedData);
             $payload = json_decode($decrypted, true);
@@ -155,7 +178,7 @@ class QRCodeService
     public function verifyDriverQRCode(string $identifier, string $encryptedData): array
     {
         $this->validateQRFormat($identifier, 'DRV-');
-        $payload = $this->decryptAndValidatePayload($encryptedData);
+        $payload = $this->decryptAndValidatePayload($encryptedData, $identifier);
 
         $driver = Driver::with('project')->where('qr_code_identifier', $identifier)->first();
         if (!$driver) {
@@ -177,7 +200,7 @@ class QRCodeService
     public function verifyVehicleQRCode(string $identifier, string $encryptedData): array
     {
         $this->validateQRFormat($identifier, 'CAR-');
-        $payload = $this->decryptAndValidatePayload($encryptedData);
+        $payload = $this->decryptAndValidatePayload($encryptedData, $identifier);
 
         $vehicle = Vehicle::with('project')->where('qr_code_identifier', $identifier)->first();
         if (!$vehicle) {

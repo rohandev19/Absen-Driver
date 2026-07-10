@@ -2,97 +2,153 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>ERD BW - Structured Chen</title>
+<title>ERD A4 Portrait - Sistem Absensi Driver</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#fff;font-family:"Segoe UI",Arial,sans-serif}
-#c{display:block;background:#fff}
+@page{size:A4 portrait;margin:0}
+html,body{background:#f2f2f2;font-family:"Segoe UI",Arial,sans-serif}
+body{min-height:100vh;padding:18px}
+#c{display:block;margin:0 auto;background:#fff;width:min(100%,794px);height:auto;box-shadow:0 2px 18px rgba(0,0,0,.18)}
+@media print{
+  html,body{background:#fff;padding:0;width:210mm;height:297mm}
+  #c{width:210mm;height:297mm;box-shadow:none;page-break-inside:avoid}
+}
 </style>
 </head>
 <body>
-<canvas id="c" width="3400" height="2350" style="width:3400px;height:2350px;"></canvas>
+<canvas id="c" width="1240" height="1754"></canvas>
 <script>
-const W=3400,H=2350,c=document.getElementById('c'),g=c.getContext('2d');
+const W=1240,H=1754,c=document.getElementById('c'),g=c.getContext('2d');
 g.fillStyle='#fff';g.fillRect(0,0,W,H);
 
-function tw(s,f){return String(s).length*f*0.55}
+function tw(s,f){return String(s).length*f*0.54}
 function ellipse(cx,cy,rx,ry){g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,Math.PI*2)}
 function diamond(cx,cy,hw,hh){g.beginPath();g.moveTo(cx,cy-hh);g.lineTo(cx+hw,cy);g.lineTo(cx,cy+hh);g.lineTo(cx-hw,cy);g.closePath()}
-function entitySize(e){return {w:Math.max(tw(e.l,14)+46,145),h:34}}
+function entitySize(e){return {w:Math.max(tw(e.l,11)+32,92),h:25}}
+const LINE=1.35;
+const REL_FONT='bold 9px "Segoe UI",Arial,sans-serif';
+const REL_SIZE=9.2;
+const REL_PAD=36;
+const REL_MIN=70;
+const REL_DH=17;
+
+g.strokeStyle='#000';
+g.lineWidth=LINE;
+g.strokeRect(28,28,W-56,H-56);
+g.strokeStyle='#bdbdbd';
+g.lineWidth=LINE;
+g.strokeRect(52,88,W-104,H-136);
 
 g.fillStyle='#000';
-g.font='bold 30px "Segoe UI",Arial,sans-serif';
+g.font='bold 18px "Segoe UI",Arial,sans-serif';
 g.textAlign='center';
 g.textBaseline='middle';
-g.fillText('ERD - Sistem Absensi & Manajemen Armada Driver (Notasi Chen)',W/2,42);
-g.font='16px "Segoe UI",Arial,sans-serif';
+g.fillText('ERD Sistem Absensi dan Manajemen Armada Driver',W/2,49);
+g.font='10px "Segoe UI",Arial,sans-serif';
 g.fillStyle='#333';
-g.fillText('16 Entitas - 30 Relasi - Layout garis terstruktur',W/2,75);
+g.fillText('Notasi Chen - Layout Potret A4 - 16 Entitas, 32 Relasi',W/2,69);
 
 const E=[
-{id:'users',l:'users',x:360,y:300,pk:['id'],fk:['customer_id'],a:['name','email','password','role']},
-{id:'customers',l:'customers',x:360,y:760,pk:['id'],fk:[],a:['name','code','contact_person','email','phone','address']},
-{id:'projects',l:'projects',x:820,y:760,pk:['id'],fk:['customer_id'],a:['name','code','description']},
-{id:'drivers',l:'drivers',x:820,y:300,pk:['id'],fk:['project_id'],a:['driver_id_nik','full_name','nik_ktp','sim_expiry_date','sim_type','password','foto_sim','foto_ktp','profile_photo','fcm_token','is_on_duty']},
-{id:'vehicles',l:'vehicles',x:1320,y:300,pk:['id'],fk:['project_id'],a:['plate_number','type','tahun_pembuatan','status','current_km','service_interval_km','last_service_km','pajak_stnk_berlaku_sampai','kir_berlaku_sampai','is_temporary','verification_status','qr_code_path']},
-{id:'attendances',l:'attendances',x:1320,y:760,pk:['id'],fk:['driver_id','vehicle_id'],a:['time_in','time_out','gps_location_in','speedo_awal','speedo_akhir','selfie_photo_path','check_ban','check_lampu','check_rem','catatan','is_offline_recovery']},
-{id:'transport_costs',l:'transport_costs',x:820,y:1250,pk:['id'],fk:['driver_id','vehicle_id','project_id','attendance_id','approved_by','created_by'],a:['trip_date','do_number','odometer_start','odometer_end','gasoline_cost','toll_cost','parking_cost','approval_status','overtime_hours']},
-{id:'offline_recovery_logs',l:'offline_recovery_logs',x:1320,y:1660,pk:['id'],fk:['driver_id','attendance_id'],a:['offline_entry_id','device_timestamp','recovery_timestamp','delay_minutes','result','error_code','retry_count']},
-{id:'audit_histories',l:'audit_histories',x:360,y:1660,pk:['id'],fk:[],a:['report_id','type','status','total_findings','critical_count','high_count','medium_count','low_count','execution_time_seconds','triggered_by']},
-{id:'emergency_reports',l:'emergency_reports',x:1840,y:520,pk:['id'],fk:['driver_id','vehicle_id','service_report_id','processed_by'],a:['timestamp','gps_location','description','proof_photo_path','follow_up_status']},
-{id:'service_reports',l:'service_reports',x:1840,y:1030,pk:['id'],fk:['driver_id','vehicle_id','customer_id','approved_by_admin_id','approved_by_customer_id'],a:['timestamp','gps_location','description','status','service_type','workshop_name','total_cost','admin_notes','ticket_number']},
-{id:'maintenance_logs',l:'maintenance_logs',x:1600,y:1430,pk:['id'],fk:['vehicle_id','recorded_by_user_id'],a:['service_date','km_at_service','description','workshop_name']},
-{id:'vehicle_replacements',l:'vehicle_replacements',x:2240,y:1660,pk:['id'],fk:['original_vehicle_id','replacement_vehicle_id','driver_id','service_report_id','created_by'],a:['start_at','end_at','reason','status','notes']},
-{id:'vehicle_components',l:'vehicle_components',x:2260,y:300,pk:['id'],fk:['vehicle_id'],a:['component_name','category','replacement_interval_km','replacement_interval_days','last_replacement_km','next_replacement_km','cost_per_replacement','warning_threshold_km','status','notes']},
-{id:'maintenance_schedules',l:'maintenance_schedules',x:2880,y:720,pk:['id'],fk:['vehicle_id','component_id','completed_by'],a:['scheduled_date','scheduled_km','type','priority','status','estimated_cost','actual_cost','workshop_name','notes','completed_at']},
-{id:'maintenance_alerts',l:'maintenance_alerts',x:2880,y:1220,pk:['id'],fk:['vehicle_id','component_id','acknowledged_by'],a:['alert_type','message','triggered_at','acknowledged_at','resolved_at','status']}
+{id:'users',l:'users',x:165,y:240,side:'left',gap:92,step:15,pk:['id'],fk:['customer_id'],a:['name','email','password','role']},
+{id:'drivers',l:'drivers',x:470,y:240,side:'both',gap:105,step:15,pk:['id'],fk:['project_id'],a:['driver_id_nik','full_name','nik_ktp','sim_expiry_date','sim_type','password','foto_sim','foto_ktp','profile_photo','fcm_token','is_on_duty']},
+{id:'vehicles',l:'vehicles',x:800,y:240,side:'both',gap:108,step:15,pk:['id'],fk:['project_id','customer_id'],a:['plate_number','type','tahun_pembuatan','status','current_km','service_interval_km','last_service_km','pajak_stnk_berlaku_sampai','kir_berlaku_sampai','is_temporary','verification_status','qr_code_path']},
+
+{id:'customers',l:'customers',x:165,y:515,side:'left',gap:92,step:15,pk:['id'],fk:[],a:['name','code','contact_person','email','phone','address']},
+{id:'projects',l:'projects',x:470,y:515,side:'right',gap:108,step:16,pk:['id'],fk:['customer_id'],a:['name','code','description']},
+{id:'attendances',l:'attendances',x:800,y:650,side:'both',gap:108,step:15,pk:['id'],fk:['driver_id','vehicle_id'],a:['time_in','time_out','gps_location_in','speedo_awal','speedo_akhir','selfie_photo_path','check_ban','check_lampu','check_rem','catatan','is_offline_recovery']},
+{id:'emergency_reports',l:'emergency_reports',x:1085,y:650,side:'right',gap:78,step:15,pk:['id'],fk:['driver_id','vehicle_id','service_report_id','processed_by'],a:['timestamp','gps_location','description','proof_photo_path','follow_up_status']},
+
+{id:'transport_costs',l:'transport_costs',x:470,y:920,side:'left',gap:106,step:14,pk:['id'],fk:['driver_id','vehicle_id','project_id','attendance_id','approved_by','created_by'],a:['trip_date','do_number','odometer_start','odometer_end','gasoline_cost','toll_cost','parking_cost','approval_status','overtime_hours']},
+{id:'service_reports',l:'service_reports',x:800,y:920,side:'right',gap:106,step:14,pk:['id'],fk:['driver_id','vehicle_id','customer_id','approved_by_admin_id','approved_by_customer_id'],a:['timestamp','gps_location','description','status','service_type','workshop_name','total_cost','admin_notes','ticket_number']},
+{id:'vehicle_replacements',l:'vehicle_replacements',x:1085,y:1090,side:'right',gap:78,step:15,pk:['id'],fk:['original_vehicle_id','replacement_vehicle_id','driver_id','service_report_id','created_by'],a:['start_at','end_at','reason','status','notes']},
+{id:'audit_histories',l:'audit_histories',x:165,y:1180,side:'left',gap:92,step:14,pk:['id'],fk:[],a:['report_id','type','status','total_findings','critical_count','high_count','medium_count','low_count','execution_time_seconds','triggered_by']},
+{id:'offline_recovery_logs',l:'offline_recovery_logs',x:470,y:1180,side:'right',gap:108,step:15,pk:['id'],fk:['driver_id','attendance_id'],a:['offline_entry_id','device_timestamp','recovery_timestamp','delay_minutes','result','error_code','retry_count']},
+
+{id:'maintenance_logs',l:'maintenance_logs',x:470,y:1340,side:'right',gap:120,step:15,pk:['id'],fk:['vehicle_id','recorded_by_user_id'],a:['service_date','km_at_service','description','workshop_name']},
+{id:'vehicle_components',l:'vehicle_components',x:800,y:1340,side:'right',gap:106,step:14,pk:['id'],fk:['vehicle_id'],a:['component_name','category','replacement_interval_km','replacement_interval_days','last_replacement_km','next_replacement_km','cost_per_replacement','warning_threshold_km','status','notes']},
+{id:'maintenance_schedules',l:'maintenance_schedules',x:470,y:1575,side:'left',gap:120,step:14,pk:['id'],fk:['vehicle_id','component_id','completed_by'],a:['scheduled_date','scheduled_km','type','priority','status','estimated_cost','actual_cost','workshop_name','notes','completed_at']},
+{id:'maintenance_alerts',l:'maintenance_alerts',x:800,y:1575,side:'right',gap:106,step:15,pk:['id'],fk:['vehicle_id','component_id','acknowledged_by'],a:['alert_type','message','triggered_at','acknowledged_at','resolved_at','status']}
 ];
 
 const R=[
-{f:'customers',t:'users',l:'memiliki',c1:'1',c2:'N',d:[360,530],a:'vh',b:'vh'},
-{f:'customers',t:'projects',l:'memiliki',c1:'1',c2:'N',d:[590,760],a:'hv',b:'hv'},
-{f:'customers',t:'service_reports',l:'menerima',c1:'1',c2:'N',d:[1060,990],a:'hv',b:'hv'},
-{f:'projects',t:'drivers',l:'menaungi',c1:'1',c2:'N',d:[820,530],a:'vh',b:'vh'},
-{f:'projects',t:'vehicles',l:'menggunakan',c1:'1',c2:'N',d:[1070,760],a:'hv',b:'vh'},
-{f:'drivers',t:'attendances',l:'melakukan',c1:'1',c2:'N',d:[1070,530],a:'vh',b:'vh'},
-{f:'vehicles',t:'attendances',l:'digunakan',c1:'1',c2:'N',d:[1320,530],a:'vh',b:'vh'},
-{f:'drivers',t:'emergency_reports',l:'melaporkan',c1:'1',c2:'N',d:[1450,430],a:'vh',b:'hv'},
-{f:'vehicles',t:'emergency_reports',l:'terkait',c1:'1',c2:'N',d:[1600,430],a:'vh',b:'hv'},
-{f:'drivers',t:'service_reports',l:'mengajukan',c1:'1',c2:'N',d:[1450,940],a:'vh',b:'hv'},
-{f:'vehicles',t:'service_reports',l:'diservis',c1:'1',c2:'N',d:[1600,900],a:'vh',b:'hv'},
-{f:'vehicles',t:'maintenance_logs',l:'dicatat',c1:'1',c2:'N',d:[1440,1060],a:'vh',b:'vh'},
-{f:'users',t:'maintenance_logs',l:'mencatat',c1:'1',c2:'N',d:[1040,1428],a:'hvx',b:'hv'},
-{f:'vehicles',t:'vehicle_components',l:'memiliki',c1:'1',c2:'N',d:[1790,300],a:'hv',b:'hv'},
-{f:'vehicles',t:'maintenance_schedules',l:'dijadwalkan',c1:'1',c2:'N',d:[1940,700],a:'vh',b:'hv'},
-{f:'vehicle_components',t:'maintenance_schedules',l:'untuk',c1:'1',c2:'N',d:[2570,505],a:'vh',b:'hv'},
-{f:'vehicles',t:'maintenance_alerts',l:'memicu',c1:'1',c2:'N',d:[1940,1160],a:'vh',b:'hv'},
-{f:'vehicle_components',t:'maintenance_alerts',l:'menghasilkan',c1:'1',c2:'N',d:[2570,910],a:'vh',b:'hv'},
-{f:'users',t:'maintenance_alerts',l:'mengakui',c1:'1',c2:'N',d:[2360,1220],a:'hvy',b:'hv'},
-{f:'users',t:'maintenance_schedules',l:'menyelesaikan',c1:'1',c2:'N',d:[2360,720],a:'hvy',b:'hv'},
-{f:'attendances',t:'transport_costs',l:'menghasilkan',c1:'1',c2:'1',d:[1070,1010],a:'vh',b:'hv'},
-{f:'drivers',t:'transport_costs',l:'memiliki_biaya',c1:'1',c2:'N',d:[680,980],a:'vh',b:'vh'},
-{f:'vehicles',t:'transport_costs',l:'dipakai',c1:'1',c2:'N',d:[1130,1180],a:'vh',b:'hv'},
-{f:'projects',t:'transport_costs',l:'membiayai',c1:'1',c2:'N',d:[820,1005],a:'vh',b:'vh'},
-{f:'users',t:'service_reports',l:'menyetujui',c1:'1',c2:'N',d:[1060,1110],a:'hvy',b:'hv'},
-{f:'emergency_reports',t:'service_reports',l:'ditindaklanjuti',c1:'N',c2:'1',d:[1840,775],a:'vh',b:'vh'},
-{f:'service_reports',t:'vehicle_replacements',l:'memerlukan',c1:'1',c2:'N',d:[2040,1345],a:'vh',b:'hv'},
-{f:'drivers',t:'vehicle_replacements',l:'menerima',c1:'1',c2:'N',d:[1510,1660],a:'hvy',b:'hv'},
-{f:'attendances',t:'offline_recovery_logs',l:'memiliki_log',c1:'1',c2:'1',d:[1320,1205],a:'vh',b:'vh'},
-{f:'drivers',t:'offline_recovery_logs',l:'recovery',c1:'1',c2:'N',d:[1030,1660],a:'hvy',b:'hv'}
+{f:'customers',t:'users',l:'memiliki',c1:'1',c2:'N',d:[165,378],a:'vh',b:'vh'},
+{f:'users',t:'audit_histories',l:'memicu_audit',c1:'1',c2:'N',d:[260,1110],a:'vhhL',b:'hv'},
+{f:'customers',t:'projects',l:'memiliki',c1:'1',c2:'N',d:[318,515],a:'hv',b:'hv'},
+{f:'customers',t:'vehicles',l:'memiliki',c1:'1',c2:'N',d:[350,440],a:'hv',b:'hv'},
+{f:'customers',t:'service_reports',l:'menerima',c1:'1',c2:'N',d:[590,720],a:'hvh',b:'vh'},
+{f:'projects',t:'drivers',l:'menaungi',c1:'1',c2:'N',d:[470,378],a:'vh',b:'vh'},
+{f:'projects',t:'vehicles',l:'menggunakan',c1:'1',c2:'N',d:[635,515],a:'hv',b:'vh'},
+{f:'drivers',t:'attendances',l:'melakukan',c1:'1',c2:'N',d:[635,446],a:'vhR',b:'hv'},
+{f:'vehicles',t:'attendances',l:'digunakan',c1:'1',c2:'N',d:[800,446],a:'vh',b:'vh'},
+{f:'drivers',t:'emergency_reports',l:'melaporkan',c1:'1',c2:'N',d:[675,560],a:'vh',b:'hv'},
+{f:'vehicles',t:'emergency_reports',l:'terkait',c1:'1',c2:'N',d:[950,600],a:'vh',b:'hv'},
+{f:'drivers',t:'service_reports',l:'mengajukan',c1:'1',c2:'N',d:[650,760],a:'vh',b:'hv'},
+{f:'vehicles',t:'service_reports',l:'diservis',c1:'1',c2:'N',d:[895,760],a:'vh',b:'hv'},
+{f:'vehicles',t:'maintenance_logs',l:'dicatat',c1:'1',c2:'N',d:[470,1268],a:'vhhL',b:'vh'},
+{f:'users',t:'maintenance_logs',l:'mencatat',c1:'1',c2:'N',d:[300,1340],a:'vhh',b:'hv'},
+{f:'vehicles',t:'vehicle_components',l:'memiliki',c1:'1',c2:'N',d:[800,1050],a:'vh',b:'vh'},
+{f:'vehicles',t:'maintenance_schedules',l:'dijadwalkan',c1:'1',c2:'N',d:[470,1460],a:'vhhR',b:'vh'},
+{f:'vehicle_components',t:'maintenance_schedules',l:'untuk',c1:'1',c2:'N',d:[645,1512],a:'vh',b:'hv'},
+{f:'vehicles',t:'maintenance_alerts',l:'memicu',c1:'1',c2:'N',d:[950,1460],a:'vhh',b:'hv'},
+{f:'vehicle_components',t:'maintenance_alerts',l:'menghasilkan',c1:'1',c2:'N',d:[800,1460],a:'vh',b:'vh'},
+{f:'users',t:'maintenance_alerts',l:'menanggapi',c1:'1',c2:'N',d:[985,1575],a:'vhhR',b:'hv'},
+{f:'users',t:'maintenance_schedules',l:'menyelesaikan',c1:'1',c2:'N',d:[250,1470],a:'vhh',b:'hv'},
+{f:'attendances',t:'transport_costs',l:'menghasilkan',c1:'1',c2:'1',d:[635,785],a:'vhR2',b:'vh'},
+{f:'drivers',t:'transport_costs',l:'memiliki_biaya',c1:'1',c2:'N',d:[360,755],a:'vh',b:'vh'},
+{f:'vehicles',t:'transport_costs',l:'dipakai',c1:'1',c2:'N',d:[585,850],a:'vhh',b:'hv'},
+{f:'projects',t:'transport_costs',l:'membiayai',c1:'1',c2:'N',d:[470,715],a:'vh',b:'vh'},
+{f:'users',t:'service_reports',l:'menyetujui',c1:'1',c2:'N',d:[650,1048],a:'vhh',b:'vh'},
+{f:'emergency_reports',t:'service_reports',l:'ditindaklanjuti',c1:'N',c2:'1',d:[1085,785],a:'vh',b:'vh'},
+{f:'service_reports',t:'vehicle_replacements',l:'memerlukan',c1:'1',c2:'N',d:[940,1030],a:'vh',b:'hv'},
+{f:'drivers',t:'vehicle_replacements',l:'menerima',c1:'1',c2:'N',d:[990,970],a:'vhh',b:'hv'},
+{f:'attendances',t:'offline_recovery_logs',l:'memiliki_log',c1:'1',c2:'1',d:[635,1030],a:'vhL',b:'vh'},
+{f:'drivers',t:'offline_recovery_logs',l:'recovery',c1:'1',c2:'N',d:[360,1110],a:'vh',b:'hv'}
 ];
 
 function ge(id){return E.find(e=>e.id===id)}
 function ep(e,to){
     const s=entitySize(e),dx=to.x-e.x,dy=to.y-e.y;
-    if(Math.abs(dx)/s.w>Math.abs(dy)/s.h){
-        return {x:e.x+(dx>=0?s.w/2:-s.w/2),y:e.y};
-    }
+    if(Math.abs(dx)/s.w>Math.abs(dy)/s.h)return {x:e.x+(dx>=0?s.w/2:-s.w/2),y:e.y};
     return {x:e.x,y:e.y+(dy>=0?s.h/2:-s.h/2)};
 }
 function dp(d,to){
     const dx=to.x-d.x,dy=to.y-d.y;
-    if(Math.abs(dx)>Math.abs(dy)) return {x:d.x+(dx>=0?d.hw:-d.hw),y:d.y};
+    if(Math.abs(dx)>Math.abs(dy))return {x:d.x+(dx>=0?d.hw:-d.hw),y:d.y};
     return {x:d.x,y:d.y+(dy>=0?d.hh:-d.hh)};
+}
+function relBox(r){return {x:r.d[0],y:r.d[1],hw:Math.max(tw(r.l,REL_SIZE)+REL_PAD,REL_MIN)/2,hh:REL_DH}}
+function sideOf(e,to){
+    const s=entitySize(e),dx=to.x-e.x,dy=to.y-e.y;
+    if(Math.abs(dx)/s.w>Math.abs(dy)/s.h)return dx>=0?'right':'left';
+    return dy>=0?'bottom':'top';
+}
+function buildPortSlots(){
+    const buckets={},slots={};
+    R.forEach((r,i)=>{
+        [['f',ge(r.f)],['t',ge(r.t)]].forEach(([end,e])=>{
+            const d=relBox(r),side=sideOf(e,d),key=`${e.id}:${side}`;
+            if(!buckets[key])buckets[key]=[];
+            buckets[key].push({i,end,e,side,target:d});
+        });
+    });
+    Object.values(buckets).forEach(items=>{
+        const side=items[0].side,e=items[0].e,s=entitySize(e);
+        items.sort((a,b)=>(side==='top'||side==='bottom')?a.target.x-b.target.x:a.target.y-b.target.y);
+        const maxSpan=(side==='top'||side==='bottom')?Math.max(0,s.w-22):Math.max(0,s.h-8);
+        const natural=(items.length-1)*12;
+        const span=Math.min(maxSpan,natural);
+        items.forEach((item,idx)=>{
+            slots[`${item.i}:${item.end}`]=items.length===1?0:(idx-(items.length-1)/2)*(span/(items.length-1));
+        });
+    });
+    return slots;
+}
+function endpointFor(r,i,end,d,ports){
+    const e=ge(end==='f'?r.f:r.t),s=entitySize(e),side=sideOf(e,d),offset=ports[`${i}:${end}`]||0;
+    if(side==='right')return {x:e.x+s.w/2,y:e.y+offset};
+    if(side==='left')return {x:e.x-s.w/2,y:e.y+offset};
+    if(side==='bottom')return {x:e.x+offset,y:e.y+s.h/2};
+    return {x:e.x+offset,y:e.y-s.h/2};
 }
 function drawPath(points){
     g.beginPath();
@@ -102,89 +158,107 @@ function drawPath(points){
 }
 function stepPath(a,b,mode){
     const pts=[a];
-    if(mode==='hv') pts.push({x:b.x,y:a.y});
-    else if(mode==='vh') pts.push({x:a.x,y:b.y});
-    else if(mode==='hvx') pts.push({x:(a.x+b.x)/2,y:a.y},{x:(a.x+b.x)/2,y:b.y});
-    else if(mode==='hvy') pts.push({x:b.x,y:a.y});
-    else if(Math.abs(b.x-a.x)>Math.abs(b.y-a.y)) pts.push({x:b.x,y:a.y});
-    else pts.push({x:a.x,y:b.y});
+    const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    if(mode==='hv')pts.push({x:b.x,y:a.y});
+    else if(mode==='vh')pts.push({x:a.x,y:b.y});
+    else if(mode==='vhL')pts.push({x:a.x-28,y:a.y},{x:a.x-28,y:b.y});
+    else if(mode==='vhR')pts.push({x:a.x+28,y:a.y},{x:a.x+28,y:b.y});
+    else if(mode==='vhR2')pts.push({x:a.x,y:a.y+18},{x:a.x+28,y:a.y+18},{x:a.x+28,y:b.y});
+    else if(mode==='hvh')pts.push({x:mx,y:a.y},{x:mx,y:b.y});
+    else if(mode==='vhv')pts.push({x:a.x,y:my},{x:b.x,y:my});
+    else if(mode==='vhh')pts.push({x:a.x,y:my},{x:b.x,y:my});
+    else if(mode==='vhhL')pts.push({x:a.x,y:my},{x:b.x-28,y:my},{x:b.x-28,y:b.y});
+    else if(mode==='vhhR')pts.push({x:a.x,y:my},{x:b.x+28,y:my},{x:b.x+28,y:b.y});
+    else pts.push({x:b.x,y:a.y});
     pts.push(b);
     drawPath(pts);
 }
+function labelText(x,y,text,font='8px "Segoe UI",Arial,sans-serif'){
+    g.font=font;
+    g.fillStyle='#000';
+    g.fillText(text,x,y);
+}
 function cardText(start,end,value){
     const dx=end.x-start.x,dy=end.y-start.y,len=Math.sqrt(dx*dx+dy*dy)||1;
-    const px=-dy/len*13,py=dx/len*13;
-    g.fillStyle='#000';
-    g.font='bold 13px "Segoe UI",Arial,sans-serif';
+    const px=-dy/len*8,py=dx/len*8;
+    const x=start.x+(dx/len)*18+px,y=start.y+(dy/len)*18+py;
     g.textAlign='center';
     g.textBaseline='middle';
-    g.fillText(value,start.x+(dx/len)*28+px,start.y+(dy/len)*28+py);
+    labelText(x,y,value,'bold 8px "Segoe UI",Arial,sans-serif');
 }
-function attrPositions(e){
+function attrList(e){
     const all=[];
     e.pk.forEach(n=>all.push({n,t:'pk'}));
     e.fk.forEach(n=>all.push({n,t:'fk'}));
     e.a.forEach(n=>all.push({n,t:'n'}));
-    const s=entitySize(e),left=Math.ceil(all.length/2),right=all.length-left,sy=26;
-    return all.map((a,i)=>{
-        if(i<left){
-            return {...a,x:e.x-s.w/2-102,y:e.y-(left-1)*sy/2+i*sy,ex:e.x,ey:e.y};
-        }
-        const ri=i-left;
-        return {...a,x:e.x+s.w/2+102,y:e.y-(right-1)*sy/2+ri*sy,ex:e.x,ey:e.y};
-    });
+    return all;
 }
-
-// Light module guide boxes for easier reading
+function stackAttrs(e,items,x){
+    const step=e.step||15,start=e.y-(items.length-1)*step/2;
+    return items.map((a,i)=>({...a,x,y:start+i*step,ex:e.x,ey:e.y}));
+}
+function attrPositions(e){
+    const all=attrList(e),gap=e.gap||104;
+    if(e.side==='left')return stackAttrs(e,all,e.x-gap);
+    if(e.side==='right')return stackAttrs(e,all,e.x+gap);
+    const left=all.slice(0,Math.ceil(all.length/2));
+    const right=all.slice(Math.ceil(all.length/2));
+    return stackAttrs(e,left,e.x-gap).concat(stackAttrs(e,right,e.x+gap));
+}
 function moduleBox(x,y,w,h,label){
     g.save();
-    g.strokeStyle='#ddd';
-    g.lineWidth=1;
-    g.setLineDash([8,8]);
+    g.strokeStyle='#d0d0d0';
+    g.lineWidth=LINE;
     g.strokeRect(x,y,w,h);
-    g.setLineDash([]);
     g.fillStyle='#555';
-    g.font='bold 15px "Segoe UI",Arial,sans-serif';
+    g.font='bold 9px "Segoe UI",Arial,sans-serif';
     g.textAlign='left';
-    g.fillText(label,x+12,y+18);
+    g.textBaseline='middle';
+    g.fillText(label,x+8,y+13);
     g.restore();
 }
-moduleBox(130,120,1450,1700,'Core Absensi dan Operasional');
-moduleBox(1630,120,720,1700,'Laporan');
-moduleBox(2380,120,860,1450,'Preventive Maintenance');
 
-// 1. Relationship lines
+moduleBox(62,96,1116,455,'A. Master Data');
+moduleBox(62,570,1116,670,'B. Operasional, Absensi, dan Laporan');
+moduleBox(62,1260,1116,395,'C. Preventive Maintenance');
+const PORTS=buildPortSlots();
+
+g.strokeStyle='#d8d8d8';
+g.lineWidth=LINE;
+g.beginPath();g.moveTo(62,565);g.lineTo(1178,565);g.stroke();
+g.beginPath();g.moveTo(62,1252);g.lineTo(1178,1252);g.stroke();
+
+// 1. Relationship lines are drawn first so entities and attributes stay readable.
 g.strokeStyle='#000';
-g.lineWidth=1.15;
-R.forEach(r=>{
-    const f=ge(r.f),t=ge(r.t),dw=Math.max(tw(r.l,10)+20,60),dh=18;
-    const d={x:r.d[0],y:r.d[1],hw:dw/2,hh:dh};
-    const fs=ep(f,d),ts=ep(t,d),fd=dp(d,fs),td=dp(d,ts);
+g.lineWidth=LINE;
+R.forEach((r,i)=>{
+    const d=relBox(r);
+    const fs=endpointFor(r,i,'f',d,PORTS),ts=endpointFor(r,i,'t',d,PORTS),fd=dp(d,fs),td=dp(d,ts);
     stepPath(fs,fd,r.a);
     stepPath(td,ts,r.b);
 });
 
-// 2. Relationship diamonds + cardinality
-R.forEach(r=>{
-    const f=ge(r.f),t=ge(r.t),dw=Math.max(tw(r.l,10)+20,60),dh=18;
-    const d={x:r.d[0],y:r.d[1],hw:dw/2,hh:dh};
+// 2. Relationship diamonds and cardinalities.
+R.forEach((r,i)=>{
+    const d=relBox(r);
+    const fs=endpointFor(r,i,'f',d,PORTS),ts=endpointFor(r,i,'t',d,PORTS),fd=dp(d,fs),td=dp(d,ts);
     g.fillStyle='#fff';
     g.strokeStyle='#000';
-    g.lineWidth=1.7;
+    g.lineWidth=LINE;
     diamond(d.x,d.y,d.hw,d.hh);
     g.fill();g.stroke();
     g.fillStyle='#000';
-    g.font='10px "Segoe UI",Arial,sans-serif';
+    g.font=REL_FONT;
     g.textAlign='center';
     g.textBaseline='middle';
     g.fillText(r.l,d.x,d.y);
-    cardText(ep(f,d),dp(d,ep(f,d)),r.c1);
-    cardText(ep(t,d),dp(d,ep(t,d)),r.c2);
+    cardText(fs,fd,r.c1);
+    cardText(ts,td,r.c2);
 });
 
-// 3. Attribute connector lines
-g.strokeStyle='#777';
-g.lineWidth=0.6;
+// 3. Attribute connector lines.
+g.strokeStyle='#555';
+g.lineWidth=LINE;
 E.forEach(e=>attrPositions(e).forEach(a=>{
     g.beginPath();
     g.moveTo(a.x,a.y);
@@ -192,79 +266,45 @@ E.forEach(e=>attrPositions(e).forEach(a=>{
     g.stroke();
 }));
 
-// 4. Attribute ellipses
+// 4. Attribute ellipses.
 E.forEach(e=>attrPositions(e).forEach(a=>{
-    const aw=Math.max(tw(a.n,9.5)+18,52),ah=18;
+    const aw=Math.max(tw(a.n,7.5)+12,36),ah=12;
     g.fillStyle='#fff';
     g.strokeStyle='#000';
-    g.lineWidth=a.t==='pk'?1.8:1;
-    g.setLineDash(a.t==='fk'?[4,3]:[]);
+    g.lineWidth=LINE;
     ellipse(a.x,a.y,aw/2,ah/2);
     g.fill();g.stroke();
-    g.setLineDash([]);
     g.fillStyle='#000';
     g.textAlign='center';
     g.textBaseline='middle';
-    g.font=a.t==='pk'?'bold 9.5px "Segoe UI",Arial,sans-serif':a.t==='fk'?'italic 9.5px "Segoe UI",Arial,sans-serif':'9.5px "Segoe UI",Arial,sans-serif';
+    g.font=a.t==='pk'?'bold 7.5px "Segoe UI",Arial,sans-serif':a.t==='fk'?'italic 7.5px "Segoe UI",Arial,sans-serif':'7.5px "Segoe UI",Arial,sans-serif';
     g.fillText(a.n,a.x,a.y);
     if(a.t==='pk'){
         const w=g.measureText(a.n).width;
         g.beginPath();
-        g.moveTo(a.x-w/2,a.y+6);
-        g.lineTo(a.x+w/2,a.y+6);
-        g.lineWidth=0.8;
+        g.moveTo(a.x-w/2,a.y+4.2);
+        g.lineTo(a.x+w/2,a.y+4.2);
+        g.lineWidth=LINE;
         g.stroke();
     }
 }));
 
-// 5. Entity boxes
+// 5. Entity boxes.
 E.forEach(e=>{
     const s=entitySize(e);
     g.fillStyle='#fff';
     g.strokeStyle='#000';
-    g.lineWidth=2.4;
+    g.lineWidth=LINE;
     g.fillRect(e.x-s.w/2,e.y-s.h/2,s.w,s.h);
     g.strokeRect(e.x-s.w/2,e.y-s.h/2,s.w,s.h);
     g.fillStyle='#000';
-    g.font='bold 14px "Segoe UI",Arial,sans-serif';
+    g.font='bold 11px "Segoe UI",Arial,sans-serif';
     g.textAlign='center';
     g.textBaseline='middle';
     g.fillText(e.l,e.x,e.y);
 });
 
-// 6. Legend
-const lx=70,ly=H-170;
-g.fillStyle='#fff';
-g.strokeStyle='#000';
-g.lineWidth=1.2;
-g.fillRect(lx,ly,330,125);
-g.strokeRect(lx,ly,330,125);
-g.fillStyle='#000';
-g.font='bold 14px "Segoe UI",Arial,sans-serif';
-g.textAlign='left';
-g.textBaseline='middle';
-g.fillText('Legenda:',lx+15,ly+18);
-g.lineWidth=2;
-g.strokeRect(lx+15,ly+38,28,16);
-g.font='12px "Segoe UI",Arial,sans-serif';
-g.fillText('Entitas / tabel',lx+55,ly+46);
-diamond(lx+29,ly+72,14,9);
-g.stroke();
-g.fillText('Relasi',lx+55,ly+72);
-g.lineWidth=1.8;
-ellipse(lx+29,ly+96,16,8);
-g.stroke();
-g.font='bold 12px "Segoe UI",Arial,sans-serif';
-g.fillText('Primary key digarisbawahi',lx+55,ly+96);
-g.lineWidth=1;
-g.setLineDash([4,3]);
-ellipse(lx+29,ly+116,16,8);
-g.stroke();
-g.setLineDash([]);
-g.font='italic 12px "Segoe UI",Arial,sans-serif';
-g.fillText('Foreign key garis putus',lx+55,ly+116);
-
-document.title='READY - ERD Canvas Structured';
+document.title='READY - ERD Canvas A4 Portrait';
 </script>
 </body>
 </html>

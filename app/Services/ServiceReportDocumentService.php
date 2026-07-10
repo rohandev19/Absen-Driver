@@ -26,7 +26,7 @@ class ServiceReportDocumentService
         $docNumber = "No: FIN/SVC/{$dateStr}/" . str_pad($report->id, 3, '0', STR_PAD_LEFT);
 
         // Header
-        $section->addText('PT Hamada Logistik', ['bold' => true, 'size' => 18], ['alignment' => Jc::CENTER]);
+        $section->addText('PT Hamada Global Jaya', ['bold' => true, 'size' => 18], ['alignment' => Jc::CENTER]);
         $section->addText('Divisi Keuangan & Operasional', ['size' => 12], ['alignment' => Jc::CENTER]);
         $section->addText('===========================================================================', ['bold' => true], ['alignment' => Jc::CENTER]);
         $section->addTextBreak(1);
@@ -186,7 +186,7 @@ class ServiceReportDocumentService
         $docNumber = "No: BAP/HL-{$customerInitial}/{$dateStr}/" . str_pad($report->id, 3, '0', STR_PAD_LEFT);
 
         // Header / Kop
-        $section->addText('PT Hamada Logistik', ['bold' => true, 'size' => 18], ['alignment' => Jc::CENTER]);
+        $section->addText('PT Hamada Global Jaya', ['bold' => true, 'size' => 18], ['alignment' => Jc::CENTER]);
         $section->addText('Jl. Contoh Alamat No. 123, Kota, Indonesia | Telp: (021) 1234567', ['size' => 10], ['alignment' => Jc::CENTER]);
         $section->addText('===========================================================================', ['bold' => true], ['alignment' => Jc::CENTER]);
         $section->addTextBreak(1);
@@ -288,7 +288,7 @@ class ServiceReportDocumentService
         
         $cell1 = $sigTable->addCell(4500);
         $cell1->addText('PIHAK PERTAMA', ['bold' => true], ['alignment' => Jc::CENTER]);
-        $cell1->addText('PT Hamada Logistik', [], ['alignment' => Jc::CENTER]);
+        $cell1->addText('PT Hamada Global Jaya', [], ['alignment' => Jc::CENTER]);
         $cell1->addTextBreak(1);
 
         if ($report->admin_signature_path && file_exists(storage_path('app/public/' . $report->admin_signature_path))) {

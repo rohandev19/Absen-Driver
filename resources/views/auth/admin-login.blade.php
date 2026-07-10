@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin - Hamada Transport</title>
+    <title>Login Admin - PT Hamada Global Jaya</title>
 
     {{-- Bootstrap CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -276,7 +276,7 @@
                     <div class="logo-text">
                         <div class="brand">
                             <span class="brand-h">H</span><span class="brand-amada">amada</span>
-                            <span class="brand-logistik">Logistik</span>
+                            <span class="brand-logistik">Global Jaya</span>
                         </div>
                         <div class="tagline">Transport &amp; Logistics</div>
                     </div>
@@ -343,7 +343,7 @@
             {{-- Footer --}}
             <div class="login-footer">
                 <small>
-                    &copy; {{ date('Y') }} PT Hamada Logistik Internasional.
+                    &copy; {{ date('Y') }} PT Hamada Global Jaya.
                 </small>
             </div>
 

@@ -43,155 +43,94 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([Mulai]) --> B[Driver membuka aplikasi mobile]
-    B --> C[Driver memilih check-in]
-    C --> D{Metode input kendaraan}
+    A([Mulai]) --> B[Driver membuka aplikasi dan scan QR driver]
+    B --> C{Metode input kendaraan}
 
-    D -- QR Code --> E[Scan QR kendaraan]
-    D -- Manual --> F[Input plat kendaraan, alasan, dan foto kendaraan]
+    C -- QR Code --> D[Scan QR kendaraan]
+    C -- Manual --> E[Input plat dan alasan penggantian unit]
 
-    E --> G[Ambil GPS, timestamp, KM awal, selfie, dan foto speedometer]
-    F --> G
+    D --> F[Ambil GPS, KM awal, selfie, dan foto speedometer]
+    E --> F
 
-    G --> H[Kirim data check-in ke server]
-    H --> I{Token driver valid?}
+    F --> G[Kirim data check-in ke server]
+    G --> H{Autentikasi dan validasi berhasil?}
 
-    I -- Tidak --> J[Tampilkan pesan unauthenticated]
-    J --> Z([Selesai])
+    H -- Tidak --> I[Tampilkan pesan error]
+    I --> F
 
-    I -- Ya --> K[Validasi data check-in]
-    K --> L{Data valid?}
+    H -- Ya --> J{Driver sedang bertugas?}
+    J -- Ya --> K[Tolak check-in]
+    K --> Z([Selesai])
 
-    L -- Tidak --> M[Tampilkan error validasi]
-    M --> G
+    J -- Tidak --> L[Cari kendaraan berdasarkan plat]
+    L --> M{Kendaraan ditemukan?}
 
-    L -- Ya --> N{Driver sedang bertugas?}
-    N -- Ya --> O[Tolak check-in karena sudah clock-in]
-    O --> Z
+    M -- Tidak, QR --> N[Tolak karena plat tidak dikenal]
+    N --> Z
 
-    N -- Tidak --> P[Cari kendaraan berdasarkan plat]
-    P --> Q{Kendaraan ditemukan?}
+    M -- Tidak, Manual --> O[Buat kendaraan sementara]
+    M -- Ya --> P{Status kendaraan tersedia?}
 
-    Q -- Tidak, metode QR --> R[Tolak karena plat tidak dikenal]
-    R --> Z
+    P -- Tidak --> Q[Tolak karena unit tidak dapat digunakan]
+    Q --> Z
 
-    Q -- Tidak, metode manual --> S[Buat kendaraan sementara menunggu verifikasi]
-    Q -- Ya --> T{Status kendaraan boleh digunakan?}
-
-    S --> U[Optimasi dan simpan foto]
-    T -- Tidak --> V[Tolak karena unit tidak dapat digunakan]
-    V --> Z
-
-    T -- Ya --> U
-    U --> W[Mulai transaksi database]
-    W --> X[Simpan attendance masuk]
-    X --> Y[Set driver is_on_duty = true]
-    Y --> AA[Commit transaksi]
-    AA --> AB[Hapus cache status dan riwayat driver]
-    AB --> AC[Tampilkan check-in berhasil]
-    AC --> Z
+    P -- Ya --> R[Simpan data attendance dan update status driver]
+    O --> R
+    R --> S[Tampilkan check-in berhasil]
+    S --> Z
 ```
 
 ## 3. Activity Diagram Check-Out Driver
 
 ```mermaid
 flowchart TD
-    A([Mulai]) --> B[Driver membuka aplikasi mobile]
-    B --> C[Driver memilih check-out]
-    C --> D[Input KM akhir, GPS, checklist ban, lampu, rem, catatan, dan foto speedometer]
-    D --> E[Kirim data check-out ke server]
-    E --> F{Token driver valid?}
+    A([Mulai]) --> B[Driver membuka aplikasi dan memilih check-out]
+    B --> C[Input KM akhir, checklist kondisi kendaraan, catatan, dan foto speedometer]
+    C --> D[Ambil GPS dan kirim data ke server]
+    D --> E{Autentikasi dan validasi berhasil?}
 
-    F -- Tidak --> G[Tampilkan pesan unauthenticated]
-    G --> Z([Selesai])
+    E -- Tidak --> F[Tampilkan pesan error]
+    F --> C
 
-    F -- Ya --> H[Validasi data check-out]
-    H --> I{Data valid?}
+    E -- Ya --> G{Ada tugas aktif?}
+    G -- Tidak --> H[Tampilkan pesan tidak ada tugas aktif]
+    H --> Z([Selesai])
 
-    I -- Tidak --> J[Tampilkan error validasi]
-    J --> D
-
-    I -- Ya --> K[Cari data driver]
-    K --> L{Driver ditemukan?}
-
-    L -- Tidak --> M[Tampilkan error data driver tidak ditemukan]
-    M --> Z
-
-    L -- Ya --> N[Cari attendance aktif]
-    N --> O{Ada tugas aktif?}
-
-    O -- Tidak --> P[Tampilkan pesan tidak ada tugas aktif]
-    P --> Z
-
-    O -- Ya --> Q[Optimasi dan simpan foto speedometer akhir]
-    Q --> R[Mulai transaksi database]
-    R --> S[Update attendance dengan time_out, KM akhir, GPS, checklist, dan catatan]
-    S --> T[Set driver is_on_duty = false]
-    T --> U[Commit transaksi]
-    U --> V[Hapus cache status dan riwayat driver]
-    V --> W[Hitung durasi kerja dan total KM]
-    W --> X[Tentukan status kondisi kendaraan dari checklist]
-    X --> Y[Tampilkan ringkasan check-out]
-    Y --> Z
+    G -- Ya --> I[Update attendance dan set driver off duty]
+    I --> J[Hitung durasi kerja, total KM, dan status kendaraan]
+    J --> K[Tampilkan ringkasan check-out]
+    K --> Z
 ```
 
 ## 4. Activity Diagram Sinkronisasi Offline
 
 ```mermaid
 flowchart TD
-    A([Mulai]) --> B[Driver melakukan check-out saat offline]
-    B --> C[Simpan data check-out ke local offline database]
-    C --> D[Tandai data sebagai belum sinkron]
-    D --> E{Koneksi internet tersedia?}
+    A([Mulai]) --> B[Driver check-out saat offline]
+    B --> C[Simpan data ke local database]
+    C --> D{Koneksi internet tersedia?}
 
-    E -- Tidak --> F[Tunggu dan cek koneksi kembali]
-    F --> E
+    D -- Tidak --> E[Tunggu koneksi]
+    E --> D
 
-    E -- Ya --> G[Kirim data ke endpoint clock-out offline]
-    G --> H{Token driver valid?}
+    D -- Ya --> F[Kirim data ke server]
+    F --> G{Autentikasi dan validasi berhasil?}
 
-    H -- Tidak --> I[Tandai sync gagal karena token tidak valid]
-    I --> Z([Selesai])
+    G -- Tidak --> H[Tandai sync gagal]
+    H --> Z([Selesai])
 
-    H -- Ya --> J[Validasi payload offline]
-    J --> K{Payload valid?}
+    G -- Ya --> I{Data sudah pernah diproses?}
+    I -- Ya --> J[Tandai data lokal sudah sinkron]
+    J --> Z
 
-    K -- Tidak --> L[Tandai data perlu diperbaiki atau dikirim ulang]
+    I -- Belum --> K{Driver masih bertugas di server?}
+    K -- Tidak --> L[Tandai sync gagal]
     L --> Z
 
-    K -- Ya --> M[Cek offline_entry_id]
-    M --> N{offline_entry_id sudah pernah diproses?}
-
-    N -- Ya, data sudah selesai --> O[Kembalikan idempotent success]
-    O --> P[Tandai data lokal sudah sinkron]
-    P --> Z
-
-    N -- Ya, konflik --> Q[Tandai konflik sinkronisasi]
-    Q --> Z
-
-    N -- Belum --> R[Cari attendance aktif driver]
-    R --> S{Attendance aktif ditemukan?}
-
-    S -- Tidak --> T[Catat log recovery gagal]
-    T --> U[Tandai sync gagal]
-    U --> Z
-
-    S -- Ya --> V{Driver masih on duty menurut server?}
-    V -- Tidak --> W[Catat log recovery gagal]
-    W --> U
-
-    V -- Ya --> X[Parse device_timestamp]
-    X --> Y[Hitung delay dan status late submission]
-    Y --> AA[Optimasi foto speedometer akhir]
-    AA --> AB[Mulai transaksi database]
-    AB --> AC[Update attendance dengan data offline]
-    AC --> AD[Set driver is_on_duty = false]
-    AD --> AE[Commit transaksi]
-    AE --> AF[Catat log recovery sukses]
-    AF --> AG[Hapus cache status dan riwayat driver]
-    AG --> AH[Tandai data lokal sudah sinkron]
-    AH --> AI[Tampilkan ringkasan sync berhasil]
-    AI --> Z
+    K -- Ya --> M[Update attendance dan set driver off duty]
+    M --> N[Tandai data lokal sudah sinkron]
+    N --> O[Tampilkan ringkasan sync berhasil]
+    O --> Z
 ```
 
 ## 5. Activity Diagram Preventive Maintenance

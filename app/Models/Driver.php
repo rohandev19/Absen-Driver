@@ -84,7 +84,7 @@ class Driver extends Authenticatable
     public function getQrCodeUrlAttribute()
     {
         if ($this->qr_code_path) {
-            return \Illuminate\Support\Facades\Storage::url($this->qr_code_path);
+            return \Illuminate\Support\Facades\Storage::url($this->qr_code_path) . '?v=' . ($this->updated_at ? $this->updated_at->timestamp : now()->timestamp);
         }
         return null;
     }

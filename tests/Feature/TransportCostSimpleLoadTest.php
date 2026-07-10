@@ -52,12 +52,12 @@ class TransportCostSimpleLoadTest extends TestCase
             $attendance = Attendance::create([
                 'driver_id' => $driver->id,
                 'vehicle_id' => $vehicle->id,
-                'time_in' => now()->subHours(10),
+                'time_in' => now()->startOfDay()->addHours(8),
                 'gps_location_in' => '-6.200000, 106.816666',
                 'selfie_photo_path' => 'photos/test_selfie.jpg',
                 'speedo_photo_awal_path' => 'photos/test_speedo.jpg',
                 'speedo_awal' => 10000 + ($i * 100),
-                'time_out' => now()->subHours(2),
+                'time_out' => now()->startOfDay()->addHours(16),
                 'speedo_photo_akhir_path' => 'photos/test_speedo_akhir.jpg',
                 'speedo_akhir' => 10250 + ($i * 100),
             ]);
@@ -87,8 +87,8 @@ class TransportCostSimpleLoadTest extends TestCase
                 'gasoline_cost' => rand(300000, 600000),
                 'toll_cost' => rand(100000, 200000),
                 'parking_cost' => rand(10000, 30000),
-                'delivery_start_time' => now()->subHours(8)->format('Y-m-d H:i:s'),
-                'delivery_end_time' => now()->subHours(1)->format('Y-m-d H:i:s'),
+                'delivery_start_time' => now()->startOfDay()->addHours(8)->format('Y-m-d H:i:s'),
+                'delivery_end_time' => now()->startOfDay()->addHours(17)->format('Y-m-d H:i:s'),
             ];
 
             $requestStart = microtime(true);

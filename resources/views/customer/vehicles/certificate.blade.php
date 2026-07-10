@@ -234,11 +234,11 @@
             <div class="cert-border-inner">
                 
                 <!-- Watermark -->
-                <div class="cert-watermark">HAMADA</div>
+                <div class="cert-watermark">HAMADA GLOBAL JAYA</div>
                 
                 <!-- Certificate Header -->
                 <div class="cert-header">
-                    <div class="cert-logo"><i class="bi bi-shield-check"></i> PT Hamada Logistik</div>
+                    <div class="cert-logo"><i class="bi bi-shield-check"></i> PT Hamada Global Jaya</div>
                     <div class="cert-company">Fleet Management Division</div>
                 </div>
 

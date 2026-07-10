@@ -22,42 +22,37 @@ class TransportCostDocumentService
         
         // Document properties
         $properties = $phpWord->getDocInfo();
-        $properties->setCreator('Hamada Logistik');
+        $properties->setCreator('PT Hamada Global Jaya');
         $properties->setTitle('Pengajuan Keuangan Uang Jalan - ' . $trip->id);
         
         $section = $phpWord->addSection([
-            'marginTop' => 1200,
-            'marginBottom' => 1200,
-            'marginLeft' => 1200,
-            'marginRight' => 1200,
+            'marginTop' => 1440,
+            'marginBottom' => 1440,
+            'marginLeft' => 1440,
+            'marginRight' => 1440,
         ]);
 
-        // Header
-        $section->addText(
-            'FORM PENGGANTIAN UANG JALAN & LEMBUR',
-            ['bold' => true, 'size' => 14, 'color' => '1B365D', 'name' => 'Calibri'],
-            ['alignment' => Jc::CENTER]
-        );
-        $section->addText(
-            'PT Hamada Logistik',
-            ['bold' => true, 'size' => 12, 'color' => '5C768D', 'name' => 'Calibri'],
-            ['alignment' => Jc::CENTER]
-        );
-        $section->addText(
-            'Dokumen Kontrol Internal Keuangan',
-            ['italic' => true, 'size' => 9, 'color' => '7F8C8D', 'name' => 'Calibri'],
-            ['alignment' => Jc::CENTER]
-        );
+        // Header Table with bottom border line
+        $headerTable = $section->addTable(['align' => 'center']);
+        $headerTable->addRow();
+        $cell = $headerTable->addCell(9000, [
+            'borderBottomSize' => 18, // 1.5 pt
+            'borderBottomColor' => '1B365D',
+            'paddingBottom' => 100
+        ]);
+        $cell->addText('PT HAMADA GLOBAL JAYA', ['bold' => true, 'size' => 16, 'color' => '1B365D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell->addText('FORM PENGGANTIAN UANG JALAN & LEMBUR DRIVER', ['bold' => true, 'size' => 11, 'color' => '5C768D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $docNo = 'HGJ/TC-FORM/' . $trip->trip_date->format('Y') . '/' . str_pad((string)$trip->id, 5, '0', STR_PAD_LEFT);
+        $cell->addText('Dokumen Kontrol Internal Keuangan  •  No. Dokumen: ' . $docNo, ['italic' => true, 'size' => 9, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        
         $section->addTextBreak(1);
+
+        $tableStyle = [
+            'cellMargin' => 80,
+        ];
 
         // General Information
         $section->addText('I. INFORMASI TRIP & PENGEMUDI', ['bold' => true, 'size' => 11, 'color' => '1B365D', 'name' => 'Calibri']);
-        
-        $tableStyle = [
-            'borderSize' => 6,
-            'borderColor' => 'BDC3C7',
-            'cellMargin' => 80,
-        ];
         $table = $section->addTable($tableStyle);
         
         $this->addTableRow($table, 'Tanggal Perjalanan', $trip->trip_date->format('d-m-Y'));
@@ -85,16 +80,10 @@ class TransportCostDocumentService
         $section->addText('III. RINCIAN BIAYA OPERASIONAL (UANG JALAN)', ['bold' => true, 'size' => 11, 'color' => '1B365D', 'name' => 'Calibri']);
         $tableCosts = $section->addTable($tableStyle);
         
-        $this->addTableRow($tableCosts, 'Biaya Pembelian Bensin (BBM)', 'Rp ' . number_format($trip->gasoline_cost, 0, ',', '.'));
-        $this->addTableRow($tableCosts, 'Biaya Pembayaran Tol', 'Rp ' . number_format($trip->toll_cost, 0, ',', '.'));
-        $this->addTableRow($tableCosts, 'Biaya Parkir & Retribusi', 'Rp ' . number_format($trip->parking_cost, 0, ',', '.'));
-        
-        // Operational subtotal
-        $tableCosts->addRow();
-        $cellLabel = $tableCosts->addCell(3000, ['bgColor' => 'ECF0F1']);
-        $cellLabel->addText('Subtotal Biaya Operasional', ['bold' => true, 'size' => 10, 'name' => 'Calibri']);
-        $cellValue = $tableCosts->addCell(6000, ['bgColor' => 'ECF0F1']);
-        $cellValue->addText('Rp ' . number_format($trip->total_cost, 0, ',', '.'), ['bold' => true, 'size' => 10, 'color' => '2C3E50', 'name' => 'Calibri']);
+        $this->addTableRow($tableCosts, 'Biaya Pembelian Bensin (BBM)', 'Rp ' . number_format($trip->gasoline_cost, 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableCosts, 'Biaya Pembayaran Tol', 'Rp ' . number_format($trip->toll_cost, 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableCosts, 'Biaya Parkir & Retribusi', 'Rp ' . number_format($trip->parking_cost, 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableCosts, 'Subtotal Biaya Operasional', 'Rp ' . number_format($trip->total_cost, 0, ',', '.'), true, 'EAECEE', 'right');
         
         $section->addTextBreak(1);
 
@@ -106,33 +95,69 @@ class TransportCostDocumentService
         $this->addTableRow($tableOvertime, 'Jam Selesai Tugas', $trip->delivery_end_time->format('H:i'));
         $this->addTableRow($tableOvertime, 'Durasi Kerja Nyata', number_format($trip->actual_delivery_hours, 2) . ' Jam');
         $this->addTableRow($tableOvertime, 'Akumulasi Jam Lembur', number_format($trip->overtime_hours, 2) . ' Jam');
-        $this->addTableRow($tableOvertime, 'Tarif Lembur per Jam', 'Rp ' . number_format($trip->overtime_rate_per_hour, 0, ',', '.'));
-        
-        $tableOvertime->addRow();
-        $cellLabelOvt = $tableOvertime->addCell(3000, ['bgColor' => 'E8F8F5']);
-        $cellLabelOvt->addText('Subtotal Bayaran Lembur', ['bold' => true, 'size' => 10, 'name' => 'Calibri']);
-        $cellValueOvt = $tableOvertime->addCell(6000, ['bgColor' => 'E8F8F5']);
-        $cellValueOvt->addText('Rp ' . number_format($trip->overtime_payment, 0, ',', '.'), ['bold' => true, 'size' => 10, 'color' => '16A085', 'name' => 'Calibri']);
+        $this->addTableRow($tableOvertime, 'Tarif Lembur per Jam', 'Rp ' . number_format($trip->overtime_rate_per_hour, 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableOvertime, 'Subtotal Bayaran Lembur', 'Rp ' . number_format($trip->overtime_payment, 0, ',', '.'), true, 'EAECEE', 'right');
         
         $section->addTextBreak(1);
 
         // Grand Total Banner
         $grandTotalTable = $section->addTable();
         $grandTotalTable->addRow();
-        $cellBanner = $grandTotalTable->addCell(9000, ['bgColor' => '1B365D', 'valign' => 'center']);
+        $cellBanner = $grandTotalTable->addCell(9000, [
+            'bgColor' => '1B365D', 
+            'valign' => 'center',
+            'borderBottomSize' => 12, 'borderBottomColor' => '1B365D',
+            'borderTopSize' => 12, 'borderTopColor' => '1B365D',
+            'borderLeftSize' => 12, 'borderLeftColor' => '1B365D',
+            'borderRightSize' => 12, 'borderRightColor' => '1B365D'
+        ]);
         
         $totalTextRun = $cellBanner->addTextRun(['alignment' => Jc::CENTER]);
-        $totalTextRun->addText('TOTAL PENGAJUAN DANA KE FINANCE: ', ['bold' => true, 'size' => 12, 'color' => 'FFFFFF', 'name' => 'Calibri']);
+        $totalTextRun->addText('TOTAL PENGAJUAN DANA KE FINANCE: ', ['bold' => true, 'size' => 11, 'color' => 'FFFFFF', 'name' => 'Calibri']);
         
         $grandTotalAmount = $trip->total_cost + $trip->overtime_payment + $trip->bonus_driver;
-        $totalTextRun->addText('Rp ' . number_format($grandTotalAmount, 0, ',', '.'), ['bold' => true, 'size' => 14, 'color' => 'F1C40F', 'name' => 'Calibri']);
+        $totalTextRun->addText('Rp ' . number_format($grandTotalAmount, 0, ',', '.'), ['bold' => true, 'size' => 13, 'color' => 'F1C40F', 'name' => 'Calibri']);
         
         $section->addTextBreak(2);
+
+        // Signatures block
+        $section->addText('V. PENGESAHAN DOKUMEN & OTORISASI', ['bold' => true, 'size' => 11, 'color' => '1B365D', 'name' => 'Calibri']);
+        $section->addTextBreak(1);
+
+        $sigTable = $section->addTable();
+        $sigTable->addRow();
+        
+        $borderStyle = [
+            'borderBottomSize' => 6, 'borderBottomColor' => 'BDC3C7',
+            'borderTopSize' => 6, 'borderTopColor' => 'BDC3C7',
+            'borderLeftSize' => 6, 'borderLeftColor' => 'BDC3C7',
+            'borderRightSize' => 6, 'borderRightColor' => 'BDC3C7'
+        ];
+
+        $cell1 = $sigTable->addCell(3000, array_merge(['valign' => 'top', 'bgColor' => 'F9FAF9'], $borderStyle));
+        $cell1->addText('Diajukan Oleh (Driver),', ['size' => 9, 'color' => '2C3E50', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell1->addTextBreak(3);
+        $cell1->addText($trip->driver->full_name, ['bold' => true, 'size' => 9.5, 'color' => '111827', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell1->addText('Tanggal: ' . $trip->trip_date->format('d-m-Y'), ['size' => 8.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+
+        $cell2 = $sigTable->addCell(3000, array_merge(['valign' => 'top', 'bgColor' => 'F9FAF9'], $borderStyle));
+        $cell2->addText('Disetujui Oleh (Master Admin),', ['size' => 9, 'color' => '2C3E50', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell2->addTextBreak(3);
+        $adminName = $trip->financeSubmitter->name ?? $trip->approver->name ?? 'Master Admin';
+        $cell2->addText($adminName, ['bold' => true, 'size' => 9.5, 'color' => '111827', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $approvedTime = $trip->submitted_to_finance_at ?? $trip->approved_at ?? now();
+        $cell2->addText('Tanggal: ' . $approvedTime->format('d-m-Y H:i'), ['size' => 8.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+
+        $cell3 = $sigTable->addCell(3000, array_merge(['valign' => 'top', 'bgColor' => 'F9FAF9'], $borderStyle));
+        $cell3->addText('Diproses Oleh (Finance),', ['size' => 9, 'color' => '2C3E50', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell3->addTextBreak(3);
+        $cell3->addText('___________________', ['bold' => true, 'size' => 9.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell3->addText('Tanggal: ____________', ['size' => 8.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
 
         // Receipts Attachment Section
         if ($trip->gasoline_receipt_path || $trip->toll_receipt_path || $trip->parking_receipt_path) {
             $section->addPageBreak();
-            $section->addText('V. LAMPIRAN KUITANSI & BUKTI FISIK PENGELUARAN', ['bold' => true, 'size' => 12, 'color' => '1B365D', 'name' => 'Calibri']);
+            $section->addText('VI. LAMPIRAN KUITANSI & BUKTI FISIK PENGELUARAN', ['bold' => true, 'size' => 12, 'color' => '1B365D', 'name' => 'Calibri']);
             $section->addTextBreak(1);
 
             if ($trip->gasoline_receipt_path) {
@@ -167,35 +192,7 @@ class TransportCostDocumentService
                 }
                 $section->addTextBreak(1);
             }
-            $section->addPageBreak();
         }
-
-        // Signatures block
-        $section->addText('PENGESAHAN DOKUMEN & OTORISASI', ['bold' => true, 'size' => 11, 'color' => '1B365D', 'name' => 'Calibri']);
-        $section->addTextBreak(1);
-
-        $sigTable = $section->addTable();
-        $sigTable->addRow();
-        
-        $cell1 = $sigTable->addCell(3000);
-        $cell1->addText('Diajukan Oleh (Driver),', ['size' => 10, 'alignment' => Jc::CENTER]);
-        $cell1->addTextBreak(3);
-        $cell1->addText($trip->driver->full_name, ['bold' => true, 'size' => 10, 'alignment' => Jc::CENTER]);
-        $cell1->addText('Tanggal: ' . $trip->trip_date->format('d-m-Y'), ['size' => 9, 'alignment' => Jc::CENTER]);
-
-        $cell2 = $sigTable->addCell(3000);
-        $cell2->addText('Disetujui Oleh (Master Admin),', ['size' => 10, 'alignment' => Jc::CENTER]);
-        $cell2->addTextBreak(3);
-        $adminName = $trip->financeSubmitter->name ?? $trip->approver->name ?? 'Master Admin';
-        $cell2->addText($adminName, ['bold' => true, 'size' => 10, 'alignment' => Jc::CENTER]);
-        $approvedTime = $trip->submitted_to_finance_at ?? $trip->approved_at ?? now();
-        $cell2->addText('Tanggal: ' . $approvedTime->format('d-m-Y H:i'), ['size' => 9, 'alignment' => Jc::CENTER]);
-
-        $cell3 = $sigTable->addCell(3000);
-        $cell3->addText('Diproses Oleh (Finance),', ['size' => 10, 'alignment' => Jc::CENTER]);
-        $cell3->addTextBreak(3);
-        $cell3->addText('___________________', ['bold' => true, 'size' => 10, 'alignment' => Jc::CENTER]);
-        $cell3->addText('Tanggal: ____________', ['size' => 9, 'alignment' => Jc::CENTER]);
 
         // Save Document
         $fileName = 'transport_docs/finance_' . $trip->id . '_' . Str::uuid() . '.docx';
@@ -220,48 +217,42 @@ class TransportCostDocumentService
         $phpWord = new PhpWord();
         
         $properties = $phpWord->getDocInfo();
-        $properties->setCreator('Hamada Logistik');
+        $properties->setCreator('PT Hamada Global Jaya');
         $properties->setTitle('Rekap Uang Jalan Keuangan - ' . $driver->full_name);
 
         $section = $phpWord->addSection([
-            'marginTop' => 1000,
-            'marginBottom' => 1000,
-            'marginLeft' => 1000,
-            'marginRight' => 1000,
+            'marginTop' => 1440,
+            'marginBottom' => 1440,
+            'marginLeft' => 1440,
+            'marginRight' => 1440,
         ]);
 
-        // Header
-        $section->addText(
-            'REKAPITULASI BULANAN UANG JALAN & LEMBUR DRIVER',
-            ['bold' => true, 'size' => 14, 'color' => '1B365D', 'name' => 'Calibri'],
-            ['alignment' => Jc::CENTER]
-        );
-        $section->addText(
-            'PT Hamada Logistik',
-            ['bold' => true, 'size' => 11, 'color' => '5C768D', 'name' => 'Calibri'],
-            ['alignment' => Jc::CENTER]
-        );
+        // Header Table with bottom border line
+        $headerTable = $section->addTable(['align' => 'center']);
+        $headerTable->addRow();
+        $cell = $headerTable->addCell(9000, [
+            'borderBottomSize' => 18, // 1.5 pt
+            'borderBottomColor' => '1B365D',
+            'paddingBottom' => 100
+        ]);
+        $cell->addText('PT HAMADA GLOBAL JAYA', ['bold' => true, 'size' => 16, 'color' => '1B365D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell->addText('REKAPITULASI BULANAN UANG JALAN & LEMBUR DRIVER', ['bold' => true, 'size' => 11, 'color' => '5C768D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
         
         // Format Month
         list($year, $monthNum) = explode('-', $month);
         $monthDate = Carbon::createFromDate($year, $monthNum, 1);
         $monthLabel = $monthDate->translatedFormat('F Y');
         
-        $section->addText(
-            'Periode Rekap: ' . $monthLabel,
-            ['bold' => true, 'size' => 10, 'color' => '2C3E50', 'name' => 'Calibri'],
-            ['alignment' => Jc::CENTER]
-        );
+        $cell->addText('Laporan Rekap Bulanan Internal Keuangan  •  Periode: ' . $monthLabel, ['italic' => true, 'size' => 9, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        
         $section->addTextBreak(1);
+
+        $tableStyle = [
+            'cellMargin' => 80,
+        ];
 
         // Driver details
         $section->addText('DATA UTAMA PENGAJUAN', ['bold' => true, 'size' => 11, 'color' => '1B365D', 'name' => 'Calibri']);
-        
-        $tableStyle = [
-            'borderSize' => 6,
-            'borderColor' => 'BDC3C7',
-            'cellMargin' => 80,
-        ];
         $tableDriver = $section->addTable($tableStyle);
         $this->addTableRow($tableDriver, 'Nama Driver', $driver->full_name);
         $this->addTableRow($tableDriver, 'Nomor Handphone', $driver->phone_number ?? '-');
@@ -271,57 +262,57 @@ class TransportCostDocumentService
 
         // Consolidated Financial totals
         $section->addText('RINGKASAN TOTAL DANA', ['bold' => true, 'size' => 11, 'color' => '1B365D', 'name' => 'Calibri']);
-        
         $tableSummary = $section->addTable($tableStyle);
         $this->addTableRow($tableSummary, 'Total Perjalanan (Trip)', $recap['total_trips'] . ' Trip');
         $this->addTableRow($tableSummary, 'Akumulasi Jarak Tempuh', number_format($recap['total_km_traveled'], 0, ',', '.') . ' KM');
         $this->addTableRow($tableSummary, 'Konsumsi BBM Rata-rata', $recap['average_fuel_efficiency'] ? number_format($recap['average_fuel_efficiency'], 2) . ' KM / Liter' : 'N/A');
         
-        $this->addTableRow($tableSummary, 'Total Biaya Bensin', 'Rp ' . number_format($recap['total_gasoline_cost'], 0, ',', '.'));
-        $this->addTableRow($tableSummary, 'Total Biaya Tol', 'Rp ' . number_format($recap['total_toll_cost'], 0, ',', '.'));
-        $this->addTableRow($tableSummary, 'Total Biaya Parkir', 'Rp ' . number_format($recap['total_parking_cost'], 0, ',', '.'));
-        $this->addTableRow($tableSummary, 'Total Pembayaran Lembur', 'Rp ' . number_format($recap['total_overtime_payment'], 0, ',', '.'));
-        $this->addTableRow($tableSummary, 'Total Bonus Driver (Telah Dihapus)', 'Rp ' . number_format($recap['total_bonus_earned'], 0, ',', '.'));
-        
-        $tableSummary->addRow();
-        $cellLabelSum = $tableSummary->addCell(3000, ['bgColor' => 'EAECEE']);
-        $cellLabelSum->addText('GRAND TOTAL KLAIM', ['bold' => true, 'size' => 10, 'name' => 'Calibri']);
-        $cellValueSum = $tableSummary->addCell(6000, ['bgColor' => 'EAECEE']);
-        $cellValueSum->addText('Rp ' . number_format($recap['grand_total'], 0, ',', '.'), ['bold' => true, 'size' => 11, 'color' => '1B365D', 'name' => 'Calibri']);
+        $this->addTableRow($tableSummary, 'Total Biaya Bensin', 'Rp ' . number_format($recap['total_gasoline_cost'], 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableSummary, 'Total Biaya Tol', 'Rp ' . number_format($recap['total_toll_cost'], 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableSummary, 'Total Biaya Parkir', 'Rp ' . number_format($recap['total_parking_cost'], 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableSummary, 'Total Pembayaran Lembur', 'Rp ' . number_format($recap['total_overtime_payment'], 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableSummary, 'Total Bonus Driver (Telah Dihapus)', 'Rp ' . number_format($recap['total_bonus_earned'], 0, ',', '.'), false, 'FFFFFF', 'right');
+        $this->addTableRow($tableSummary, 'GRAND TOTAL KLAIM', 'Rp ' . number_format($recap['grand_total'], 0, ',', '.'), true, 'EAECEE', 'right');
 
         $section->addTextBreak(1);
 
         // Detail list of trips
         $section->addText('LAMPIRAN DATA PERJALANAN DETIL', ['bold' => true, 'size' => 11, 'color' => '1B365D', 'name' => 'Calibri']);
-        
         $tableTrips = $section->addTable([
-            'borderSize' => 4,
+            'borderSize' => 6,
             'borderColor' => 'BDC3C7',
-            'cellMargin' => 60,
+            'cellMargin' => 80,
         ]);
         
         // Table Header
         $tableTrips->addRow(400);
         $tableTrips->addCell(1200, ['bgColor' => '1B365D'])->addText('Tanggal', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
-        $tableTrips->addCell(1500, ['bgColor' => '1B365D'])->addText('DO Number', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $tableTrips->addCell(1800, ['bgColor' => '1B365D'])->addText('DO Number', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
         $tableTrips->addCell(1000, ['bgColor' => '1B365D'])->addText('KM', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
-        $tableTrips->addCell(1500, ['bgColor' => '1B365D'])->addText('Bensin/Tol/Pkr', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
-        $tableTrips->addCell(1300, ['bgColor' => '1B365D'])->addText('Lembur', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $tableTrips->addCell(2000, ['bgColor' => '1B365D'])->addText('Bensin / Tol / Parkir', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $tableTrips->addCell(1500, ['bgColor' => '1B365D'])->addText('Lembur', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
         $tableTrips->addCell(1500, ['bgColor' => '1B365D'])->addText('Total', ['bold' => true, 'color' => 'FFFFFF', 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
 
         foreach ($recap['trips'] as $trip) {
             $tableTrips->addRow();
             
-            $tableTrips->addCell(1200)->addText($trip->trip_date->format('d-m-Y'), ['size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
-            $tableTrips->addCell(1500)->addText(Str::limit($trip->do_number, 20), ['size' => 8, 'name' => 'Calibri']);
-            $tableTrips->addCell(1000)->addText(number_format($trip->odometer_difference, 0, ',', '.'), ['size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+            $cellBorder = [
+                'borderBottomSize' => 6, 'borderBottomColor' => 'BDC3C7',
+                'borderTopSize' => 6, 'borderTopColor' => 'BDC3C7',
+                'borderLeftSize' => 6, 'borderLeftColor' => 'BDC3C7',
+                'borderRightSize' => 6, 'borderRightColor' => 'BDC3C7'
+            ];
+            
+            $tableTrips->addCell(1200, $cellBorder)->addText($trip->trip_date->format('d-m-Y'), ['size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+            $tableTrips->addCell(1800, $cellBorder)->addText(Str::limit($trip->do_number, 25), ['size' => 8.5, 'name' => 'Calibri']);
+            $tableTrips->addCell(1000, $cellBorder)->addText(number_format($trip->odometer_difference, 0, ',', '.'), ['size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
             
             $costBreakdown = 'B: ' . number_format($trip->gasoline_cost / 1000, 0) . 'k / T: ' . number_format($trip->toll_cost / 1000, 0) . 'k / P: ' . number_format($trip->parking_cost / 1000, 0) . 'k';
-            $tableTrips->addCell(1500)->addText($costBreakdown, ['size' => 8, 'name' => 'Calibri']);
-            $tableTrips->addCell(1300)->addText('Rp ' . number_format($trip->overtime_payment, 0, ',', '.'), ['size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::RIGHT]);
+            $tableTrips->addCell(2000, $cellBorder)->addText($costBreakdown, ['size' => 8.5, 'name' => 'Calibri']);
+            $tableTrips->addCell(1500, $cellBorder)->addText('Rp ' . number_format($trip->overtime_payment, 0, ',', '.'), ['size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::RIGHT]);
             
             $tripTotal = $trip->total_cost + $trip->overtime_payment + $trip->bonus_driver;
-            $tableTrips->addCell(1500)->addText('Rp ' . number_format($tripTotal, 0, ',', '.'), ['bold' => true, 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::RIGHT]);
+            $tableTrips->addCell(1500, $cellBorder)->addText('Rp ' . number_format($tripTotal, 0, ',', '.'), ['bold' => true, 'size' => 9, 'name' => 'Calibri'], ['alignment' => Jc::RIGHT]);
         }
 
         $section->addTextBreak(2);
@@ -330,23 +321,30 @@ class TransportCostDocumentService
         $sigTable = $section->addTable();
         $sigTable->addRow();
         
-        $cell1 = $sigTable->addCell(3000);
-        $cell1->addText('Diajukan Oleh (Driver),', ['size' => 10, 'alignment' => Jc::CENTER]);
+        $borderStyle = [
+            'borderBottomSize' => 6, 'borderBottomColor' => 'BDC3C7',
+            'borderTopSize' => 6, 'borderTopColor' => 'BDC3C7',
+            'borderLeftSize' => 6, 'borderLeftColor' => 'BDC3C7',
+            'borderRightSize' => 6, 'borderRightColor' => 'BDC3C7'
+        ];
+
+        $cell1 = $sigTable->addCell(3000, array_merge(['valign' => 'top', 'bgColor' => 'F9FAF9'], $borderStyle));
+        $cell1->addText('Diajukan Oleh (Driver),', ['size' => 9, 'color' => '2C3E50', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
         $cell1->addTextBreak(3);
-        $cell1->addText($driver->full_name, ['bold' => true, 'size' => 10, 'alignment' => Jc::CENTER]);
-        $cell1->addText('Tanggal: ________________', ['size' => 9, 'alignment' => Jc::CENTER]);
+        $cell1->addText($driver->full_name, ['bold' => true, 'size' => 9.5, 'color' => '111827', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell1->addText('Tanggal: ________________', ['size' => 8.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
 
-        $cell2 = $sigTable->addCell(3000);
-        $cell2->addText('Diperiksa Oleh (Admin),', ['size' => 10, 'alignment' => Jc::CENTER]);
+        $cell2 = $sigTable->addCell(3000, array_merge(['valign' => 'top', 'bgColor' => 'F9FAF9'], $borderStyle));
+        $cell2->addText('Diperiksa Oleh (Admin),', ['size' => 9, 'color' => '2C3E50', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
         $cell2->addTextBreak(3);
-        $cell2->addText('___________________', ['bold' => true, 'size' => 10, 'alignment' => Jc::CENTER]);
-        $cell2->addText('Tanggal: ________________', ['size' => 9, 'alignment' => Jc::CENTER]);
+        $cell2->addText('___________________', ['bold' => true, 'size' => 9.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell2->addText('Tanggal: ________________', ['size' => 8.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
 
-        $cell3 = $sigTable->addCell(3000);
-        $cell3->addText('Disetujui Keuangan (Finance),', ['size' => 10, 'alignment' => Jc::CENTER]);
+        $cell3 = $sigTable->addCell(3000, array_merge(['valign' => 'top', 'bgColor' => 'F9FAF9'], $borderStyle));
+        $cell3->addText('Disetujui Keuangan (Finance),', ['size' => 9, 'color' => '2C3E50', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
         $cell3->addTextBreak(3);
-        $cell3->addText('___________________', ['bold' => true, 'size' => 10, 'alignment' => Jc::CENTER]);
-        $cell3->addText('Tanggal: ________________', ['size' => 9, 'alignment' => Jc::CENTER]);
+        $cell3->addText('___________________', ['bold' => true, 'size' => 9.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
+        $cell3->addText('Tanggal: ________________', ['size' => 8.5, 'color' => '7F8C8D', 'name' => 'Calibri'], ['alignment' => Jc::CENTER]);
 
         // Save file
         $fileName = 'transport_docs/recap_' . $driver->id . '_' . $month . '_' . Str::uuid() . '.docx';
@@ -365,10 +363,29 @@ class TransportCostDocumentService
     /**
      * Helper to add a table row.
      */
-    private function addTableRow($table, string $label, string $value): void
+    private function addTableRow($table, string $label, string $value, bool $isTotal = false, string $bgColorVal = 'FFFFFF', string $align = 'left'): void
     {
         $table->addRow();
-        $table->addCell(3000)->addText($label, ['bold' => true, 'size' => 9, 'name' => 'Calibri']);
-        $table->addCell(6000)->addText($value, ['size' => 9, 'name' => 'Calibri']);
+        
+        $labelBg = $isTotal ? 'EAECEE' : 'F2F4F4';
+        $valBg = $isTotal ? 'EAECEE' : $bgColorVal;
+        
+        $borderStyle = [
+            'borderBottomSize' => 6, 'borderBottomColor' => 'BDC3C7',
+            'borderTopSize' => 6, 'borderTopColor' => 'BDC3C7',
+            'borderLeftSize' => 6, 'borderLeftColor' => 'BDC3C7',
+            'borderRightSize' => 6, 'borderRightColor' => 'BDC3C7'
+        ];
+        
+        $cellLabel = $table->addCell(3000, array_merge(['bgColor' => $labelBg, 'valign' => 'center'], $borderStyle));
+        $cellLabel->addText($label, ['bold' => true, 'size' => 9, 'color' => '2C3E50', 'name' => 'Calibri']);
+        
+        $cellValue = $table->addCell(6000, array_merge(['bgColor' => $valBg, 'valign' => 'center'], $borderStyle));
+        $alignment = match($align) {
+            'right' => Jc::RIGHT,
+            'center' => Jc::CENTER,
+            default => Jc::LEFT
+        };
+        $cellValue->addText($value, ['size' => 9, 'color' => '111827', 'name' => 'Calibri'], ['alignment' => $alignment]);
     }
 }

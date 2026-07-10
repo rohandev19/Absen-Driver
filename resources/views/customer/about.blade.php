@@ -24,7 +24,7 @@
                         <i class="bi bi-shield-check me-1"></i><span data-en="Official Portal" data-id="Portal Resmi">Official Portal</span>
                     </span>
                     <h1 class="fw-bold fs-3 fs-md-2 mb-2" style="line-height: 1.25;" data-en="About Customer Portal" data-id="Tentang Portal Customer">About Customer Portal</h1>
-                    <p class="mb-0 text-white-50 fs-6 opacity-90" style="max-width: 600px;" data-en="A transparent, secure, and trusted fleet monitoring portal from PT Hamada Logistik." data-id="Portal monitoring armada yang transparan, aman, dan terpercaya dari PT Hamada Logistik.">A transparent, secure, and trusted fleet monitoring portal from PT Hamada Logistik.</p>
+                    <p class="mb-0 text-white-50 fs-6 opacity-90" style="max-width: 600px;" data-en="A transparent, secure, and trusted fleet monitoring portal from PT Hamada Global Jaya." data-id="Portal monitoring armada yang transparan, aman, dan terpercaya dari PT Hamada Global Jaya.">A transparent, secure, and trusted fleet monitoring portal from PT Hamada Global Jaya.</p>
                 </div>
             </div>
         </div>
@@ -41,7 +41,7 @@
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="About the Company" data-id="Tentang Perusahaan">About the Company</h5>
                     </div>
-                    <p class="text-secondary mb-3" style="line-height: 1.7;" data-en="<strong>PT Hamada Logistik</strong> is a company engaged in transportation and logistics services. We are committed to providing <strong>safe, timely, and professional</strong> delivery services to all our customers." data-id="<strong>PT Hamada Logistik</strong> adalah perusahaan yang bergerak di bidang jasa transportasi dan logistik. Kami berkomitmen memberikan layanan pengiriman yang <strong>aman, tepat waktu, dan profesional</strong> kepada seluruh pelanggan kami."><strong>PT Hamada Logistik</strong> is a company engaged in transportation and logistics services. We are committed to providing <strong>safe, timely, and professional</strong> delivery services to all our customers.</p>
+                    <p class="text-secondary mb-3" style="line-height: 1.7;" data-en="<strong>PT Hamada Global Jaya</strong> is a company engaged in transportation and logistics services. We are committed to providing <strong>safe, timely, and professional</strong> delivery services to all our customers." data-id="<strong>PT Hamada Global Jaya</strong> adalah perusahaan yang bergerak di bidang jasa transportasi dan logistik. Kami berkomitmen memberikan layanan pengiriman yang <strong>aman, tepat waktu, dan profesional</strong> kepada seluruh pelanggan kami."><strong>PT Hamada Global Jaya</strong> is a company engaged in transportation and logistics services. We are committed to providing <strong>safe, timely, and professional</strong> delivery services to all our customers.</p>
                     <p class="text-secondary mb-0" style="line-height: 1.7;" data-en="With a well-maintained vehicle fleet and modern monitoring systems, we ensure every unit operates in prime condition to support our customers' business needs." data-id="Dengan armada kendaraan yang terawat baik dan sistem monitoring modern, kami memastikan setiap unit beroperasi dalam kondisi prima untuk mendukung kebutuhan bisnis pelanggan.">With a well-maintained vehicle fleet and modern monitoring systems, we ensure every unit operates in prime condition to support our customers' business needs.</p>
                 </div>
             </div>
@@ -56,7 +56,7 @@
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="About This Portal" data-id="Tentang Portal Ini">About This Portal</h5>
                     </div>
-                    <p class="text-secondary mb-3" style="line-height: 1.7;" data-en="The <strong>Hamada Logistik</strong> Customer Portal is specially designed to provide <strong>full transparency</strong> to customers regarding the condition and reliability of leased vehicle units." data-id="Portal Customer <strong>Hamada Logistik</strong> dirancang khusus untuk memberikan <strong>transparansi penuh</strong> kepada pelanggan atas kondisi dan keandalan unit kendaraan sewa.">The <strong>Hamada Logistik</strong> Customer Portal is specially designed to provide <strong>full transparency</strong> to customers regarding the condition and reliability of leased vehicle units.</p>
+                    <p class="text-secondary mb-3" style="line-height: 1.7;" data-en="The <strong>Hamada Global Jaya</strong> Customer Portal is specially designed to provide <strong>full transparency</strong> to customers regarding the condition and reliability of leased vehicle units." data-id="Portal Customer <strong>Hamada Global Jaya</strong> dirancang khusus untuk memberikan <strong>transparansi penuh</strong> kepada pelanggan atas kondisi dan keandalan unit kendaraan sewa.">The <strong>Hamada Global Jaya</strong> Customer Portal is specially designed to provide <strong>full transparency</strong> to customers regarding the condition and reliability of leased vehicle units.</p>
                     <p class="text-secondary mb-0" style="line-height: 1.7;" data-en="Through this portal, you can monitor vehicle conditions in real-time, view maintenance history, ensure document compliance (STNK/KIR), and <strong>digitally sign</strong> service approvals directly from your phone or computer — no printing required." data-id="Melalui portal ini, Anda dapat memantau kondisi kendaraan secara real-time, melihat riwayat perawatan, memastikan kepatuhan dokumen (STNK/KIR), dan <strong>menandatangani secara digital</strong> persetujuan service langsung dari HP atau komputer Anda — tanpa perlu cetak dokumen.">Through this portal, you can monitor vehicle conditions in real-time, view maintenance history, ensure document compliance (STNK/KIR), and <strong>digitally sign</strong> service approvals directly from your phone or computer — no printing required.</p>
                 </div>
             </div>
@@ -293,7 +293,7 @@
             <div class="card border-0 shadow-sm h-100 help-card-bg" style="border-radius: 14px;">
                 <div class="card-body p-4 d-flex flex-column justify-content-center text-center">
                     <div class="mb-3">
-                        <img src="{{ asset('images/hamada-logo.png') }}" alt="Hamada Logistik" style="max-width: 120px; height: auto;" class="mb-3">
+                        <img src="{{ asset('images/hamada-logo.png') }}" alt="Hamada Global Jaya" style="max-width: 120px; height: auto;" class="mb-3">
                     </div>
                     <h5 class="fw-bold text-dark mb-2" data-en="Need Help?" data-id="Butuh Bantuan?">Need Help?</h5>
                     <p class="text-secondary small mb-3" data-en="If you have any questions or issues, please contact our team." data-id="Jika Anda memiliki pertanyaan atau kendala, silakan hubungi tim kami.">If you have any questions or issues, please contact our team.</p>

@@ -322,9 +322,9 @@
             <div class="d-flex align-items-center bg-warning bg-opacity-10 border border-warning border-opacity-50 p-3 rounded flex-grow-1 w-100" style="max-width: 500px;">
                 <i class="bi bi-check-circle-fill text-warning fs-3 me-3"></i>
                 <div>
-                    <h6 class="fw-bold text-dark mb-1">Verifikasi PT Hamada Logistik</h6>
+                    <h6 class="fw-bold text-dark mb-1">Verifikasi PT Hamada Global Jaya</h6>
                     <p class="small text-muted mb-0" style="font-size: 0.75rem;">
-                        Laporan ini telah diverifikasi oleh Admin Operasional PT Hamada Logistik sebelum dikirim ke Anda.
+                        Laporan ini telah diverifikasi oleh Admin Operasional PT Hamada Global Jaya sebelum dikirim ke Anda.
                     </p>
                 </div>
                 <div class="ms-auto ps-3 border-start d-none d-sm-block">
@@ -364,7 +364,7 @@
             <form action="{{ route('customer.approve.reject', $report->id) }}" method="POST">
                 @csrf
                 <div class="modal-body p-4">
-                    <p class="small text-muted mb-3">Silakan tuliskan alasan Anda menolak hasil service ini. Alasan ini akan dikirimkan kembali ke pihak Admin Hamada Logistik untuk ditindaklanjuti.</p>
+                    <p class="small text-muted mb-3">Silakan tuliskan alasan Anda menolak hasil service ini. Alasan ini akan dikirimkan kembali ke pihak Admin Hamada Global Jaya untuk ditindaklanjuti.</p>
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Alasan Penolakan <span class="text-danger">*</span></label>
                         <textarea name="customer_rejection_reason" class="form-control bg-light" rows="4" placeholder="Misal: Perbaikan tidak sesuai kesepakatan, plat nomor salah, dll" required></textarea>

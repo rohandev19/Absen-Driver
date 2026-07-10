@@ -39,7 +39,7 @@
     <div class="d-none d-print-block w-100" style="color: #000 !important; background: #fff !important; font-family: Arial, sans-serif;">
         {{-- Kop Surat --}}
         <div style="text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px;">
-            <h1 style="font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase;">PT HAMADA LOGISTIK</h1>
+            <h1 style="font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase;">PT HAMADA GLOBAL JAYA</h1>
             <p style="font-size: 14px; margin: 0;">Slip Rincian Uang Jalan & Pengeluaran</p>
         </div>
 

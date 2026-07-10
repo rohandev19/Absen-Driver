@@ -8,7 +8,7 @@
         <div class="col-12">
             <h4 class="fw-bold text-dark mb-1">Panduan Penggunaan Portal Admin</h4>
             <p class="text-muted" style="font-size: 0.9rem;">
-                Panduan operasional untuk absensi, unit pengganti, service kendaraan, approval customer, dan proses internal Hamada Logistik.
+                Panduan operasional untuk absensi, unit pengganti, service kendaraan, approval customer, dan proses internal Hamada Global Jaya.
             </p>
         </div>
     </div>

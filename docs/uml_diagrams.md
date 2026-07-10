@@ -567,24 +567,24 @@ classDiagram
 ```mermaid
 graph TB
     subgraph Client
-        A["📱 Flutter Mobile App<br/>Dart, Sembast, GPS, Camera"]
-        B["🖥️ Web Dashboard<br/>Blade, Bootstrap, Chart.js"]
+        A["Flutter Mobile App<br/>Dart, Sembast, GPS, Camera"]
+        B["Web Dashboard<br/>Blade, Bootstrap, Chart.js"]
     end
 
     subgraph Server
-        C["🌐 Nginx / Apache<br/>Reverse Proxy, SSL"]
-        D["⚙️ Laravel 11<br/>Sanctum Auth, REST API<br/>Blade Views, Artisan"]
-        E["⏰ Scheduler<br/>Cron Jobs Maintenance<br/>& Push Notification"]
+        C["Nginx / Apache<br/>Reverse Proxy, SSL"]
+        D["Laravel 11<br/>Sanctum Auth, REST API<br/>Blade Views, Artisan"]
+        E["Scheduler<br/>Cron Jobs Maintenance<br/>& Push Notification"]
     end
 
     subgraph Data
-        F["🗄️ MySQL<br/>16 Tabel, Eloquent ORM<br/>Transaction Support"]
-        G["📁 File Storage<br/>Foto, Tanda Tangan, PDF"]
+        F["MySQL Database<br/>16 Tabel, Eloquent ORM<br/>Transaction Support"]
+        G["File Storage<br/>Foto, Tanda Tangan, PDF"]
     end
 
     subgraph External
-        H["🔔 Firebase FCM<br/>Push Notification"]
-        I["🗺️ Google Maps<br/>GPS Location"]
+        H["Firebase FCM<br/>Push Notification"]
+        I["Google Maps<br/>GPS Location"]
     end
 
     A -- "HTTPS REST API<br/>JSON + Multipart" --> C
