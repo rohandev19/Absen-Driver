@@ -755,46 +755,381 @@
         @media print {
             @page {
                 size: A4 portrait;
-                margin: 1.5cm;
+                margin: 15mm 18mm 20mm 18mm;
             }
-            body {
-                background: white !important;
-                color: #000 !important;
+
+            /* --- Reset & Base --- */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
             }
-            #sidebar, 
-            .topbar, 
+            html, body {
+                background: #fff !important;
+                color: #1a1a1a !important;
+                font-size: 10pt !important;
+                line-height: 1.5 !important;
+                font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            /* --- Hide interactive / chrome UI --- */
+            #sidebar,
+            .topbar,
+            .sidebar-overlay,
             .btn,
             .btn-group,
             .modal,
-            .d-print-none {
+            .d-print-none,
+            .sticky-bottom,
+            nav[aria-label="breadcrumb"],
+            .stepper-wrapper,
+            .stepper-container,
+            a.btn,
+            a.nav-link,
+            form,
+            .topbar-user,
+            .topbar-welcome-text {
                 display: none !important;
+            }
+
+            /* --- Layout reset --- */
+            .wrapper {
+                display: block !important;
             }
             #main-content {
                 margin-left: 0 !important;
-                padding: 0 !important;
+                padding-left: 0 !important;
+                width: 100% !important;
             }
             .content-area {
                 padding: 0 !important;
             }
+            .container-fluid {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+
+            /* --- Print Header (letterhead) --- */
+            .print-header {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 3px solid #1e3a8a;
+                padding-bottom: 12pt;
+                margin-bottom: 16pt;
+            }
+            .print-header-logo {
+                display: flex !important;
+                align-items: center;
+                gap: 10pt;
+            }
+            .print-header-logo img {
+                width: 48pt;
+                height: 48pt;
+                object-fit: contain;
+            }
+            .print-header-brand {
+                line-height: 1.2;
+            }
+            .print-header-brand .company-name {
+                font-size: 14pt;
+                font-weight: 800;
+                color: #1e3a8a;
+                text-transform: uppercase;
+                letter-spacing: 0.5pt;
+            }
+            .print-header-brand .company-tagline {
+                font-size: 8pt;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 1.5pt;
+                font-weight: 500;
+            }
+            .print-header-docinfo {
+                text-align: right;
+                font-size: 8.5pt;
+                color: #475569;
+                line-height: 1.6;
+            }
+            .print-header-docinfo .doc-title {
+                font-size: 11pt;
+                font-weight: 700;
+                color: #1a1a1a;
+                margin-bottom: 2pt;
+            }
+
+            /* --- Print Footer --- */
+            .print-footer {
+                display: block !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                border-top: 1.5px solid #cbd5e1;
+                padding-top: 6pt;
+                font-size: 7pt;
+                color: #94a3b8;
+                text-align: center;
+            }
+            .print-footer-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            /* --- Card / Section Styling --- */
             .card {
                 border: none !important;
                 box-shadow: none !important;
                 background: transparent !important;
+                margin-bottom: 10pt !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
             .card-header {
                 background: transparent !important;
-                border-bottom: 2px solid #000 !important;
-                color: #000 !important;
-                padding-left: 0 !important;
-                padding-right: 0 !important;
+                padding: 6pt 0 4pt 0 !important;
+                margin-bottom: 4pt;
             }
+            .card-header h6 {
+                font-size: 10.5pt !important;
+                font-weight: 700 !important;
+                color: #1e3a8a !important;
+                border-bottom: 1.5px solid #1e3a8a;
+                padding-bottom: 4pt;
+                margin: 0 !important;
+                text-transform: uppercase;
+                letter-spacing: 0.3pt;
+            }
+            .card-header h6 i {
+                display: none !important;
+            }
+            .card-body {
+                padding: 6pt 0 !important;
+            }
+
+            /* --- Typography --- */
+            h4, h5, h6 {
+                color: #1a1a1a !important;
+                page-break-after: avoid;
+            }
+            small.text-muted.fw-bold {
+                font-size: 7.5pt !important;
+                color: #64748b !important;
+                text-transform: uppercase;
+                letter-spacing: 0.5pt;
+            }
+            .fw-semibold, .fw-bold {
+                color: #1a1a1a !important;
+            }
+
+            /* --- Grid layout for print --- */
+            .row {
+                display: flex !important;
+                flex-wrap: wrap !important;
+            }
+            .col-12.col-lg-7 {
+                flex: 0 0 55% !important;
+                max-width: 55% !important;
+            }
+            .col-12.col-lg-5 {
+                flex: 0 0 45% !important;
+                max-width: 45% !important;
+            }
+            .col-6 {
+                flex: 0 0 50% !important;
+                max-width: 50% !important;
+            }
+
+            /* --- Info Bar (ticket/status) --- */
+            .print-info-bar {
+                display: flex !important;
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 4pt !important;
+                padding: 8pt 12pt !important;
+                margin-bottom: 12pt !important;
+                gap: 20pt;
+            }
+            .print-info-bar > div {
+                flex: 1;
+            }
+
+            /* --- Badges --- */
             .badge {
-                border: 1px solid #000 !important;
-                color: #000 !important;
-                background: transparent !important;
+                border: 1px solid #475569 !important;
+                color: #1a1a1a !important;
+                background: #f1f5f9 !important;
+                font-size: 8pt !important;
+                padding: 2pt 8pt !important;
+                border-radius: 2pt !important;
             }
+            .badge.bg-success {
+                border-color: #16a34a !important;
+                background: #f0fdf4 !important;
+                color: #166534 !important;
+            }
+            .badge.bg-warning {
+                border-color: #ca8a04 !important;
+                background: #fefce8 !important;
+                color: #854d0e !important;
+            }
+            .badge.bg-danger {
+                border-color: #dc2626 !important;
+                background: #fef2f2 !important;
+                color: #991b1b !important;
+            }
+            .badge.bg-info {
+                border-color: #0891b2 !important;
+                background: #ecfeff !important;
+                color: #155e75 !important;
+            }
+            .badge.bg-secondary {
+                border-color: #475569 !important;
+                background: #f1f5f9 !important;
+                color: #1e293b !important;
+            }
+
+            /* --- Photo grid --- */
+            .col-12.col-md-4 {
+                flex: 0 0 33.333% !important;
+                max-width: 33.333% !important;
+            }
+            .col-12.col-md-4 .border.rounded {
+                border: 1px solid #d1d5db !important;
+                border-radius: 4pt !important;
+                padding: 4pt !important;
+                background: #fff !important;
+            }
+            .col-12.col-md-4 img {
+                max-height: 100pt !important;
+                object-fit: cover !important;
+                border-radius: 2pt !important;
+            }
+
+            /* --- Kronologi / text sections --- */
+            .card-body p.text-muted.small {
+                font-size: 9pt !important;
+                color: #374151 !important;
+                line-height: 1.6 !important;
+            }
+            hr {
+                border-color: #e5e7eb !important;
+                margin: 6pt 0 !important;
+            }
+
+            /* --- Konfirmasi Laporan Box (print version) --- */
+            .bg-light.bg-opacity-50.border.border-info {
+                background: #f0f9ff !important;
+                border: 1px solid #93c5fd !important;
+                border-radius: 4pt !important;
+                padding: 10pt !important;
+                page-break-inside: avoid;
+            }
+            .alert.alert-primary {
+                background: #eff6ff !important;
+                border: 1px solid #bfdbfe !important;
+                border-radius: 3pt !important;
+                padding: 6pt 8pt !important;
+            }
+
+            /* --- Shadow resets --- */
             .shadow-sm, .shadow, .shadow-lg {
                 box-shadow: none !important;
+            }
+
+            /* --- Verification box in print --- */
+            .print-verification-box {
+                display: block !important;
+                border: 1.5px solid #1e3a8a;
+                border-radius: 4pt;
+                padding: 10pt 14pt;
+                margin-top: 14pt;
+                page-break-inside: avoid;
+                background: #f8fafc !important;
+            }
+            .print-verification-box .verify-title {
+                font-size: 9.5pt;
+                font-weight: 700;
+                color: #1e3a8a;
+                margin-bottom: 6pt;
+            }
+            .print-verification-box table {
+                width: 100%;
+                font-size: 8.5pt;
+                border-collapse: collapse;
+            }
+            .print-verification-box table td {
+                padding: 2pt 0;
+                vertical-align: top;
+            }
+            .print-verification-box table td:first-child {
+                width: 40%;
+                color: #64748b;
+                font-weight: 500;
+            }
+            .print-verification-box table td:last-child {
+                color: #1a1a1a;
+                font-weight: 600;
+            }
+
+            /* --- Signature area --- */
+            .print-signatures {
+                display: flex !important;
+                justify-content: space-between;
+                margin-top: 30pt;
+                page-break-inside: avoid;
+            }
+            .print-signature-block {
+                width: 45%;
+                text-align: center;
+            }
+            .print-signature-block .sig-label {
+                font-size: 8.5pt;
+                color: #64748b;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5pt;
+                margin-bottom: 50pt;
+            }
+            .print-signature-block .sig-line {
+                border-top: 1px solid #1a1a1a;
+                padding-top: 4pt;
+                font-size: 9pt;
+                font-weight: 700;
+                color: #1a1a1a;
+            }
+            .print-signature-block .sig-role {
+                font-size: 7.5pt;
+                color: #64748b;
+                margin-top: 2pt;
+            }
+
+            /* --- Watermark --- */
+            .print-watermark {
+                display: block !important;
+                position: fixed;
+                top: 45%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-35deg);
+                font-size: 60pt;
+                color: rgba(0,0,0,0.03);
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: 8pt;
+                z-index: -1;
+                pointer-events: none;
+                white-space: nowrap;
+            }
+
+            /* --- Page number support --- */
+            .print-page-number::after {
+                counter-increment: page;
+                content: "Halaman " counter(page);
             }
         }
 

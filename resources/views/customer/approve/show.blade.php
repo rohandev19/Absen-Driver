@@ -3,9 +3,39 @@
 @section('title', 'Detail Konfirmasi Service Unit')
 
 @section('content')
+
+{{-- ============ PRINT-ONLY: Letterhead Header ============ --}}
+<div class="print-header d-none">
+    <div class="print-header-logo">
+        <img src="{{ asset('images/hamada-logo.png') }}" alt="Logo Hamada">
+        <div class="print-header-brand">
+            <div class="company-name">PT Hamada Global Jaya</div>
+            <div class="company-tagline">Transport &amp; Logistics</div>
+        </div>
+    </div>
+    <div class="print-header-docinfo">
+        <div class="doc-title">Laporan Konfirmasi Service Unit</div>
+        <div>No. Tiket: <strong>{{ $report->ticket_number ?? 'N/A' }}</strong></div>
+        <div>Tanggal Cetak: {{ now()->format('d-m-Y H:i') }}</div>
+    </div>
+</div>
+
+{{-- PRINT-ONLY: Watermark --}}
+<div class="print-watermark d-none">HAMADA</div>
+
+{{-- PRINT-ONLY: Footer --}}
+<div class="print-footer d-none">
+    <div class="print-footer-content">
+        <span>&copy; {{ date('Y') }} PT Hamada Global Jaya &mdash; Transport &amp; Logistics</span>
+        <span>Dokumen ini dicetak secara otomatis pada {{ now()->format('d-m-Y H:i') }} WIB</span>
+        <span class="print-page-number"></span>
+    </div>
+</div>
+
 <div class="container-fluid mb-5">
+
     {{-- Top Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
         <div>
             <h4 class="fw-bold mb-1 fs-5 text-dark">Detail Konfirmasi Service Unit</h4>
             <nav aria-label="breadcrumb">
@@ -30,7 +60,7 @@
     </div>
 
     {{-- Action Buttons --}}
-    <div class="d-flex justify-content-between mb-4">
+    <div class="d-flex justify-content-between mb-4 d-print-none">
         <a href="{{ route('customer.approve.index') }}" class="btn btn-white border shadow-sm">
             <i class="bi bi-arrow-left me-2"></i> Kembali ke Daftar
         </a>
@@ -90,7 +120,7 @@
     </div>
 
     {{-- Info Card Bar --}}
-    <div class="card border-0 shadow-sm mb-4">
+    <div class="card border-0 shadow-sm mb-4 d-print-none">
         <div class="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div>
                 <small class="text-muted fw-bold d-block mb-1">No Tiket</small>
@@ -316,7 +346,7 @@
 
     {{-- Footer Actions Bar --}}
     @if($report->status === 'pending_customer')
-    <div class="card border-0 shadow-sm mt-4 bg-white sticky-bottom" style="bottom: 20px; z-index: 1000;">
+    <div class="card border-0 shadow-sm mt-4 bg-white sticky-bottom d-print-none" style="bottom: 20px; z-index: 1000;">
         <div class="card-body p-4 d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
             {{-- Verifikasi Admin --}}
             <div class="d-flex align-items-center bg-warning bg-opacity-10 border border-warning border-opacity-50 p-3 rounded flex-grow-1 w-100" style="max-width: 500px;">
@@ -351,7 +381,44 @@
     </div>
     @endif
 
+    {{-- ============ PRINT-ONLY: Verification & Signatures ============ --}}
+    <div class="print-verification-box d-none">
+        <div class="verify-title">✓ Verifikasi PT Hamada Global Jaya</div>
+        <table>
+            <tr>
+                <td>Diverifikasi oleh</td>
+                <td>: {{ $report->admin_signer_name ?? 'Admin Operasional' }}</td>
+            </tr>
+            <tr>
+                <td>Waktu Verifikasi</td>
+                <td>: {{ $report->approved_at_admin ? $report->approved_at_admin->format('d-m-Y H:i') : '-' }}</td>
+            </tr>
+            <tr>
+                <td>Status Konfirmasi</td>
+                <td>: @if($report->status === 'approved_customer') Terkonfirmasi @elseif($report->status === 'pending_customer') Menunggu Konfirmasi @elseif($report->status === 'revision_requested') Minta Klarifikasi @elseif($report->status === 'rejected_customer') Ditolak @endif</td>
+            </tr>
+            <tr>
+                <td>No. Tiket</td>
+                <td>: {{ $report->ticket_number ?? 'N/A' }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="print-signatures d-none">
+        <div class="print-signature-block">
+            <div class="sig-label">PT Hamada Global Jaya</div>
+            <div class="sig-line">{{ $report->admin_signer_name ?? 'Admin Operasional' }}</div>
+            <div class="sig-role">Admin Operasional</div>
+        </div>
+        <div class="print-signature-block">
+            <div class="sig-label">Pihak Customer</div>
+            <div class="sig-line">{{ $report->customer->name ?? Auth::user()->name }}</div>
+            <div class="sig-role">{{ $report->customer->name ?? 'Customer' }}</div>
+        </div>
+    </div>
+
 </div>
+
 
 {{-- Reject Modal --}}
 <div class="modal fade" id="rejectModal" tabindex="-1">
