@@ -194,6 +194,9 @@ class ReportController extends Controller
                 $jarak = max(0, $akhir - $awal);
 
                 return [
+                    'id' => $item->id,
+                    'raw_speedo_awal' => $awal,
+                    'raw_speedo_akhir' => $akhir,
                     'timestamp_keluar' => Carbon::parse($item->time_out)->format('Y-m-d H:i:s'),
                     'driver_name' => $item->driver->full_name ?? 'N/A (Deleted)',
                     'plate_number' => $item->vehicle->plate_number ?? 'N/A',

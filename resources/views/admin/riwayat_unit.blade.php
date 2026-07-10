@@ -280,6 +280,9 @@
                                 <th>Kondisi Fisik</th>
                                 <th>Catatan</th>
                                 <th class="text-center pe-4">Bukti</th>
+                                @can('is-master-admin')
+                                    <th class="text-center pe-4">Aksi</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -355,6 +358,75 @@
                                             <span class="text-muted opacity-25"><i class="bi bi-slash-circle"></i></span>
                                         @endif
                                     </td>
+
+                                    {{-- 7. Aksi (Koreksi KM) --}}
+                                    @can('is-master-admin')
+                                    <td class="text-center pe-4" data-label="Aksi">
+                                        @if(!empty($item['id']))
+                                            <button type="button" class="btn btn-sm btn-outline-warning border-0 fw-bold"
+                                                data-bs-toggle="modal" data-bs-target="#modalEditKm{{ $item['id'] }}">
+                                                <i class="bi bi-pencil-square me-1"></i> Koreksi
+                                            </button>
+
+                                            {{-- MODAL KOREKSI --}}
+                                            <div class="modal fade" id="modalEditKm{{ $item['id'] }}" tabindex="-1"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content text-start border-0 shadow">
+                                                        <div class="modal-header bg-warning bg-opacity-10">
+                                                            <h6 class="modal-title fw-bold text-warning-emphasis">
+                                                                <i class="bi bi-pencil-fill me-2"></i>Koreksi Data KM
+                                                            </h6>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <form action="{{ route('admin.attendance.updateKm', $item['id']) }}" method="POST">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <div class="modal-body p-4">
+                                                                <div class="alert alert-light border mb-4 small d-flex align-items-center">
+                                                                    <i class="bi bi-info-circle me-2 text-muted fs-5"></i>
+                                                                    <div>
+                                                                        Edit untuk: <strong>{{ $item['driver_name'] }}</strong><br>
+                                                                        Unit: {{ $item['plate_number'] }}<br>
+                                                                        Waktu: {{ $item['timestamp_keluar'] }}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label small fw-bold text-muted">KM Awal</label>
+                                                                    <div class="input-group">
+                                                                        <input type="number" class="form-control" name="speedo_awal"
+                                                                            value="{{ $item['raw_speedo_awal'] }}" required min="0" step="1">
+                                                                        <span class="input-group-text bg-light text-muted">Km</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mb-4">
+                                                                    <label class="form-label small fw-bold text-muted">KM Akhir</label>
+                                                                    <div class="input-group">
+                                                                        <input type="number" class="form-control" name="speedo_akhir"
+                                                                            value="{{ $item['raw_speedo_akhir'] }}" required min="0" step="1">
+                                                                        <span class="input-group-text bg-light text-muted">Km</span>
+                                                                    </div>
+                                                                    <div class="form-text mt-2 text-danger small">
+                                                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                                                        Mengubah KM Akhir (jika ini log terbaru) akan otomatis mengubah KM Master Kendaraan.
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer bg-light border-0 px-4 py-3">
+                                                                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                                                                <button type="submit" class="btn btn-warning fw-bold px-4">
+                                                                    <i class="bi bi-check-circle me-2"></i>Simpan Perubahan
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>
