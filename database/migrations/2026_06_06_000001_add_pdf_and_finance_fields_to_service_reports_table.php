@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('service_reports', function (Blueprint $table) {
             // Path PDF.
-            $table->string('admin_internal_pdf_path')->nullable()->after('customer_signed_pdf_path');
+            $table->string('admin_internal_pdf_path')->nullable()->after('customer_signed_document_path');
             $table->string('finance_pdf_path')->nullable()->after('finance_word_path');
 
             // Field finance/internal. Nullable agar tidak merusak data lama.

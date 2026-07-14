@@ -20,6 +20,7 @@ use App\Http\Controllers\MaintenanceAlertController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\MaintenanceAssetController;
 use App\Http\Controllers\PanduanController;
+use App\Http\Controllers\VehicleReplacementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -252,6 +253,19 @@ Route::middleware(['auth', 'role:master,service_admin', 'throttle:60,1'])->prefi
         Route::post('/{id}/submit-to-finance', 'submitToFinance')->name('admin.transport-costs.submit_to_finance');
         Route::post('/bulk-submit-to-finance', 'bulkSubmitToFinance')->name('admin.transport-costs.bulk_submit_to_finance');
         Route::get('/{id}/export-finance', 'exportFinance')->name('admin.transport-costs.export_finance');
+    });
+
+    // ====================================================
+    // 6.5 VEHICLE REPLACEMENTS
+    // ====================================================
+    Route::controller(VehicleReplacementController::class)->prefix('vehicle-replacements')->name('admin.vehicle_replacements.')->group(function() {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{vehicleReplacement}/edit', 'edit')->name('edit');
+        Route::put('/{vehicleReplacement}', 'update')->name('update');
+        Route::post('/{vehicleReplacement}/complete', 'complete')->name('complete');
+        Route::post('/{vehicleReplacement}/cancel', 'cancel')->name('cancel');
     });
 
     // ====================================================

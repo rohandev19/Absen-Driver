@@ -885,16 +885,17 @@
                 <li class="nav-item">
                     <button class="btn btn-toggle collapsed"
                         data-bs-toggle="collapse" data-bs-target="#unit-collapse"
-                        aria-expanded="{{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit') ? 'true' : 'false' }}">
+                        aria-expanded="{{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit', 'admin.vehicle_replacements.*') ? 'true' : 'false' }}">
                         <i class="bi bi-truck menu-icon"></i>
                         <span class="menu-label">Manajemen Unit</span>
                         <i class="bi bi-chevron-right toggle-chevron"></i>
                     </button>
-                    <div class="collapse {{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit') ? 'show' : '' }}"
+                    <div class="collapse {{ request()->routeIs('admin.daftar_aset', 'admin.riwayat_unit', 'admin.vehicle_replacements.*') ? 'show' : '' }}"
                         id="unit-collapse">
                         <ul class="btn-toggle-nav list-unstyled">
                             <li><a href="{{ route('admin.daftar_aset') }}" class="{{ request()->routeIs('admin.daftar_aset') ? 'active' : '' }}">Daftar Aset</a></li>
                             <li><a href="{{ route('admin.riwayat_unit') }}" class="{{ request()->routeIs('admin.riwayat_unit') ? 'active' : '' }}">Riwayat Unit</a></li>
+                            <li><a href="{{ route('admin.vehicle_replacements.index') }}" class="{{ request()->routeIs('admin.vehicle_replacements.*') ? 'active' : '' }}">Penggantian Kendaraan</a></li>
                         </ul>
                     </div>
                 </li>
