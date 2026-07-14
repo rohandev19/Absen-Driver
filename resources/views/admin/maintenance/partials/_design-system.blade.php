@@ -125,11 +125,11 @@
         transform: translateY(-2px);
     }
 
-    .border-left-danger { border-left: 4px solid var(--color-danger); }
-    .border-left-warning { border-left: 4px solid var(--color-warning); }
-    .border-left-success { border-left: 4px solid var(--color-success); }
-    .border-left-primary { border-left: 4px solid var(--color-primary); }
-    .border-left-info { border-left: 4px solid var(--color-info); }
+    .border-left-danger { border: 1px solid var(--color-danger-border); }
+    .border-left-warning { border: 1px solid var(--color-warning-border); }
+    .border-left-success { border: 1px solid var(--color-success-border); }
+    .border-left-primary { border: 1px solid var(--color-primary-light); }
+    .border-left-info { border: 1px solid var(--color-info-border); }
 
     .stat-card-danger:hover .stat-icon { box-shadow: 0 8px 24px rgba(220, 53, 69, 0.3); transform: scale(1.05); }
     .stat-card-warning:hover .stat-icon { box-shadow: 0 8px 24px rgba(255, 193, 7, 0.3); transform: scale(1.05); }

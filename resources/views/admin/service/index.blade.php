@@ -20,7 +20,7 @@
     {{-- Stats Cards --}}
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid var(--bs-warning) !important;">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex align-items-center p-3">
                     <div class="rounded-circle bg-warning bg-opacity-10 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                         <i class="bi bi-clock-history text-warning fs-4"></i>
@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid var(--bs-primary) !important;">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex align-items-center p-3">
                     <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                         <i class="bi bi-person-lines-fill text-primary fs-4"></i>
@@ -46,7 +46,7 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid var(--bs-success) !important;">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex align-items-center p-3">
                     <div class="rounded-circle bg-success bg-opacity-10 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                         <i class="bi bi-check-circle-fill text-success fs-4"></i>
@@ -59,7 +59,7 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid var(--bs-danger) !important;">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex align-items-center p-3">
                     <div class="rounded-circle bg-danger bg-opacity-10 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                         <i class="bi bi-exclamation-triangle-fill text-danger fs-4"></i>
