@@ -108,21 +108,18 @@
 
         /* Action Icon Button (Tiny) */
         .btn-icon-corp {
-            width: 32px;
-            height: 32px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            color: #64748b;
-            transition: all 0.2s;
+            width: 34px; height: 34px; border-radius: 6px;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: white; border: 1px solid #e2e8f0; color: #64748b;
+            transition: 0.2s; text-decoration: none;
         }
-
-        .btn-icon-corp:hover {
-            border-color: #3b82f6;
-            color: #3b82f6;
+        .btn-icon-corp:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+        
+        [data-bs-theme="dark"] .btn-icon-corp {
+            background: transparent; border-color: rgba(255,255,255,0.2); color: #e2e8f0;
+        }
+        [data-bs-theme="dark"] .btn-icon-corp:hover {
+            background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.3);
         }
 
         /* === 2. CORPORATE TABLE === */
@@ -389,23 +386,25 @@
                                         </div>
                                     </td>
 
+
+
                                     {{-- 6. FOTO --}}
                                     <td class="text-center" data-label="Foto Bukti">
                                         <div class="d-inline-flex gap-1">
-                                            <a href="{{ $item['link_speedo_awal'] }}" target="_blank" class="btn-icon-corp"
+                                            <a href="{{ $item['link_speedo_awal'] }}" target="_blank" class="btn-icon-corp text-primary"
                                                 title="Foto Awal">
                                                 <i class="bi bi-1-circle"></i>
                                             </a>
-                                            <a href="{{ $item['link_speedo_akhir'] }}" target="_blank" class="btn-icon-corp"
+                                            <a href="{{ $item['link_speedo_akhir'] }}" target="_blank" class="btn-icon-corp text-primary"
                                                 title="Foto Akhir">
                                                 <i class="bi bi-2-circle"></i>
                                             </a>
-                                            <a href="{{ $item['link_selfie'] }}" target="_blank" class="btn-icon-corp"
+                                            <a href="{{ $item['link_selfie'] }}" target="_blank" class="btn-icon-corp text-primary"
                                                 title="Selfie">
                                                 <i class="bi bi-person-bounding-box"></i>
                                             </a>
                                             @if(($item['vehicle_entry_method'] ?? 'qr') === 'manual')
-                                                <a href="{{ $item['link_manual_vehicle_photo'] }}" target="_blank" class="btn-icon-corp"
+                                                <a href="{{ $item['link_manual_vehicle_photo'] }}" target="_blank" class="btn-icon-corp text-primary"
                                                     title="Foto Plat/Unit Manual">
                                                     <i class="bi bi-truck-front"></i>
                                                 </a>

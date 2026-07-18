@@ -673,8 +673,7 @@ class AttendanceController extends Controller
 
     public function submitEmergencyReport(Request $request)
     {
-        $plate = $request->input('plate_number');
-        if (empty($plate) || $plate === 'N/A' || $plate === 'null') {
+        if (! $request->filled('plate_number')) {
             $activeAttendance = Attendance::with('vehicle')
                 ->where('driver_id', Auth::id())
                 ->whereNull('time_out')

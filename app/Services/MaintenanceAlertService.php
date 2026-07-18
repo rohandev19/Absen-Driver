@@ -60,48 +60,50 @@ class MaintenanceAlertService
     {
         $vehicle = $component->vehicle;
         
-        if (!$vehicle || !$component->next_replacement_km) {
+        if (!$vehicle || (!$component->next_replacement_km && !$component->next_replacement_date)) {
             return null;
         }
 
-        $kmRemaining = $component->next_replacement_km - $vehicle->current_km;
+        $kmRemaining = $component->next_replacement_km ? ($component->next_replacement_km - $vehicle->current_km) : null;
         $alertType = null;
         $message = null;
 
         // Check KM-based alerts
-        if ($kmRemaining <= 0) {
-            $alertType = 'overdue';
-            $message = sprintf(
-                'OVERDUE: %s untuk %s (%s) sudah melewati batas penggantian. ' .
-                'Seharusnya diganti pada %s KM, saat ini %s KM.',
-                $component->component_name,
-                $vehicle->plate_number,
-                $vehicle->type,
-                number_format($component->next_replacement_km),
-                number_format($vehicle->current_km)
-            );
-        } elseif ($kmRemaining <= $component->critical_threshold_km) {
-            $alertType = 'critical';
-            $message = sprintf(
-                'CRITICAL: %s untuk %s (%s) perlu segera diganti. ' .
-                'Sisa %s KM lagi (target: %s KM).',
-                $component->component_name,
-                $vehicle->plate_number,
-                $vehicle->type,
-                number_format($kmRemaining),
-                number_format($component->next_replacement_km)
-            );
-        } elseif ($kmRemaining <= $component->warning_threshold_km) {
-            $alertType = 'warning';
-            $message = sprintf(
-                'WARNING: %s untuk %s (%s) akan segera perlu diganti. ' .
-                'Sisa %s KM lagi (target: %s KM).',
-                $component->component_name,
-                $vehicle->plate_number,
-                $vehicle->type,
-                number_format($kmRemaining),
-                number_format($component->next_replacement_km)
-            );
+        if ($kmRemaining !== null) {
+            if ($kmRemaining <= 0) {
+                $alertType = 'overdue';
+                $message = sprintf(
+                    'OVERDUE: %s untuk %s (%s) sudah melewati batas penggantian. ' .
+                    'Seharusnya diganti pada %s KM, saat ini %s KM.',
+                    $component->component_name,
+                    $vehicle->plate_number,
+                    $vehicle->type,
+                    number_format($component->next_replacement_km),
+                    number_format($vehicle->current_km)
+                );
+            } elseif ($kmRemaining <= $component->critical_threshold_km) {
+                $alertType = 'critical';
+                $message = sprintf(
+                    'CRITICAL: %s untuk %s (%s) perlu segera diganti. ' .
+                    'Sisa %s KM lagi (target: %s KM).',
+                    $component->component_name,
+                    $vehicle->plate_number,
+                    $vehicle->type,
+                    number_format($kmRemaining),
+                    number_format($component->next_replacement_km)
+                );
+            } elseif ($kmRemaining <= $component->warning_threshold_km) {
+                $alertType = 'warning';
+                $message = sprintf(
+                    'WARNING: %s untuk %s (%s) akan segera perlu diganti. ' .
+                    'Sisa %s KM lagi (target: %s KM).',
+                    $component->component_name,
+                    $vehicle->plate_number,
+                    $vehicle->type,
+                    number_format($kmRemaining),
+                    number_format($component->next_replacement_km)
+                );
+            }
         }
 
         // Check date-based alerts
@@ -146,10 +148,10 @@ class MaintenanceAlertService
             return null;
         }
 
-        // Check if alert already exists and is active
+        // Check if alert already exists and is active or acknowledged
         $existingAlert = MaintenanceAlert::where('vehicle_id', $vehicle->id)
             ->where('component_id', $component->id)
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'acknowledged'])
             ->where('alert_type', $alertType)
             ->first();
 

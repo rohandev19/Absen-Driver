@@ -14,6 +14,12 @@
             <p class="text-muted mb-0">Kelola jadwal servis dan maintenance kendaraan</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
+            <form action="{{ route('admin.maintenance.schedules.refresh') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn-primary-corp">
+                    <i class="bi bi-arrow-repeat me-1"></i> Perbarui Jadwal
+                </button>
+            </form>
             <a href="{{ route('admin.maintenance.export.schedules', request()->all()) }}" class="btn-primary-corp">
                 <i class="bi bi-file-earmark-excel me-1"></i> Ekspor Excel
             </a>

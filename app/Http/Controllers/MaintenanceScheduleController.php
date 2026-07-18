@@ -47,6 +47,12 @@ class MaintenanceScheduleController extends Controller
         return view('admin.maintenance.schedules', compact('schedules', 'stats', 'vehicles'));
     }
 
+    public function refresh()
+    {
+        \Illuminate\Support\Facades\Artisan::call('maintenance:generate-schedules');
+        return redirect()->back()->with('success', 'Jadwal maintenance berhasil diperbarui berdasarkan status komponen terbaru.');
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

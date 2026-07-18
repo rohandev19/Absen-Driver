@@ -85,20 +85,34 @@ class VehicleComponent extends Model
     {
         $vehicle = $this->vehicle;
 
-        if (!$vehicle || !$this->next_replacement_km) {
+        if (!$vehicle || (!$this->next_replacement_km && !$this->next_replacement_date)) {
             $this->status = 'healthy';
             return;
         }
 
-        $kmRemaining = $this->next_replacement_km - $vehicle->current_km;
+        $kmRemaining = $this->next_replacement_km ? ($this->next_replacement_km - $vehicle->current_km) : null;
 
-        if ($kmRemaining <= 0) {
+        if ($kmRemaining !== null && $kmRemaining <= 0) {
             $this->status = 'overdue';
-        } elseif ($kmRemaining <= $this->critical_threshold_km) {
+        } elseif ($kmRemaining !== null && $kmRemaining <= $this->critical_threshold_km) {
             $this->status = 'critical';
-        } elseif ($kmRemaining <= $this->warning_threshold_km) {
+        } elseif ($kmRemaining !== null && $kmRemaining <= $this->warning_threshold_km) {
             $this->status = 'warning';
         } else {
+            // Jika ada pengecekan tanggal
+            if ($this->next_replacement_date) {
+                $daysRemaining = Carbon::now()->diffInDays($this->next_replacement_date, false);
+                if ($daysRemaining < 0) {
+                    $this->status = 'overdue';
+                    return;
+                } elseif ($daysRemaining <= 3 && $daysRemaining >= 0) {
+                    $this->status = 'critical';
+                    return;
+                } elseif ($daysRemaining <= 7 && $daysRemaining > 3) {
+                    $this->status = 'warning';
+                    return;
+                }
+            }
             $this->status = 'healthy';
         }
     }

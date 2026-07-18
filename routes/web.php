@@ -171,6 +171,7 @@ Route::middleware(['auth', 'role:master,service_admin', 'throttle:60,1'])->prefi
         // Schedule routes
         Route::controller(MaintenanceScheduleController::class)->group(function () {
             Route::get('/maintenance/schedules', 'index')->name('admin.maintenance.schedules');
+            Route::post('/maintenance/schedules/refresh', 'refresh')->name('admin.maintenance.schedules.refresh');
             Route::post('/maintenance/schedules/store', 'store')->name('admin.maintenance.schedules.store');
             Route::post('/maintenance/schedules/{schedule}/complete', 'complete')->name('admin.maintenance.schedules.complete');
             Route::get('/maintenance/export/schedules', 'export')->name('admin.maintenance.export.schedules');

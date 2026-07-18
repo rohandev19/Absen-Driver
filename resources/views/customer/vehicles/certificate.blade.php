@@ -301,8 +301,8 @@
                     <div class="cert-signature">
                         <div class="small text-muted text-uppercase tracking-wider">Mengesahkan,</div>
                         <div class="signature-line"></div>
-                        <div class="fw-bold text-dark mb-0">Rian Hidayat, S.T.</div>
-                        <small class="text-muted">Chief Fleet Auditor</small>
+                        <div class="fw-bold text-dark mb-0">Manajemen PT Hamada Global Jaya</div>
+                        <small class="text-muted">Divisi Fleet & Maintenance</small>
                     </div>
                 </div>
 

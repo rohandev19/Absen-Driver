@@ -49,9 +49,7 @@
                 @endphp
                 <div class="col-xl-4 col-md-6">
                     <div class="card border-0 shadow-sm h-100 transition-hover position-relative" style="border-radius: 14px; overflow: hidden;">
-                        <!-- Health border strip -->
-                        <div class="position-absolute top-0 start-0 end-0" style="height: 5px; background: {{ $hColor === 'green' ? '#10b981' : ($hColor === 'yellow' ? '#f59e0b' : ($hColor === 'orange' ? '#f97316' : '#ef4444')) }};"></div>
-                        
+
                         <div class="card-body p-4 pt-4">
                             <!-- Card Header Info -->
                             <div class="d-flex justify-content-between align-items-start mb-3">
@@ -68,7 +66,10 @@
                                              style="width: 54px; height: 54px; background: linear-gradient(135deg, {{ $hColor === 'green' ? '#10b981, #059669' : ($hColor === 'yellow' ? '#f59e0b, #d97706' : ($hColor === 'orange' ? '#f97316, #ea580c' : '#ef4444, #dc2626')) }}); font-size: 1.15rem; font-weight: 700;">
                                             {{ round($vehicle->health_score) }}%
                                         </div>
-                                        <span class="badge bg-{{ $hColor }} bg-opacity-10 text-{{ $hColor }} border border-{{ $hColor }} border-opacity-25" style="font-size: 0.75rem;">
+                                        @php
+                                            $bsColor = $hColor === 'green' ? 'success' : ($hColor === 'yellow' || $hColor === 'orange' ? 'warning' : 'danger');
+                                        @endphp
+                                        <span class="badge bg-{{ $bsColor }} bg-opacity-10 text-{{ $bsColor }} border border-{{ $bsColor }} border-opacity-25" style="font-size: 0.75rem;">
                                             {{ $hLabel }}
                                         </span>
                                     </div>
