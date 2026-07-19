@@ -7,7 +7,7 @@
 
 A comprehensive, enterprise-grade backend system for managing logistics fleets and driver attendance. This system powers both the Web Administrative Dashboard and the Mobile App (Driver API) for PT Hamada Global Jaya.
 
-## 🚀 Key Features
+## Key Features
 
 *   **Driver Management & Attendance:** Secure mobile API for driver login, profile management, and daily attendance tracking. Includes Account Lockout protections.
 *   **Preventive Fleet Maintenance:**
@@ -21,7 +21,7 @@ A comprehensive, enterprise-grade backend system for managing logistics fleets a
     *   QR Code verification system for real-time validity checks.
 *   **Web Cron Integration:** Custom-built secure webhook endpoint for triggering scheduled tasks on Shared Hosting environments without CLI access.
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 *   **Framework:** Laravel 10.x
 *   **Database:** MySQL
@@ -65,7 +65,7 @@ A comprehensive, enterprise-grade backend system for managing logistics fleets a
     php artisan storage:link
     ```
 
-## ⏱️ Background Jobs & Web Cron (Shared Hosting)
+## Background Jobs & Web Cron (Shared Hosting)
 
 For environments where daemon queue workers or OS-level Cron jobs are not available (e.g., cPanel Shared Hosting), this system utilizes a secure Web Cron endpoint.
 
@@ -74,14 +74,14 @@ For environments where daemon queue workers or OS-level Cron jobs are not availa
     `https://yourdomain.com/api/cron/run-schedules?token=YourVerySecretTokenHere2026!`
 3.  The backend will securely verify the token against the `.env` file (`MAINTENANCE_URL_TOKEN`) using timing-attack resistant hashes before executing `php artisan schedule:run`.
 
-## 🛡️ Security Features
+## Security Features
 
 *   **API Rate Limiting:** Global IP throttling.
 *   **Web Account Lockout:** Login attempts are rate-limited by `Email + IP`. 5 failed attempts result in a 5-minute lockout.
 *   **Session Fixation Protection:** Session IDs are strictly regenerated upon successful authentication.
 *   **Fail-Safe Web Cron:** The scheduler webhook fails closed. If `MAINTENANCE_URL_TOKEN` is empty or missing, access is completely blocked.
 
-## 📝 CLI Commands Reference
+## CLI Commands Reference
 
 For VPS or local development, you can run maintenance tasks manually:
 
