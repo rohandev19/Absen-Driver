@@ -38,6 +38,8 @@ class StoreDriverRequest extends FormRequest
             'nik_ktp' => ['nullable', 'string', 'max:20', 'unique:' . Driver::class],
 
             'sim_expiry_date' => ['required', 'date'],
+            'sim_type' => ['required', 'string', 'max:50'],
+            'project_id' => ['nullable', 'exists:projects,id'],
 
             // Password wajib, harus dikonfirmasi (ketik ulang), dan memenuhi standar keamanan default Laravel
             'password' => ['required', 'confirmed', Rules\Password::defaults()],

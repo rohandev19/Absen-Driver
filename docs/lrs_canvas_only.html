@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <title>LRS - Sistem Absensi dan Manajemen Armada Driver</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0
+    }
+
+    html,
+    body {
+      background: #f2f2f2;
+      font-family: "Segoe UI", Arial, sans-serif
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 18px
+    }
+
+    #c {
+      display: block;
+      margin: 0 auto;
+      background: #fff;
+      width: min(100%, 794px);
+      height: auto;
+      box-shadow: 0 2px 18px rgba(0, 0, 0, .18)
+    }
+
+    @media print {
+
+      html,
+      body {
+        background: #fff;
+        padding: 0;
+        width: 210mm;
+        height: 297mm
+      }
+
+      #c {
+        width: 210mm;
+        height: 297mm;
+        box-shadow: none;
+        page-break-inside: avoid
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="c" width="1240" height="1754"></canvas>
+  <script>
+    const W = 1240, H = 1754, cv = document.getElementById('c'), g = cv.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+
+    // ── Border A4 ──
+    g.strokeStyle = '#000'; g.lineWidth = 1.5;
+    g.strokeRect(28, 28, W - 56, H - 56);
+
+    // ── Judul ──
+    g.fillStyle = '#000';
+    g.font = 'bold 16px "Segoe UI",sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('Logical Record Structure (LRS)', W / 2, 50);
+    g.font = '10px "Segoe UI",sans-serif'; g.fillStyle = '#444';
+    g.fillText('Sistem Absensi dan Manajemen Armada Driver — 16 Tabel', W / 2, 70);
+
+    const HDR = 24, LH = 16;
+
+    // ── Definisi 16 Tabel ──
+    const T = [
+      // Baris 1 — Master Data (y=110)
+      {
+        id: 'customers', x: 60, y: 110, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'name' }, { n: 'code' }, { n: 'contact_person' }, { n: 'email' }, { n: 'phone' }, { n: 'address' }]
+      },
+      {
+        id: 'users', x: 290, y: 110, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'customer_id', t: 'fk' }, { n: 'name' }, { n: 'email' }, { n: 'password' }, { n: 'role' }]
+      },
+      {
+        id: 'projects', x: 520, y: 110, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'customer_id', t: 'fk' }, { n: 'name' }, { n: 'code' }, { n: 'description' }]
+      },
+      {
+        id: 'drivers', x: 750, y: 110, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'project_id', t: 'fk' }, { n: 'driver_id_nik' }, { n: 'full_name' }, { n: 'nik_ktp' }, { n: 'sim_expiry_date' }, { n: 'sim_type' }, { n: 'is_on_duty' }]
+      },
+      {
+        id: 'vehicles', x: 980, y: 110, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'project_id', t: 'fk' }, { n: 'customer_id', t: 'fk' }, { n: 'plate_number' }, { n: 'type' }, { n: 'tahun_pembuatan' }, { n: 'status' }, { n: 'current_km' }]
+      },
+
+      // Baris 2 — Operasional (y=470)
+      {
+        id: 'attendances', x: 60, y: 470, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'driver_id', t: 'fk' }, { n: 'vehicle_id', t: 'fk' }, { n: 'time_in' }, { n: 'time_out' }, { n: 'gps_location_in' }, { n: 'speedo_awal' }, { n: 'speedo_akhir' }, { n: 'is_offline_recovery' }]
+      },
+      {
+        id: 'transport_costs', x: 290, y: 470, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'driver_id', t: 'fk' }, { n: 'vehicle_id', t: 'fk' }, { n: 'project_id', t: 'fk' }, { n: 'attendance_id', t: 'fk' }, { n: 'trip_date' }, { n: 'gasoline_cost' }, { n: 'toll_cost' }, { n: 'approval_status' }]
+      },
+      {
+        id: 'emergency_reports', x: 520, y: 470, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'driver_id', t: 'fk' }, { n: 'vehicle_id', t: 'fk' }, { n: 'service_report_id', t: 'fk' }, { n: 'timestamp' }, { n: 'description' }, { n: 'follow_up_status' }]
+      },
+      {
+        id: 'service_reports', x: 750, y: 470, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'driver_id', t: 'fk' }, { n: 'vehicle_id', t: 'fk' }, { n: 'customer_id', t: 'fk' }, { n: 'approved_by_admin_id', t: 'fk' }, { n: 'ticket_number' }, { n: 'service_type' }, { n: 'total_cost' }, { n: 'status' }]
+      },
+      {
+        id: 'vehicle_replacements', x: 980, y: 470, w: 210, f: [
+          { n: 'id', t: 'pk' }, { n: 'original_vehicle_id', t: 'fk' }, { n: 'replacement_vehicle_id', t: 'fk' }, { n: 'driver_id', t: 'fk' }, { n: 'service_report_id', t: 'fk' }, { n: 'reason' }, { n: 'status' }]
+      },
+
+      // Baris 3 — Audit & Recovery (y=890)
+      {
+        id: 'audit_histories', x: 80, y: 890, w: 260, f: [
+          { n: 'id', t: 'pk' }, { n: 'report_id' }, { n: 'type' }, { n: 'status' }, { n: 'total_findings' }, { n: 'critical_count' }, { n: 'execution_time_seconds' }, { n: 'triggered_by' }]
+      },
+      {
+        id: 'offline_recovery_logs', x: 400, y: 890, w: 260, f: [
+          { n: 'id', t: 'pk' }, { n: 'driver_id', t: 'fk' }, { n: 'attendance_id', t: 'fk' }, { n: 'offline_entry_id' }, { n: 'device_timestamp' }, { n: 'recovery_timestamp' }, { n: 'result' }, { n: 'retry_count' }]
+      },
+
+      // Baris 4 — Preventive Maintenance (y=1230)
+      {
+        id: 'vehicle_components', x: 60, y: 1230, w: 260, f: [
+          { n: 'id', t: 'pk' }, { n: 'vehicle_id', t: 'fk' }, { n: 'component_name' }, { n: 'category' }, { n: 'replacement_interval_km' }, { n: 'last_replacement_km' }, { n: 'next_replacement_km' }, { n: 'warning_threshold_km' }, { n: 'status' }]
+      },
+      {
+        id: 'maintenance_logs', x: 350, y: 1230, w: 240, f: [
+          { n: 'id', t: 'pk' }, { n: 'vehicle_id', t: 'fk' }, { n: 'recorded_by_user_id', t: 'fk' }, { n: 'service_date' }, { n: 'km_at_service' }, { n: 'description' }, { n: 'workshop_name' }]
+      },
+      {
+        id: 'maintenance_schedules', x: 620, y: 1230, w: 260, f: [
+          { n: 'id', t: 'pk' }, { n: 'vehicle_id', t: 'fk' }, { n: 'component_id', t: 'fk' }, { n: 'completed_by', t: 'fk' }, { n: 'scheduled_date' }, { n: 'scheduled_km' }, { n: 'priority' }, { n: 'status' }]
+      },
+      {
+        id: 'maintenance_alerts', x: 910, y: 1230, w: 260, f: [
+          { n: 'id', t: 'pk' }, { n: 'vehicle_id', t: 'fk' }, { n: 'component_id', t: 'fk' }, { n: 'acknowledged_by', t: 'fk' }, { n: 'alert_type' }, { n: 'message' }, { n: 'triggered_at' }, { n: 'status' }]
+      }
+    ];
+
+    // Hitung tinggi setiap tabel
+    T.forEach(t => { t.h = HDR + t.f.length * LH + 6; });
+
+    // Utilitas gambar polyline
+    function pl(pts) {
+      g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+      g.stroke();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // LANGKAH 1: Gambar SELURUH garis relasi TERLEBIH DAHULU
+    //            (akan tertutup oleh kotak tabel putih di langkah 2)
+    // ══════════════════════════════════════════════════════════════
+    g.strokeStyle = '#000'; g.lineWidth = 1;
+
+    // R1: customers → users  (horizontal sejajar)
+    pl([[270, 155], [290, 155]]);
+    // R2: projects → drivers  (horizontal sejajar)
+    pl([[730, 150], [750, 150]]);
+    // R3: customers → projects  (bawah baris 1, lewat bawah users)
+    pl([[165, 252], [165, 290], [625, 290], [625, 220]]);
+    // R4: customers → vehicles  (atas baris 1)
+    pl([[200, 110], [200, 97], [1100, 97], [1100, 110]]);
+    // R5: projects → vehicles  (atas baris 1, jalur kedua)
+    pl([[640, 110], [640, 85], [1040, 85], [1040, 110]]);
+    // R6: drivers → attendances  (lintas baris, L-shape)
+    pl([[780, 268], [780, 365], [130, 365], [130, 470]]);
+    // R7: vehicles → attendances  (lintas baris, L-shape)
+    pl([[1010, 268], [1010, 385], [200, 385], [200, 470]]);
+    // R8: attendances → transport_costs  (horizontal sejajar)
+    pl([[270, 520], [290, 520]]);
+    // R9: drivers → emergency_reports  (lintas baris)
+    pl([[830, 268], [830, 405], [590, 405], [590, 470]]);
+    // R10: vehicles → emergency_reports  (lintas baris)
+    pl([[1085, 268], [1085, 425], [660, 425], [660, 470]]);
+    // R11: drivers → service_reports  (vertikal lurus, kolom sama)
+    pl([[855, 268], [855, 470]]);
+    // R12: vehicles → service_reports  (lintas baris)
+    pl([[1150, 268], [1150, 445], [920, 445], [920, 470]]);
+    // R13: emergency_reports → service_reports  (horizontal sejajar)
+    pl([[730, 530], [750, 530]]);
+    // R14: service_reports → vehicle_replacements  (horizontal sejajar)
+    pl([[960, 530], [980, 530]]);
+    // R15: attendances → offline_recovery_logs  (lintas baris)
+    pl([[165, 644], [165, 730], [530, 730], [530, 890]]);
+    // R16: vehicles → vehicle_components  (jalur tepi kanan)
+    pl([[1190, 180], [1200, 180], [1200, 1170], [120, 1170], [120, 1230]]);
+    // R17: vehicle_components → maintenance_schedules  (bawah baris 4)
+    pl([[190, 1404], [190, 1440], [750, 1440], [750, 1388]]);
+    // R18: vehicle_components → maintenance_alerts  (bawah baris 4)
+    pl([[250, 1404], [250, 1460], [1040, 1460], [1040, 1388]]);
+    // R19: vehicles → maintenance_logs  (jalur tepi kanan)
+    pl([[1190, 220], [1208, 220], [1208, 1150], [470, 1150], [470, 1230]]);
+
+    // ══════════════════════════════════════════════════════════════
+    // LANGKAH 2: Gambar SEMUA tabel DI ATAS garis
+    //            (fill putih menutupi segmen garis di bawah tabel)
+    // ══════════════════════════════════════════════════════════════
+    T.forEach(t => {
+      // Isi putih
+      g.fillStyle = '#fff'; g.fillRect(t.x, t.y, t.w, t.h);
+      // Border tabel
+      g.strokeStyle = '#000'; g.lineWidth = 1.2;
+      g.strokeRect(t.x, t.y, t.w, t.h);
+      // Garis pemisah header
+      g.beginPath(); g.moveTo(t.x, t.y + HDR); g.lineTo(t.x + t.w, t.y + HDR); g.stroke();
+      // Nama tabel (header)
+      g.fillStyle = '#000';
+      g.font = 'bold 11px "Segoe UI",sans-serif';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(t.id, t.x + t.w / 2, t.y + HDR / 2);
+      // Atribut / field
+      g.textAlign = 'left';
+      t.f.forEach((f, i) => {
+        const fy = t.y + HDR + i * LH + 10;
+        let lbl = '- ' + f.n;
+        if (f.t === 'pk') {
+          g.font = 'bold 9px "Segoe UI",sans-serif';
+          lbl += ' *(primary)';
+        } else if (f.t === 'fk') {
+          g.font = 'italic 9px "Segoe UI",sans-serif';
+          lbl += ' **(foreign)';
+        } else {
+          g.font = '9px "Segoe UI",sans-serif';
+        }
+        g.fillText(lbl, t.x + 6, fy);
+        // Garis bawah untuk Primary Key
+        if (f.t === 'pk') {
+          g.font = 'bold 9px "Segoe UI",sans-serif';
+          const dw = g.measureText('- ').width;
+          const nw = g.measureText(f.n).width;
+          g.beginPath(); g.moveTo(t.x + 6 + dw, fy + 5); g.lineTo(t.x + 6 + dw + nw, fy + 5);
+          g.lineWidth = 0.7; g.stroke(); g.lineWidth = 1.2;
+        }
+      });
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // LANGKAH 3: Label kardinalitas DI ATAS segalanya
+    //            (teks 1 dan M dengan latar putih agar terbaca)
+    // ══════════════════════════════════════════════════════════════
+    function lb(txt, x, y) {
+      g.font = 'bold 10px "Segoe UI",sans-serif';
+      const m = g.measureText(txt);
+      // Latar putih kecil supaya teks tidak tertimpa garis
+      g.fillStyle = '#fff';
+      g.fillRect(x - m.width / 2 - 2, y - 6, m.width + 4, 12);
+      g.fillStyle = '#000';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(txt, x, y);
+    }
+
+    // R1: customers → users (1:M)
+    lb('1', 280, 146); lb('M', 280, 164);
+    // R2: projects → drivers (1:M)
+    lb('1', 740, 141); lb('M', 740, 159);
+    // R3: customers → projects (1:M)
+    lb('1', 173, 260); lb('M', 633, 228);
+    // R4: customers → vehicles (1:M)
+    lb('1', 192, 105); lb('M', 1108, 105);
+    // R5: projects → vehicles (1:M)
+    lb('1', 648, 105); lb('M', 1048, 105);
+    // R6: drivers → attendances (1:M)
+    lb('1', 788, 276); lb('M', 122, 462);
+    // R7: vehicles → attendances (1:M)
+    lb('1', 1018, 276); lb('M', 208, 462);
+    // R8: attendances → transport_costs (1:1)
+    lb('1', 280, 511); lb('1', 280, 529);
+    // R9: drivers → emergency_reports (1:M)
+    lb('1', 838, 276); lb('M', 598, 462);
+    // R10: vehicles → emergency_reports (1:M)
+    lb('1', 1077, 276); lb('M', 668, 462);
+    // R11: drivers → service_reports (1:M)
+    lb('1', 863, 276); lb('M', 863, 462);
+    // R12: vehicles → service_reports (1:M)
+    lb('1', 1158, 276); lb('M', 928, 462);
+    // R13: emergency_reports → service_reports (M:1)
+    lb('M', 740, 521); lb('1', 740, 539);
+    // R14: service_reports → vehicle_replacements (1:M)
+    lb('1', 970, 521); lb('M', 970, 539);
+    // R15: attendances → offline_recovery_logs (1:1)
+    lb('1', 173, 652); lb('1', 538, 882);
+    // R16: vehicles → vehicle_components (1:M)
+    lb('1', 1200, 170); lb('M', 128, 1222);
+    // R17: vehicle_components → maintenance_schedules (1:M)
+    lb('1', 198, 1412); lb('M', 758, 1396);
+    // R18: vehicle_components → maintenance_alerts (1:M)
+    lb('1', 258, 1412); lb('M', 1048, 1396);
+    // R19: vehicles → maintenance_logs (1:M)
+    lb('1', 1200, 210); lb('M', 478, 1222);
+
+    // ── Label kelompok (opsional, subtle) ──
+    g.fillStyle = '#888';
+    g.font = 'italic 9px "Segoe UI",sans-serif';
+    g.textAlign = 'left'; g.textBaseline = 'middle';
+    g.fillText('A. Master Data', 60, 103);
+    g.fillText('B. Operasional & Layanan', 60, 463);
+    g.fillText('C. Audit & Sinkronisasi', 80, 883);
+    g.fillText('D. Preventive Maintenance', 60, 1223);
+
+    // ── Keterangan bawah ──
+    g.fillStyle = '#555';
+    g.font = 'italic 9px "Segoe UI",sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('', W / 2, 1710);
+    document.title = 'READY - LRS A4 Portrait';
+
+    // Tombol download PNG
+    var btn = document.createElement('button');
+    btn.id = 'downloadPng';
+    btn.textContent = '⬇ Download PNG';
+    btn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;padding:8px 16px;background:#2563eb;color:#fff;border:none;border-radius:6px;font:bold 13px "Segoe UI",sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)';
+    btn.addEventListener('click', function () {
+      var a = document.createElement('a');
+      a.download = 'lrs_canvas_only.png';
+      a.href = cv.toDataURL('image/png');
+      a.click();
+    });
+    document.body.appendChild(btn);
+    // Sembunyikan saat print
+    var ps = document.createElement('style');
+    ps.textContent = '@media print{#downloadPng{display:none!important}}';
+    document.head.appendChild(ps);
+  </script>
+</body>
+
+</html>

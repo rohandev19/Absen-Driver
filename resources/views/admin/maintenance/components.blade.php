@@ -22,8 +22,9 @@
     background: rgba(255,255,255,.08);
     border: 1px solid rgba(255,255,255,.12);
     border-radius: 8px;
-    padding: 6px 14px;
-    font-size: .8125rem;
+    padding: 8px 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: #e2e8f0;
 }
 .health-pill {
@@ -357,6 +358,10 @@
     }
     .component-item {
         grid-template-columns: 1fr;
+    }
+    .odometer-badge {
+        font-size: .875rem;
+        padding: 6px 12px;
     }
 }
 </style>

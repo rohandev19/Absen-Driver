@@ -266,9 +266,9 @@
     <div class="row">
         {{-- Trip Information --}}
         <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Trip</h5>
+            <div class="card mb-3 border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-transparent border-bottom px-4 py-3">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-info-circle text-primary me-2 fs-5"></i> Informasi Trip</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -309,9 +309,9 @@
 
         {{-- Odometer & Efficiency --}}
         <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-speedometer"></i> Odometer & Efisiensi</h5>
+            <div class="card mb-3 border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-transparent border-bottom px-4 py-3">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-speedometer text-info me-2 fs-5"></i> Odometer & Efisiensi</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -352,9 +352,9 @@
     <div class="row">
         {{-- Cost Breakdown --}}
         <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="bi bi-wallet2"></i> Rincian Biaya</h5>
+            <div class="card mb-3 border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-transparent border-bottom px-4 py-3">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-wallet2 text-warning me-2 fs-5"></i> Rincian Biaya</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -371,9 +371,9 @@
                                 <th>Biaya Parkir</th>
                                 <td class="text-end">Rp {{ number_format($trip->parking_cost, 0, ',', '.') }}</td>
                             </tr>
-                            <tr class="table-active">
-                                <th>Total Biaya</th>
-                                <th class="text-end">Rp {{ number_format($trip->total_cost, 0, ',', '.') }}</th>
+                            <tr>
+                                <th class="border-top border-2 border-secondary pt-3 mt-1">Total Biaya</th>
+                                <th class="text-end border-top border-2 border-secondary pt-3 mt-1 text-primary">Rp {{ number_format($trip->total_cost, 0, ',', '.') }}</th>
                             </tr>
                         </table>
                     </div>
@@ -383,9 +383,9 @@
 
         {{-- Overtime & Bonus --}}
         <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-gift"></i> Lembur & Bonus</h5>
+            <div class="card mb-3 border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-transparent border-bottom px-4 py-3">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-gift text-success me-2 fs-5"></i> Lembur & Bonus</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -410,9 +410,9 @@
                                 <th>Bayaran Lembur</th>
                                 <td class="text-end">Rp {{ number_format($trip->overtime_payment, 0, ',', '.') }}</td>
                             </tr>
-                            <tr class="table-success">
-                                <th>Bonus Driver</th>
-                                <th class="text-end">Rp {{ number_format($trip->bonus_driver, 0, ',', '.') }}</th>
+                            <tr>
+                                <th class="border-top border-2 border-secondary pt-3 mt-1">Bonus Driver</th>
+                                <th class="text-end border-top border-2 border-secondary pt-3 mt-1 text-success">Rp {{ number_format($trip->bonus_driver, 0, ',', '.') }}</th>
                             </tr>
                         </table>
                     </div>

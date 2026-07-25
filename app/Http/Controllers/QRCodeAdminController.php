@@ -26,12 +26,12 @@ class QRCodeAdminController extends Controller
      */
     public function downloadDriverQRCode(Driver $driver)
     {
-        if (!$driver->qr_code_path || !Storage::disk('local')->exists($driver->qr_code_path)) {
+        if (!$driver->qr_code_path || !Storage::disk('public')->exists($driver->qr_code_path)) {
             return redirect()->back()->with('error', 'QR Code belum tersedia.');
         }
 
         $filename = "QR-Driver-{$driver->driver_id_nik}.svg";
-        return Storage::disk('local')->download($driver->qr_code_path, $filename);
+        return Storage::disk('public')->download($driver->qr_code_path, $filename);
     }
 
     /**
@@ -39,12 +39,12 @@ class QRCodeAdminController extends Controller
      */
     public function downloadVehicleQRCode(Vehicle $vehicle)
     {
-        if (!$vehicle->qr_code_path || !Storage::disk('local')->exists($vehicle->qr_code_path)) {
+        if (!$vehicle->qr_code_path || !Storage::disk('public')->exists($vehicle->qr_code_path)) {
             return redirect()->back()->with('error', 'QR Code belum tersedia.');
         }
 
         $filename = "QR-Vehicle-{$vehicle->plate_number}.svg";
-        return Storage::disk('local')->download($vehicle->qr_code_path, $filename);
+        return Storage::disk('public')->download($vehicle->qr_code_path, $filename);
     }
 
     /**

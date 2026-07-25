@@ -148,6 +148,24 @@ class MaintenanceAlertService
             return null;
         }
 
+        // Jika komponen ini sudah ada di Jadwal Servis (pending/scheduled), jangan buat alert lagi
+        $existingSchedule = \App\Models\MaintenanceSchedule::where('vehicle_id', $vehicle->id)
+            ->where('component_id', $component->id)
+            ->whereIn('status', ['pending', 'scheduled'])
+            ->first();
+
+        if ($existingSchedule) {
+            // Auto-resolve alert yang masih aktif karena sudah masuk jadwal
+            MaintenanceAlert::where('vehicle_id', $vehicle->id)
+                ->where('component_id', $component->id)
+                ->whereIn('status', ['active', 'acknowledged'])
+                ->update([
+                    'status' => 'resolved',
+                    'resolved_at' => now()
+                ]);
+            return null;
+        }
+
         // Check if alert already exists and is active or acknowledged
         $existingAlert = MaintenanceAlert::where('vehicle_id', $vehicle->id)
             ->where('component_id', $component->id)

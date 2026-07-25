@@ -87,6 +87,18 @@
         }
         .badge-corp-success { background-color: #f0fdf4; color: #15803d; border-color: #dcfce7; }
         .badge-corp-danger { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+
+        /* Dark Mode Badge Overrides */
+        [data-bs-theme="dark"] .badge-corp-success {
+            background-color: rgba(21, 128, 61, 0.2);
+            color: #4ade80;
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+        [data-bs-theme="dark"] .badge-corp-danger {
+            background-color: rgba(185, 28, 28, 0.2);
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.3);
+        }
         
         .btn-icon-corp {
             width: 34px; height: 34px; border-radius: 6px;
@@ -148,6 +160,7 @@
                 <a href="javascript:history.back()" class="btn-corp btn-corp-outline" style="padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; text-decoration: none; border: 1px solid #cbd5e1; color: #475569; background-color: white;">
                     <i class="bi bi-arrow-left"></i> Kembali
                 </a>
+            
             </div>
         </div>
 

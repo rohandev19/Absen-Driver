@@ -201,8 +201,7 @@
                         @endphp
                             <td class="{{ $val == '✓' ? 'symbol-check' : 'symbol-cross' }}">{{ $val }}</td>
                     @endforeach
-
-                        <td class="col-total">{{ $row['total'] }}</td>
+                        <td class="col-total">{{ $row['total_hadir'] ?? 0 }}</td>
                     </tr>
             @endforeach
         </tbody>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Class Diagram - Sistem Absensi dan Manajemen Armada Driver</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @page { size: A4 portrait; margin: 0; }
+    html, body { background: #f2f2f2; font-family: "Segoe UI", Arial, sans-serif; }
+    body { min-height: 100vh; padding: 18px; }
+    #c {
+      display: block;
+      margin: 0 auto;
+      background: #fff;
+      width: min(100%, 794px);
+      height: auto;
+      box-shadow: 0 2px 18px rgba(0, 0, 0, .18);
+    }
+    @media print {
+      html, body { background: #fff; padding: 0; width: 210mm; height: 297mm; }
+      #c { width: 210mm; height: 297mm; box-shadow: none; page-break-inside: avoid; }
+      #downloadPng { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="1240" height="1754"></canvas>
+  <script>
+    const W = 1240, H = 1754, cv = document.getElementById('c'), g = cv.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+
+    // ── Border A4 ──
+    g.strokeStyle = '#000'; g.lineWidth = 1.5;
+    g.strokeRect(28, 28, W - 56, H - 56);
+
+    // ── Judul ──
+    g.fillStyle = '#000';
+    g.font = 'bold 16px "Segoe UI",sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('Class Diagram', W / 2, 38);
+    g.font = '10px "Segoe UI",sans-serif'; g.fillStyle = '#444';
+    g.fillText('Sistem Absensi dan Manajemen Armada Driver — 16 Class (Eloquent Models)', W / 2, 56);
+
+    const HDR = 22, LH = 14;
+
+    // ════════════════════════════════════════════════════════════
+    // Definisi 16 Kelas UML — Format: nama_kolom; TipeData(Panjang)
+    // ════════════════════════════════════════════════════════════
+
+    // --- Baris 1 (y=95): Master Data ---
+    // Customer: 6 attrs + 4 methods = h = 22 + 6*14+6 + 4*14+6 = 22+90+62 = 174
+    // User:     5 attrs + 5 methods = h = 22 + 5*14+6 + 5*14+6 = 22+76+76 = 174
+    // Project:  5 attrs + 3 methods = h = 22 + 5*14+6 + 3*14+6 = 22+76+48 = 146
+    // Driver:   7 attrs + 4 methods = h = 22 + 7*14+6 + 4*14+6 = 22+104+62 = 188
+    // Vehicle:  7 attrs + 5 methods = h = 22 + 7*14+6 + 5*14+6 = 22+104+76 = 202
+
+    const R1Y = 95;
+    const C = [
+      {
+        name: 'Customer', x: 50, y: R1Y, w: 215,
+        attrs: ['id; Int(11)', 'name; Varchar(255)', 'code; Varchar(50)', 'contact_person; Varchar(150)', 'email; Varchar(150)', 'phone; Varchar(20)'],
+        methods: ['+tambah()', '+edit()', '+hapus()', '+cetak()']
+      },
+      {
+        name: 'User', x: 280, y: R1Y, w: 215,
+        attrs: ['id; Int(11)', 'customer_id; Int(11)', 'name; Varchar(255)', 'email; Varchar(150)', 'role; Varchar(50)'],
+        methods: ['+tambah()', '+edit()', '+hapus()', '+isMaster()', '+isServiceAdmin()']
+      },
+      {
+        name: 'Project', x: 510, y: R1Y, w: 215,
+        attrs: ['id; Int(11)', 'customer_id; Int(11)', 'name; Varchar(255)', 'code; Varchar(50)', 'description; Text'],
+        methods: ['+tambah()', '+edit()', '+hapus()']
+      },
+      {
+        name: 'Driver', x: 740, y: R1Y, w: 225,
+        attrs: ['id; Int(11)', 'project_id; Int(11)', 'full_name; Varchar(255)', 'driver_id_nik; Varchar(50)', 'nik_ktp; Varchar(50)', 'sim_expiry_date; Date', 'is_on_duty; TinyInt(1)'],
+        methods: ['+tambah()', '+edit()', '+hapus()', '+isOnDuty()']
+      },
+      {
+        name: 'Vehicle', x: 980, y: R1Y, w: 225,
+        attrs: ['id; Int(11)', 'project_id; Int(11)', 'customer_id; Int(11)', 'plate_number; Varchar(20)', 'type; Varchar(50)', 'status; Varchar(50)', 'current_km; Int(11)'],
+        methods: ['+tambah()', '+edit()', '+hapus()', '+getComputedKm()', '+getHealthCode()']
+      },
+
+      // --- Baris 2 (y=370): Operasional ---
+      {
+        name: 'Attendance', x: 50, y: 370, w: 215,
+        attrs: ['id; Int(11)', 'driver_id; Int(11)', 'vehicle_id; Int(11)', 'time_in; DateTime', 'time_out; DateTime', 'gps_location_in; Varchar(255)', 'speedo_awal; Int(11)', 'speedo_akhir; Int(11)', 'is_offline_recovery; TinyInt(1)'],
+        methods: ['+input()', '+edit()', '+hapus()']
+      },
+      {
+        name: 'TransportCost', x: 280, y: 370, w: 215,
+        attrs: ['id; Int(11)', 'driver_id; Int(11)', 'vehicle_id; Int(11)', 'project_id; Int(11)', 'attendance_id; Int(11)', 'trip_date; Date', 'gasoline_cost; Decimal(15,2)', 'toll_cost; Decimal(15,2)', 'approval_status; Varchar(50)'],
+        methods: ['+input()', '+edit()', '+hapus()', '+cetak()']
+      },
+      {
+        name: 'EmergencyReport', x: 510, y: 370, w: 215,
+        attrs: ['id; Int(11)', 'driver_id; Int(11)', 'vehicle_id; Int(11)', 'service_report_id; Int(11)', 'timestamp; DateTime', 'description; Text', 'follow_up_status; Varchar(50)'],
+        methods: ['+input()', '+edit()', '+hapus()']
+      },
+      {
+        name: 'ServiceReport', x: 740, y: 370, w: 225,
+        attrs: ['id; Int(11)', 'driver_id; Int(11)', 'vehicle_id; Int(11)', 'customer_id; Int(11)', 'approved_by_admin_id; Int(11)', 'ticket_number; Varchar(50)', 'service_type; Varchar(50)', 'total_cost; Decimal(15,2)', 'status; Varchar(50)'],
+        methods: ['+input()', '+edit()', '+hapus()', '+cetak()']
+      },
+      {
+        name: 'VehicleReplacement', x: 980, y: 370, w: 225,
+        attrs: ['id; Int(11)', 'original_vehicle_id; Int(11)', 'replacement_vehicle_id; Int(11)', 'driver_id; Int(11)', 'service_report_id; Int(11)', 'reason; Text', 'status; Varchar(50)'],
+        methods: ['+input()', '+edit()', '+hapus()']
+      },
+
+      // --- Baris 3 (y=680): Audit & Recovery ---
+      {
+        name: 'AuditHistory', x: 80, y: 680, w: 270,
+        attrs: ['id; Int(11)', 'report_id; Varchar(50)', 'type; Varchar(50)', 'status; Varchar(50)', 'total_findings; Int(11)', 'critical_count; Int(11)', 'execution_time_seconds; Float', 'triggered_by; Varchar(100)'],
+        methods: ['+tambah()', '+cetak()']
+      },
+      {
+        name: 'OfflineRecoveryLog', x: 400, y: 680, w: 270,
+        attrs: ['id; Int(11)', 'driver_id; Int(11)', 'attendance_id; Int(11)', 'offline_entry_id; Varchar(100)', 'device_timestamp; DateTime', 'recovery_timestamp; DateTime', 'result; Varchar(50)', 'retry_count; Int(11)'],
+        methods: ['+tambah()', '+hapus()']
+      },
+
+      // --- Baris 4 (y=920): Preventive Maintenance ---
+      {
+        name: 'VehicleComponent', x: 50, y: 920, w: 270,
+        attrs: ['id; Int(11)', 'vehicle_id; Int(11)', 'component_name; Varchar(150)', 'category; Varchar(50)', 'replacement_interval_km; Int(11)', 'last_replacement_km; Int(11)', 'next_replacement_km; Int(11)', 'warning_threshold_km; Int(11)', 'status; Varchar(50)'],
+        methods: ['+tambah()', '+edit()', '+hapus()', '+updateStatus()', '+needsMaintenance()']
+      },
+      {
+        name: 'MaintenanceLog', x: 340, y: 920, w: 250,
+        attrs: ['id; Int(11)', 'vehicle_id; Int(11)', 'recorded_by_user_id; Int(11)', 'service_date; Date', 'km_at_service; Int(11)', 'description; Text', 'workshop_name; Varchar(150)'],
+        methods: ['+tambah()', '+edit()', '+hapus()', '+cetak()']
+      },
+      {
+        name: 'MaintenanceSchedule', x: 610, y: 920, w: 270,
+        attrs: ['id; Int(11)', 'vehicle_id; Int(11)', 'component_id; Int(11)', 'completed_by; Int(11)', 'scheduled_date; Date', 'scheduled_km; Int(11)', 'priority; Varchar(50)', 'status; Varchar(50)'],
+        methods: ['+tambah()', '+edit()', '+hapus()', '+markAsCompleted()']
+      },
+      {
+        name: 'MaintenanceAlert', x: 900, y: 920, w: 270,
+        attrs: ['id; Int(11)', 'vehicle_id; Int(11)', 'component_id; Int(11)', 'acknowledged_by; Int(11)', 'alert_type; Varchar(50)', 'message; Text', 'triggered_at; DateTime', 'status; Varchar(50)'],
+        methods: ['+input()', '+hapus()', '+acknowledge()']
+      }
+    ];
+
+    // Hitung tinggi setiap kelas
+    C.forEach(c => {
+      c.attrH = c.attrs.length * LH;
+      c.methodH = c.methods.length > 0 ? (c.methods.length * LH + 6) : 0;
+      c.h = HDR + c.attrH + 6 + c.methodH;
+    });
+
+    // Utilitas polyline dengan panah (▶) di ujung
+    function pl(pts) {
+      g.strokeStyle = '#000'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+      g.stroke();
+      // Gambar panah solid di ujung
+      const last = pts[pts.length - 1];
+      const prev = pts[pts.length - 2];
+      const a = Math.atan2(last[1] - prev[1], last[0] - prev[0]);
+      const sz = 8;
+      g.beginPath();
+      g.moveTo(last[0], last[1]);
+      g.lineTo(last[0] - sz * Math.cos(a - Math.PI / 7), last[1] - sz * Math.sin(a - Math.PI / 7));
+      g.lineTo(last[0] - sz * Math.cos(a + Math.PI / 7), last[1] - sz * Math.sin(a + Math.PI / 7));
+      g.closePath();
+      g.fillStyle = '#000'; g.fill();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // LANGKAH 1: Gambar SEMUA garis relasi DULU (layer bawah)
+    // ════════════════════════════════════════════════════════════
+    g.strokeStyle = '#000'; g.lineWidth = 1;
+
+    // -- Baris 1 horizontal --
+    // R1: Customer → User (horizontal)
+    pl([[265, 140], [280, 140]]);
+    // R2: Customer → Project (atas)
+    pl([[158, 95], [158, 82], [618, 82], [618, 95]]);
+    // R3: Customer → Vehicle (atas jalur 2)
+    pl([[190, 95], [190, 72], [1092, 72], [1092, 95]]);
+    // R4: Project → Driver (horizontal)
+    pl([[725, 140], [740, 140]]);
+    // R5: Project → Vehicle (atas)
+    pl([[630, 95], [630, 88], [1050, 88], [1050, 95]]);
+
+    // -- Baris 1 → Baris 2 vertikal --
+    // R11: Customer → ServiceReport
+    pl([[150, 269], [150, 310], [790, 310], [790, 370]]);
+    // R6: Driver → Attendance
+    pl([[760, 283], [760, 320], [125, 320], [125, 370]]);
+    // R8: Driver → EmergencyReport
+    pl([[800, 283], [800, 330], [585, 330], [585, 370]]);
+    // R9: Vehicle → EmergencyReport
+    pl([[1020, 297], [1020, 340], [640, 340], [640, 370]]);
+    // R7: Vehicle → Attendance
+    pl([[1060, 297], [1060, 350], [155, 350], [155, 370]]);
+    // R10: Driver → ServiceReport
+    pl([[855, 283], [855, 370]]);
+
+    // -- Baris 2 horizontal --
+    // R12: Attendance → TransportCost
+    pl([[265, 420], [280, 420]]);
+    // R13: EmergencyReport → ServiceReport
+    pl([[725, 420], [740, 420]]);
+    // R14: ServiceReport → VehicleReplacement
+    pl([[965, 420], [980, 420]]);
+
+    // -- Baris 2 → Baris 3 --
+    // R15: Attendance → OfflineRecoveryLog
+    pl([[157, 544], [157, 600], [535, 600], [535, 680]]);
+
+    // -- Baris 1 → Baris 4 (jalur tepi kanan) --
+    // R16: Vehicle → VehicleComponent
+    pl([[1205, 170], [1220, 170], [1220, 900], [185, 900], [185, 920]]);
+    // R17: Vehicle → MaintenanceLog
+    pl([[1205, 200], [1230, 200], [1230, 910], [465, 910], [465, 920]]);
+
+    // -- Baris 4 horizontal / bawah --
+    // R18: VehicleComponent → MaintenanceSchedule
+    pl([[320, 1050], [330, 1050], [330, 1140], [745, 1140], [745, 1122]]);
+    // R19: VehicleComponent → MaintenanceAlert
+    pl([[145, 1150], [145, 1180], [1035, 1180], [1035, 1108]]);
+
+    // ════════════════════════════════════════════════════════════
+    // LANGKAH 2: Gambar SEMUA kotak kelas DI ATAS garis
+    // ════════════════════════════════════════════════════════════
+    C.forEach(c => {
+      // Isi putih
+      g.fillStyle = '#fff'; g.fillRect(c.x, c.y, c.w, c.h);
+      // Border kelas
+      g.strokeStyle = '#000'; g.lineWidth = 1.2;
+      g.strokeRect(c.x, c.y, c.w, c.h);
+
+      // Header (nama kelas) - tebal
+      g.beginPath(); g.moveTo(c.x, c.y + HDR); g.lineTo(c.x + c.w, c.y + HDR); g.stroke();
+      g.fillStyle = '#000';
+      g.font = 'bold 11px "Segoe UI",sans-serif';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(c.name, c.x + c.w / 2, c.y + HDR / 2);
+
+      // Bagian atribut
+      g.textAlign = 'left';
+      g.font = '9px "Segoe UI",sans-serif';
+      c.attrs.forEach((a, i) => {
+        const ay = c.y + HDR + i * LH + 10;
+        g.fillText(a, c.x + 6, ay);
+      });
+
+      // Garis pemisah + bagian method
+      if (c.methods.length > 0) {
+        const divY = c.y + HDR + c.attrH + 4;
+        g.beginPath(); g.moveTo(c.x, divY); g.lineTo(c.x + c.w, divY); g.stroke();
+        c.methods.forEach((m, i) => {
+          const my = divY + i * LH + 10;
+          g.font = 'italic 9px "Segoe UI",sans-serif';
+          g.fillText(m, c.x + 6, my);
+        });
+      }
+    });
+
+    // ════════════════════════════════════════════════════════════
+    // LANGKAH 3: Label kardinalitas (1 dan 1..*) DI ATAS segalanya
+    // ════════════════════════════════════════════════════════════
+    function lb(txt, x, y) {
+      g.font = 'bold 9px "Segoe UI",sans-serif';
+      const m = g.measureText(txt);
+      g.fillStyle = '#fff';
+      g.fillRect(x - m.width / 2 - 2, y - 6, m.width + 4, 12);
+      g.fillStyle = '#000';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(txt, x, y);
+    }
+
+    // R1: Customer → User
+    lb('1', 270, 132); lb('1..*', 270, 148);
+    // R2: Customer → Project
+    lb('1', 168, 74); lb('1..*', 608, 74);
+    // R3: Customer → Vehicle
+    lb('1', 200, 64); lb('1..*', 1082, 64);
+    // R4: Project → Driver
+    lb('1', 730, 132); lb('1..*', 730, 148);
+    // R5: Project → Vehicle
+    lb('1', 640, 80); lb('1..*', 1040, 80);
+    // R11: Customer → ServiceReport
+    lb('1', 160, 279); lb('1..*', 800, 360);
+    // R6: Driver → Attendance
+    lb('1', 770, 293); lb('1..*', 135, 360);
+    // R8: Driver → EmergencyReport
+    lb('1', 810, 293); lb('1..*', 595, 360);
+    // R9: Vehicle → EmergencyReport
+    lb('1', 1030, 307); lb('1..*', 650, 360);
+    // R7: Vehicle → Attendance
+    lb('1', 1070, 307); lb('1..*', 165, 360);
+    // R10: Driver → ServiceReport
+    lb('1', 865, 293); lb('1..*', 865, 360);
+    // R12: Attendance → TransportCost
+    lb('1', 270, 412); lb('1..*', 270, 428);
+    // R13: EmergencyReport → ServiceReport
+    lb('1', 730, 412); lb('1..*', 730, 428);
+    // R14: ServiceReport → VehicleReplacement
+    lb('1', 970, 412); lb('1..*', 970, 428);
+    // R15: Attendance → OfflineRecoveryLog
+    lb('1', 167, 554); lb('1..*', 545, 670);
+    // R16: Vehicle → VehicleComponent
+    lb('1', 1215, 160); lb('1..*', 195, 910);
+    // R17: Vehicle → MaintenanceLog
+    lb('1', 1215, 190); lb('1..*', 475, 910);
+    // R18: VehicleComponent → MaintenanceSchedule
+    lb('1', 335, 1040); lb('1..*', 755, 1132);
+    // R19: VehicleComponent → MaintenanceAlert
+    lb('1', 155, 1160); lb('1..*', 1045, 1118);
+
+    // ── Label kelompok domain ──
+    g.fillStyle = '#777';
+    g.font = 'italic 8px "Segoe UI",sans-serif';
+    g.textAlign = 'left'; g.textBaseline = 'middle';
+    g.fillText('Domain: Master & Absensi', 50, 90);
+    g.fillText('Domain: Operasional & Layanan', 50, 365);
+    g.fillText('Domain: Audit & Recovery', 80, 675);
+    g.fillText('Domain: Preventive Maintenance', 50, 915);
+
+    document.title = 'READY - Class Diagram A4 Portrait';
+
+    // Tombol download PNG
+    var btn = document.createElement('button');
+    btn.id = 'downloadPng';
+    btn.textContent = '⬇ Download PNG';
+    btn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;padding:8px 16px;background:#2563eb;color:#fff;border:none;border-radius:6px;font:bold 13px "Segoe UI",sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)';
+    btn.addEventListener('click', function () {
+      var a = document.createElement('a');
+      a.download = 'class_diagram_canvas_only.png';
+      a.href = cv.toDataURL('image/png');
+      a.click();
+    });
+    document.body.appendChild(btn);
+  </script>
+</body>
+</html>

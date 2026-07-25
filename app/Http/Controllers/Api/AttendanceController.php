@@ -270,6 +270,11 @@ class AttendanceController extends Controller
                 if ($driverRecord) {
                     $driverRecord->update(['is_on_duty' => true]);
                 }
+
+                // Update Vehicle KM if higher
+                if ($vehicle && $validated['speedometer_manual'] > $vehicle->current_km) {
+                    $vehicle->update(['current_km' => $validated['speedometer_manual']]);
+                }
             });
 
             $this->clearDriverCacheLogic($driver->id);
@@ -366,6 +371,13 @@ class AttendanceController extends Controller
                 // Set driver as off duty
                 if ($driverRecord) {
                     $driverRecord->update(['is_on_duty' => false]);
+                }
+
+                // Update Vehicle KM
+                if ($activeAttendance->vehicle && $validated['speedometer_manual_akhir'] > $activeAttendance->vehicle->current_km) {
+                    $activeAttendance->vehicle->update([
+                        'current_km' => $validated['speedometer_manual_akhir']
+                    ]);
                 }
             });
 
@@ -480,7 +492,7 @@ class AttendanceController extends Controller
         }
 
         // --- Task 2.6: Attendance State Validation ---
-        $activeAttendance = Attendance::where('driver_id', $driverId)
+        $activeAttendance = Attendance::with('vehicle')->where('driver_id', $driverId)
             ->whereNull('time_out')
             ->first();
 
@@ -561,6 +573,13 @@ class AttendanceController extends Controller
                 // Update driver duty status
                 if ($driverRecord) {
                     $driverRecord->update(['is_on_duty' => false]);
+                }
+
+                // Update Vehicle KM
+                if ($activeAttendance->vehicle && $validated['speedometer_manual_akhir'] > $activeAttendance->vehicle->current_km) {
+                    $activeAttendance->vehicle->update([
+                        'current_km' => $validated['speedometer_manual_akhir']
+                    ]);
                 }
             });
         } catch (\Throwable $e) {
