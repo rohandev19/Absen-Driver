@@ -280,7 +280,7 @@
                     <button class="btn btn-sm btn-outline-secondary" onclick="manualRefresh()" title="Refresh sekarang">
                         <i class="bi bi-arrow-clockwise me-1"></i>Refresh
                     </button>
-                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3 py-2">
+                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-2">
                         <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"
                             style="width:10px;height:10px;"></span>
                         <span id="badge-unit-live">{{ count($onDutyDrivers) }}</span> Unit Live
@@ -336,7 +336,7 @@
                                                 data-id="{{ $driver['id'] }}" data-name="{{ $driver['driver_name'] }}"
                                                 data-plate="{{ $driver['plate_number'] }}">
                                                 <div class="d-flex align-items-center gap-3">
-                                                    <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center"
+                                                    <div class="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-circle d-flex align-items-center justify-content-center"
                                                         style="width:40px;height:40px;flex-shrink:0;">
                                                         <i class="bi bi-truck fs-5"></i>
                                                     </div>
@@ -610,7 +610,7 @@
                                          data-name="${escapeHtml(driver.driver_name)}"
                                          data-plate="${escapeHtml(driver.plate_number)}">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center"
+                                            <div class="bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-circle d-flex align-items-center justify-content-center"
                                                  style="width:40px;height:40px;flex-shrink:0;">
                                                 <i class="bi bi-truck fs-5"></i>
                                             </div>

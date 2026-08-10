@@ -36,7 +36,7 @@
             <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-3 p-2 bg-primary bg-opacity-10 text-primary me-3">
+                        <div class="rounded-3 p-2 bg-primary-subtle text-primary-emphasis border border-primary-subtle me-3">
                             <i class="bi bi-building fs-4"></i>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="About the Company" data-id="Tentang Perusahaan">About the Company</h5>
@@ -51,7 +51,7 @@
             <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-3 p-2 bg-success bg-opacity-10 text-success me-3">
+                        <div class="rounded-3 p-2 bg-success-subtle text-success-emphasis border border-success-subtle me-3">
                             <i class="bi bi-laptop fs-4"></i>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="About This Portal" data-id="Tentang Portal Ini">About This Portal</h5>
@@ -69,7 +69,7 @@
             <div class="card border-0 shadow-sm" style="border-radius: 14px; border-left: 4px solid #2563eb;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-4">
-                        <div class="rounded-3 p-2 bg-primary bg-opacity-10 text-primary me-3">
+                        <div class="rounded-3 p-2 bg-primary-subtle text-primary-emphasis border border-primary-subtle me-3">
                             <i class="bi bi-pencil-square fs-4"></i>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="How to Approve a Service Report" data-id="Cara Approve Laporan Service">How to Approve a Service Report</h5>
@@ -131,7 +131,7 @@
             <div class="card border-0 shadow-sm" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-4">
-                        <div class="rounded-3 p-2 bg-warning bg-opacity-10 text-warning me-3">
+                        <div class="rounded-3 p-2 bg-warning-subtle text-warning-emphasis border border-warning-subtle me-3">
                             <i class="bi bi-stars fs-4"></i>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="Available Features" data-id="Fitur yang Tersedia">Available Features</h5>
@@ -216,7 +216,7 @@
             <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger me-3">
+                        <div class="rounded-3 p-2 bg-danger-subtle text-danger-emphasis border border-danger-subtle me-3">
                             <i class="bi bi-shield-lock-fill fs-4"></i>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="Security & Data Protection" data-id="Keamanan & Perlindungan Data">Security & Data Protection</h5>

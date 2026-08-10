@@ -70,7 +70,7 @@
                                     <td>{{ $user->email }}</td>
                                     <td class="d-none d-md-table-cell">
                                         @if($user->role === 'master')
-                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger"><i class="bi bi-shield-lock-fill me-1"></i> Master</span>
+                                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle"><i class="bi bi-shield-lock-fill me-1"></i> Master</span>
                                         @else
                                             <span class="badge bg-info bg-opacity-10 text-dark border border-info"><i class="bi bi-person-badge me-1"></i> Admin</span>
                                         @endif

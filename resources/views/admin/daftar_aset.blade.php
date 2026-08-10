@@ -35,11 +35,11 @@
                         <div class="d-flex flex-wrap gap-2 justify-content-end">
                             @if(($pendingVerificationCount ?? 0) > 0)
                                 <a href="{{ route('admin.daftar_aset', ['verification_status' => 'pending']) }}"
-                                    class="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 py-2 rounded-pill text-decoration-none">
+                                    class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 rounded-pill text-decoration-none">
                                     <i class="bi bi-exclamation-triangle me-1"></i> {{ $pendingVerificationCount }} Pending Verifikasi
                                 </a>
                             @endif
-                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle px-3 py-2 rounded-pill">
                                 <i class="bi bi-database me-1"></i> {{ $vehicles->total() }} Unit Total
                             </span>
                         </div>
@@ -147,12 +147,12 @@
                                                     <span class="badge bg-dark fs-6 font-monospace">{{ $vehicle->plate_number }}</span>
                                                     <div class="d-flex flex-wrap gap-1 mt-2">
                                                         @if($vehicle->is_temporary)
-                                                            <span class="badge bg-info bg-opacity-10 text-info border border-info">Unit Sementara</span>
+                                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">Unit Sementara</span>
                                                         @endif
                                                         @if($vehicle->verification_status === 'pending')
-                                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">Pending Verifikasi</span>
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Pending Verifikasi</span>
                                                         @elseif($vehicle->source === 'driver_manual')
-                                                            <span class="badge bg-success bg-opacity-10 text-success border border-success">Manual Terverifikasi</span>
+                                                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Manual Terverifikasi</span>
                                                         @endif
                                                     </div>
                                                 </td>
@@ -175,15 +175,15 @@
                                                         $statusLower = strtolower((string) $vehicle->status);
                                                     @endphp
                                                     @if ($vehicle->verification_status === 'pending')
-                                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">
+                                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
                                                             <i class="bi bi-hourglass-split me-1"></i> Pending
                                                         </span>
                                                     @elseif (in_array($statusLower, ['maintenance', 'perbaikan', 'servis', 'service', 'rusak', 'tidak aktif', 'inactive', 'nonaktif']))
-                                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">
+                                                        <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">
                                                             <i class="bi bi-tools me-1"></i> Perbaikan
                                                         </span>
                                                     @else
-                                                        <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                                                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
                                                             <i class="bi bi-check-circle me-1"></i> Ready
                                                         </span>
                                                     @endif

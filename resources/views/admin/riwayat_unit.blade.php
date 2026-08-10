@@ -320,7 +320,7 @@
                                                 <div class="d-flex align-items-center gap-2 mt-1">
                                                     <span class="badge bg-dark text-white border font-monospace">{{ $item['plate_number'] }}</span>
                                                     {{-- Info Type --}}
-                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $item['vehicle_type'] }}</span>
+                                                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle border">{{ $item['vehicle_type'] }}</span>
                                                     {{-- Info Project --}}
                                                     <span class="badge bg-light text-muted border">{{ $item['project_name'] }}</span>
                                                 </div>

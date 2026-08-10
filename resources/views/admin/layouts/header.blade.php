@@ -122,12 +122,17 @@
                 - Tidak perlu `d-flex` jika hanya ada satu tombol.
                 - `ms-auto` di `<ul>` sebelumnya sudah mendorong ini ke kanan.
                     --}}
-                    <form action="{{ route('admin.logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-danger">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </button>
-                    </form>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{{ route('admin.password.form') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-key"></i> Ganti Password
+                        </a>
+                        <form action="{{ route('admin.logout') }}" method="POST" class="m-0">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
+                    </div>
 
             </div>
         </div>

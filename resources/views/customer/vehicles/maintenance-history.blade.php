@@ -72,7 +72,7 @@
                                                     @if($isEven)
                                                         <div class="p-4 border rounded-3 bg-white shadow-sm hover-grow text-start">
                                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">{{ \Carbon\Carbon::parse($log['date'])->format('d M Y') }}</span>
+                                                                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle border-opacity-25">{{ \Carbon\Carbon::parse($log['date'])->format('d M Y') }}</span>
                                                                 <small class="text-muted"><i class="bi bi-speedometer2"></i> {{ $log['km_at_service'] }} KM</small>
                                                             </div>
                                                             <h6 class="fw-bold text-dark mb-2">Perbaikan / Pemeliharaan Bengkel</h6>
@@ -97,7 +97,7 @@
                                                     @if(!$isEven)
                                                         <div class="p-4 border rounded-3 bg-white shadow-sm hover-grow">
                                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">{{ \Carbon\Carbon::parse($log['date'])->format('d M Y') }}</span>
+                                                                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle border-opacity-25">{{ \Carbon\Carbon::parse($log['date'])->format('d M Y') }}</span>
                                                                 <small class="text-muted"><i class="bi bi-speedometer2"></i> {{ $log['km_at_service'] }} KM</small>
                                                             </div>
                                                             <h6 class="fw-bold text-dark mb-2">Perbaikan / Pemeliharaan Bengkel</h6>
@@ -137,7 +137,7 @@
                                             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start mb-3 gap-2">
                                                 <div>
                                                     <div class="d-flex align-items-center gap-2 mb-1.5">
-                                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Diselesaikan</span>
+                                                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle border-opacity-25">Diselesaikan</span>
                                                         <span class="badge bg-primary text-uppercase" style="font-size: 0.7rem;">{{ $schedule['type'] }}</span>
                                                     </div>
                                                     <h5 class="fw-bold text-dark mb-0">Part / Komponen: {{ $schedule['component'] }}</h5>

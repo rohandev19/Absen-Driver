@@ -25,7 +25,7 @@
                                         @if($driver->profile_photo)
                                             <img src="{{ asset('storage/' . $driver->profile_photo) }}" alt="Foto Profil" class="rounded-circle object-fit-cover border shadow-sm" style="width: 120px; height: 120px;">
                                         @else
-                                            <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary border d-flex align-items-center justify-content-center shadow-sm" style="width: 120px; height: 120px;">
+                                            <div class="rounded-circle bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle border d-flex align-items-center justify-content-center shadow-sm" style="width: 120px; height: 120px;">
                                                 <i class="bi bi-person-fill" style="font-size: 4rem;"></i>
                                             </div>
                                         @endif

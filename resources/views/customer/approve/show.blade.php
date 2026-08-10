@@ -310,9 +310,9 @@
                     <div class="mb-4">
                         <h6 class="fw-bold text-dark mb-2 fs-6">Status Akhir Unit</h6>
                         @if($report->unit_status_after_service == 'Aman' || str_contains(strtolower($report->unit_status_after_service), 'jalan'))
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success py-2 px-3"><i class="bi bi-circle-fill small me-2" style="font-size:8px;"></i>{{ $report->unit_status_after_service }}</span>
+                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle py-2 px-3"><i class="bi bi-circle-fill small me-2" style="font-size:8px;"></i>{{ $report->unit_status_after_service }}</span>
                         @elseif($report->unit_status_after_service)
-                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger py-2 px-3"><i class="bi bi-circle-fill small me-2" style="font-size:8px;"></i>{{ $report->unit_status_after_service }}</span>
+                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle py-2 px-3"><i class="bi bi-circle-fill small me-2" style="font-size:8px;"></i>{{ $report->unit_status_after_service }}</span>
                         @else
                             <span class="text-muted">-</span>
                         @endif

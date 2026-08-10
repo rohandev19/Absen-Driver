@@ -26,7 +26,7 @@
         <div class="col-xl-3 col-sm-6">
             <div class="card border-0 shadow-sm h-100 transition-hover" style="border-radius: 12px;">
                 <div class="card-body p-3 p-md-4 d-flex align-items-center">
-                    <div class="rounded-3 p-2.5 p-md-3 bg-primary bg-opacity-10 text-primary me-3">
+                    <div class="rounded-3 p-2.5 p-md-3 bg-primary-subtle text-primary-emphasis border border-primary-subtle me-3">
                         <i class="bi bi-truck fs-3"></i>
                     </div>
                     <div>
@@ -58,7 +58,7 @@
         <div class="col-xl-3 col-sm-6">
             <div class="card border-0 shadow-sm h-100 transition-hover" style="border-radius: 12px;">
                 <div class="card-body p-3 p-md-4 d-flex align-items-center">
-                    <div class="rounded-3 p-2.5 p-md-3 bg-warning bg-opacity-10 text-warning me-3">
+                    <div class="rounded-3 p-2.5 p-md-3 bg-warning-subtle text-warning-emphasis border border-warning-subtle me-3">
                         <i class="bi bi-exclamation-triangle-fill fs-3"></i>
                     </div>
                     <div>
@@ -72,7 +72,7 @@
         <div class="col-xl-3 col-sm-6">
             <div class="card border-0 shadow-sm h-100 transition-hover" style="border-radius: 12px;">
                 <div class="card-body p-3 p-md-4 d-flex align-items-center">
-                    <div class="rounded-3 p-2.5 p-md-3 bg-danger bg-opacity-10 text-danger me-3 {{ $pendingApprovals > 0 ? 'animate-pulse' : '' }}" style="position: relative;">
+                    <div class="rounded-3 p-2.5 p-md-3 bg-danger-subtle text-danger-emphasis border border-danger-subtle me-3 {{ $pendingApprovals > 0 ? 'animate-pulse' : '' }}" style="position: relative;">
                         <i class="bi bi-check-circle-fill fs-3 position-relative z-1"></i>
                         @if($pendingApprovals > 0)
                             <div class="position-absolute top-0 start-0 w-100 h-100 bg-danger rounded-3 opacity-25" style="filter: blur(8px);"></div>

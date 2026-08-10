@@ -21,6 +21,7 @@ use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\MaintenanceAssetController;
 use App\Http\Controllers\PanduanController;
 use App\Http\Controllers\VehicleReplacementController;
+use App\Http\Controllers\AdminProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,14 @@ Route::middleware(['auth', 'role:master,service_admin', 'throttle:60,1'])->prefi
     Route::controller(DashboardController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('admin.dashboard');
         Route::get('/dashboard/status', 'getStatus')->name('admin.dashboard.status');
+    });
+
+    // ====================================================
+    // 1.5 ADMIN PROFILE (GANTI PASSWORD)
+    // ====================================================
+    Route::controller(AdminProfileController::class)->group(function () {
+        Route::get('/profile/change-password', 'showChangePasswordForm')->name('admin.password.form');
+        Route::post('/profile/change-password', 'changePassword')->name('admin.password.update');
     });
 
     // ====================================================

@@ -360,10 +360,10 @@
                                                     <span
                                                         class="badge bg-light text-dark border">{{ $item['plate_number'] }}</span>
                                                     @if(($item['vehicle_entry_method'] ?? 'qr') === 'manual')
-                                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">Manual</span>
+                                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Manual</span>
                                                     @endif
                                                     @if(($item['vehicle_verification_status'] ?? 'verified') === 'pending')
-                                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Pending Unit</span>
+                                                        <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">Pending Unit</span>
                                                     @endif
                                                 </div>
                                             </div>

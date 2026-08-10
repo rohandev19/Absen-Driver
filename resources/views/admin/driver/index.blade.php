@@ -91,7 +91,7 @@
                                             @if($driver->profile_photo)
                                                 <img src="{{ asset('storage/' . $driver->profile_photo) }}" alt="Foto" class="rounded-circle object-fit-cover border" style="width: 40px; height: 40px;">
                                             @else
-                                                <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary border d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <div class="rounded-circle bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle border d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                                     <i class="bi bi-person-fill fs-5"></i>
                                                 </div>
                                             @endif
@@ -102,7 +102,7 @@
                                     {{-- Kolom Project --}}
                                     <td class="d-none d-lg-table-cell">
                                         @if($driver->project)
-                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
+                                            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
                                                 {{ $driver->project->name }}
                                             </span>
                                         @else
@@ -123,14 +123,14 @@
                                                     $diff = $today->diffInDays($expiry, false);
                                                 @endphp
                                                 @if($diff < 0)
-                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger" style="width: fit-content;">Mati ({{ $expiry->format('d/m/y') }})</span>
+                                                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle" style="width: fit-content;">Mati ({{ $expiry->format('d/m/y') }})</span>
                                                 @elseif($diff <= 30)
-                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning" style="width: fit-content;">Exp {{ $diff }} Hr</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="width: fit-content;">Exp {{ $diff }} Hr</span>
                                                 @else
-                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success" style="width: fit-content;">Aktif</span>
+                                                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle" style="width: fit-content;">Aktif</span>
                                                 @endif
                                             @else
-                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary" style="width: fit-content;">-</span>
+                                                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle" style="width: fit-content;">-</span>
                                             @endif
                                         </div>
                                     </td>

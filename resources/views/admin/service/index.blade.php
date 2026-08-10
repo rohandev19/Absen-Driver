@@ -134,13 +134,13 @@
                                 <div class="text-end">
                                     @php
                                         $statusBadge = match($report->status) {
-                                            'pending', 'pending_admin' => 'bg-warning text-dark border-warning bg-opacity-10',
-                                            'waiting_completion' => 'bg-info text-dark border-info bg-opacity-10',
-                                            'approved_admin', 'pending_customer' => 'bg-primary text-primary border-primary bg-opacity-10',
-                                            'approved_customer' => 'bg-success text-success border-success bg-opacity-10',
-                                            'revision_requested' => 'bg-danger text-danger border-danger bg-opacity-10',
-                                            'rejected', 'rejected_admin', 'rejected_customer' => 'bg-danger text-danger border-danger bg-opacity-10',
-                                            default => 'bg-secondary text-secondary border-secondary bg-opacity-10'
+                                            'pending', 'pending_admin' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+                                            'waiting_completion' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
+                                            'approved_admin', 'pending_customer' => 'bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+                                            'approved_customer' => 'bg-success-subtle text-success-emphasis border border-success-subtle',
+                                            'revision_requested' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+                                            'rejected', 'rejected_admin', 'rejected_customer' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+                                            default => 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle'
                                         };
                                         $statusText = match($report->status) {
                                             'pending', 'pending_admin' => 'Menunggu Admin',
@@ -153,7 +153,18 @@
                                             default => $report->status
                                         };
                                     @endphp
-                                    <span class="badge {{ $statusBadge }} border px-2 py-1" style="font-size: 0.7rem;">
+                                    <span class="badge rounded-pill {{ $statusBadge }} px-2 py-1 fw-medium" style="font-size: 0.7rem; letter-spacing: 0.3px;">
+                                        @if(in_array($report->status, ['pending', 'pending_admin']))
+                                            <i class="bi bi-hourglass-split me-1"></i>
+                                        @elseif(in_array($report->status, ['approved_admin', 'pending_customer']))
+                                            <i class="bi bi-clock me-1"></i>
+                                        @elseif($report->status === 'approved_customer')
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        @elseif($report->status === 'revision_requested')
+                                            <i class="bi bi-exclamation-circle me-1"></i>
+                                        @else
+                                            <i class="bi bi-x-circle me-1"></i>
+                                        @endif
                                         {{ $statusText }}
                                     </span>
                                 </div>
@@ -236,13 +247,13 @@
                                 <td>
                                     @php
                                         $statusBadge = match($report->status) {
-                                            'pending', 'pending_admin' => 'bg-warning text-dark',
-                                            'waiting_completion' => 'bg-info text-dark',
-                                            'approved_admin', 'pending_customer' => 'bg-primary',
-                                            'approved_customer' => 'bg-success',
-                                            'revision_requested' => 'bg-danger',
-                                            'rejected', 'rejected_admin', 'rejected_customer' => 'bg-danger',
-                                            default => 'bg-secondary'
+                                            'pending', 'pending_admin' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+                                            'waiting_completion' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
+                                            'approved_admin', 'pending_customer' => 'bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+                                            'approved_customer' => 'bg-success-subtle text-success-emphasis border border-success-subtle',
+                                            'revision_requested' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+                                            'rejected', 'rejected_admin', 'rejected_customer' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+                                            default => 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle'
                                         };
                                         $statusText = match($report->status) {
                                             'pending', 'pending_admin' => 'Menunggu Admin',
@@ -255,17 +266,17 @@
                                             default => $report->status
                                         };
                                     @endphp
-                                    <span class="badge rounded-pill px-3 py-2 {{ $statusBadge }} fw-semibold shadow-sm" style="font-size: 0.75rem;">
+                                    <span class="badge rounded-pill px-3 py-2 {{ $statusBadge }} fw-medium" style="font-size: 0.75rem; letter-spacing: 0.3px; box-shadow: none;">
                                         @if(in_array($report->status, ['pending', 'pending_admin']))
                                             <i class="bi bi-hourglass-split me-1"></i>
                                         @elseif(in_array($report->status, ['approved_admin', 'pending_customer']))
-                                            <i class="bi bi-clock-history me-1"></i>
+                                            <i class="bi bi-clock me-1"></i>
                                         @elseif($report->status === 'approved_customer')
-                                            <i class="bi bi-check-circle-fill me-1"></i>
+                                            <i class="bi bi-check-circle me-1"></i>
                                         @elseif($report->status === 'revision_requested')
-                                            <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                            <i class="bi bi-exclamation-circle me-1"></i>
                                         @else
-                                            <i class="bi bi-x-circle-fill me-1"></i>
+                                            <i class="bi bi-x-circle me-1"></i>
                                         @endif
                                         {{ $statusText }}
                                     </span>

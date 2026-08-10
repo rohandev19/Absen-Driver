@@ -183,10 +183,10 @@
 
                                     <div class="timeline-card">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
+                                            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
                                                 {{ $jadwal->component ? $jadwal->component->component_name : 'General Checkup / Lainnya' }}
                                             </span>
-                                            <span class="badge bg-dark bg-opacity-10 text-dark border">
+                                            <span class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle border">
                                                 KM: <strong>{{ number_format($jadwal->scheduled_km ?? 0) }}</strong>
                                             </span>
                                         </div>

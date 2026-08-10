@@ -60,12 +60,12 @@
                                 <tr class="aset-row">
                                     <td class="ps-4" data-label="Waktu Kerja">
                                         <div class="d-flex align-items-center gap-2">
-                                            <span class="badge bg-success bg-opacity-10 text-success border border-success"
+                                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle"
                                                 title="Masuk">
                                                 {{ \Carbon\Carbon::parse($item['timestamp_masuk'])->format('H:i') }}
                                             </span>
                                             <i class="bi bi-arrow-right text-muted small"></i>
-                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger"
+                                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle"
                                                 title="Keluar">
                                                 {{ \Carbon\Carbon::parse($item['timestamp_keluar'])->format('H:i') }}
                                             </span>

@@ -63,7 +63,7 @@
                                 @if($customer && $customer->projects)
                                     <div class="d-flex flex-wrap gap-1.5 mt-1">
                                         @forelse($customer->projects as $proj)
-                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1.5" style="font-size: 0.75rem;">
+                                            <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle border-opacity-25 px-2.5 py-1.5" style="font-size: 0.75rem;">
                                                 <i class="bi bi-folder-fill me-1"></i>{{ $proj->name }}
                                             </span>
                                         @empty

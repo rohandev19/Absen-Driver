@@ -43,7 +43,7 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
+                        <div class="rounded-circle bg-primary-subtle text-primary-emphasis border border-primary-subtle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
                             <strong>1</strong>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="Data We Collect" data-id="Data yang Kami Kumpulkan">Data We Collect</h5>
@@ -74,7 +74,7 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
+                        <div class="rounded-circle bg-primary-subtle text-primary-emphasis border border-primary-subtle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
                             <strong>2</strong>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="How Data is Used" data-id="Bagaimana Data Digunakan">How Data is Used</h5>
@@ -133,7 +133,7 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
+                        <div class="rounded-circle bg-primary-subtle text-primary-emphasis border border-primary-subtle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
                             <strong>3</strong>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="Your Data Protection" data-id="Perlindungan Data Anda">Your Data Protection</h5>
@@ -177,7 +177,7 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
+                        <div class="rounded-circle bg-primary-subtle text-primary-emphasis border border-primary-subtle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
                             <strong>4</strong>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="Cookies & Sessions" data-id="Cookie & Session">Cookies & Sessions</h5>
@@ -204,7 +204,7 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
+                        <div class="rounded-circle bg-primary-subtle text-primary-emphasis border border-primary-subtle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
                             <strong>5</strong>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="Your Rights as a User" data-id="Hak Anda Sebagai Pengguna">Your Rights as a User</h5>
@@ -243,7 +243,7 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
+                        <div class="rounded-circle bg-primary-subtle text-primary-emphasis border border-primary-subtle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; min-width: 36px;">
                             <strong>6</strong>
                         </div>
                         <h5 class="fw-bold text-dark mb-0" data-en="Third-Party Data Sharing" data-id="Pembagian Data ke Pihak Ketiga">Third-Party Data Sharing</h5>

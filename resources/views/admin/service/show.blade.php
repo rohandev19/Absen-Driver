@@ -23,17 +23,13 @@
         <div class="card-body text-center py-3">
             @php
                 $statusBadge = match($report->status) {
-                    'pending' => 'bg-warning bg-opacity-10 text-warning border border-warning',
-                    'pending_admin' => 'bg-warning bg-opacity-10 text-warning border border-warning',
-                    'waiting_completion' => 'bg-info bg-opacity-10 text-info border border-info',
-                    'approved_admin' => 'bg-primary bg-opacity-10 text-primary border border-primary',
-                    'pending_customer' => 'bg-primary bg-opacity-10 text-primary border border-primary',
-                    'approved_customer' => 'bg-success bg-opacity-10 text-success border border-success',
-                    'revision_requested' => 'bg-danger bg-opacity-10 text-danger border border-danger',
-                    'rejected' => 'bg-danger bg-opacity-10 text-danger border border-danger',
-                    'rejected_admin' => 'bg-danger bg-opacity-10 text-danger border border-danger',
-                    'rejected_customer' => 'bg-danger bg-opacity-10 text-danger border border-danger',
-                    default => 'bg-secondary bg-opacity-10 text-secondary border border-secondary'
+                    'pending', 'pending_admin' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+                    'waiting_completion' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
+                    'approved_admin', 'pending_customer' => 'bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+                    'approved_customer' => 'bg-success-subtle text-success-emphasis border border-success-subtle',
+                    'revision_requested' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+                    'rejected', 'rejected_admin', 'rejected_customer' => 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+                    default => 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle'
                 };
                 $statusText = match($report->status) {
                     'pending' => 'Menunggu Review Admin',
@@ -49,7 +45,7 @@
                     default => $report->status
                 };
             @endphp
-            <h3 class="mb-0"><span class="badge {{ $statusBadge }} fs-6 rounded-pill px-4 py-2" style="font-weight: 600;">{{ $statusText }}</span></h3>
+            <h3 class="mb-0"><span class="badge {{ $statusBadge }} fs-6 rounded-pill px-4 py-2 fw-medium" style="letter-spacing: 0.5px; box-shadow: none;">{{ $statusText }}</span></h3>
         </div>
     </div>
 

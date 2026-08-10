@@ -122,13 +122,13 @@
                                 </div>
                                 <div class="text-end">
                                     @if($report->status === 'pending_customer')
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning" style="font-size: 0.7rem;">Menunggu</span>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size: 0.7rem;">Menunggu</span>
                                     @elseif($report->status === 'approved_customer')
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success" style="font-size: 0.7rem;">Terkonfirmasi</span>
+                                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle" style="font-size: 0.7rem;">Terkonfirmasi</span>
                                     @elseif($report->status === 'revision_requested')
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info" style="font-size: 0.7rem;">Klarifikasi</span>
+                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle" style="font-size: 0.7rem;">Klarifikasi</span>
                                     @elseif($report->status === 'rejected_customer')
-                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger" style="font-size: 0.7rem;">Ditolak</span>
+                                        <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle" style="font-size: 0.7rem;">Ditolak</span>
                                     @else
                                         <span class="badge bg-secondary" style="font-size: 0.7rem;">{{ $report->status }}</span>
                                     @endif
@@ -190,13 +190,13 @@
                                 </td>
                                 <td>
                                     @if($report->status === 'pending_customer')
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">Menunggu Konfirmasi</span>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Menunggu Konfirmasi</span>
                                     @elseif($report->status === 'approved_customer')
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success">Terkonfirmasi</span>
+                                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Terkonfirmasi</span>
                                     @elseif($report->status === 'revision_requested')
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info">Minta Klarifikasi</span>
+                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">Minta Klarifikasi</span>
                                     @elseif($report->status === 'rejected_customer')
-                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Ditolak</span>
+                                        <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">Ditolak</span>
                                     @else
                                         <span class="badge bg-secondary">{{ $report->status }}</span>
                                     @endif

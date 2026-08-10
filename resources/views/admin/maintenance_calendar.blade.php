@@ -109,16 +109,16 @@
 
                                 {{-- Legenda Status (Badge) --}}
                                 <div class="d-flex flex-wrap gap-2">
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">
+                                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-2 py-1">
                                         <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Lewat
                                     </span>
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
                                         <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Segera
                                     </span>
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-2 py-1">
+                                    <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle px-2 py-1">
                                         <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> STNK
                                     </span>
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">
+                                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-2 py-1">
                                         <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> KIR
                                     </span>
                                 </div>

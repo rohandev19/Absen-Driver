@@ -960,7 +960,7 @@
                             type="button" data-bs-toggle="collapse"
                             data-bs-target="#guidecat${idx}">
                         ${cat}
-                        <span class="badge bg-primary bg-opacity-10 text-primary ms-2 fw-semibold">${items.length}</span>
+                        <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle ms-2 fw-semibold">${items.length}</span>
                     </button>
                 </h2>
                 <div id="guidecat${idx}" class="accordion-collapse collapse ${idx === 0 ? 'show' : ''}">
