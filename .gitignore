@@ -23,3 +23,4 @@ storage/app/qrcodes
 Homestead.json
 Homestead.yaml
 Thumbs.db
+*-credentials.json

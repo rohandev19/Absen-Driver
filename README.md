@@ -10,6 +10,7 @@ A comprehensive, enterprise-grade backend system for managing logistics fleets a
 ## Key Features
 
 *   **Driver Management & Attendance:** Secure mobile API for driver login, profile management, and daily attendance tracking. Includes Account Lockout protections.
+*   **Offline-First Clock-Out Support:** robust sync mechanism handling network blackouts gracefully. Drivers can clock out without signal and sync later.
 *   **Preventive Fleet Maintenance:**
     *   Dynamic tracking of vehicle health (Odometer reading and Expiry dates).
     *   Automated calculation of component degradation.
@@ -79,7 +80,9 @@ For environments where daemon queue workers or OS-level Cron jobs are not availa
 *   **API Rate Limiting:** Global IP throttling.
 *   **Web Account Lockout:** Login attempts are rate-limited by `Email + IP`. 5 failed attempts result in a 5-minute lockout.
 *   **Session Fixation Protection:** Session IDs are strictly regenerated upon successful authentication.
+*   **IDOR Protection:** Strict role-based middlewares and database-level ownership verification (`driver_id` checks) across endpoints.
 *   **Fail-Safe Web Cron:** The scheduler webhook fails closed. If `MAINTENANCE_URL_TOKEN` is empty or missing, access is completely blocked.
+*   **Automated Security Testing:** Feature tests (`RoleSecurityTest`, `CriticalSimulationTest`, etc.) running via PHPUnit to guarantee endpoint safety.
 
 ## CLI Commands Reference
 
