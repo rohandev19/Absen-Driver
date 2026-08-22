@@ -24,31 +24,24 @@ use App\Http\Controllers\Api\QRCodeScanController;
 |
 */
 
-// --- 1. RUTE PUBLIK (Tanpa Token) ---
-// Endpoint Login: Pintu masuk utama.
-// Throttle ketat (10x/menit) untuk mencegah Brute Force Password.
+// Public: Login (strict throttle to prevent brute force)
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:10,1')
     ->name('login');
 
 
-// --- 2. RUTE AMAN (Wajib Pakai Token Bearer) ---
-// Middleware 'auth:sanctum': Wajib Login.
-// Middleware 'throttle:60,1': Batasi driver maks 60 request/menit (Mencegah Spam/Bug Looping dari HP).
-// SECURITY FIX: Added role-based authorization to prevent unauthorized access
+// Protected: Sanctum auth + 60 req/min throttle
 Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 
-    // ====================================================
     // DRIVER-ONLY ROUTES
-    // ====================================================
     Route::middleware('role:driver')->group(function () {
-        // A. OTORISASI
+        // Auth
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
         Route::post('/fcm-token', [AuthController::class, 'updateFcmToken']);
         Route::post('/driver/update-photo', [AuthController::class, 'updateProfilePhoto']);
 
-        // B. OPERASIONAL ABSENSI
+        // Attendance
         Route::post('/submit-attendance', [AttendanceController::class, 'submitAttendance']);
         Route::post('/submit-end-of-duty', [AttendanceController::class, 'submitEndOfDutyReport']);
         Route::post('/clock-out-offline', [AttendanceController::class, 'clockOutOffline']);
@@ -59,33 +52,30 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::get('/service-reports', [ServiceReportController::class, 'index']);
         Route::get('/service-reports/{serviceReport}', [ServiceReportController::class, 'show']);
 
-        // C. PENGAMBILAN DATA (GET)
+        // Data retrieval
         Route::get('/driver-details', [AttendanceController::class, 'getDriverDetails']);
         Route::get('/driver/guidance', DriverGuidanceController::class);
         Route::get('/driver/status', [AttendanceController::class, 'checkDriverStatus']);
         Route::get('/attendance/duty-status', [AttendanceController::class, 'getDutyStatus']);
         Route::get('/driver/history', [AttendanceController::class, 'getAttendanceHistory']);
 
-        // D. UTILITIES
+        // Utilities
         Route::post('/clear-cache', [AttendanceController::class, 'clearCache']);
         Route::get('/vehicles/{plate_number}/last-odometer', [AttendanceController::class, 'getLastOdometer']);
 
-        // E. QR CODE SCANNING
+        // QR Code
         Route::post('/qrcode/scan/driver', [QRCodeScanController::class, 'scanDriver']);
         Route::post('/qrcode/scan/vehicle', [QRCodeScanController::class, 'scanVehicle']);
 
-        // F. TRANSPORT COST MONITORING (Uang Jalan)
+        // Transport Cost (Uang Jalan)
         Route::get('/transport-costs/can-create', [TransportCostController::class, 'canCreate']);
         Route::post('/transport-costs', [TransportCostController::class, 'store']);
         Route::get('/transport-costs', [TransportCostController::class, 'index']);
         Route::get('/transport-costs/{id}', [TransportCostController::class, 'show']);
     });
 
-    // ====================================================
     // ADMIN-ONLY ROUTES (Master & Service Admin)
-    // ====================================================
     Route::middleware('role:master,service_admin')->group(function () {
-        // E. PREVENTIVE MAINTENANCE
         // Vehicle Health
         Route::get('/vehicles/health', [VehicleHealthController::class, 'index']);
         Route::get('/vehicles/{vehicle}/health', [VehicleHealthController::class, 'show']);
@@ -113,7 +103,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('/maintenance/alerts/{alert}/dismiss', [MaintenanceAlertController::class, 'dismiss']);
         Route::post('/maintenance/alerts/generate', [MaintenanceAlertController::class, 'generate']);
 
-        // --- 3b. DIAGNOSTIC ENDPOINT (SECURED) ---
+        // --- DIAGNOSTIC ENDPOINT (local env only) ---
         Route::get('/diagnostic', function () {
             if (!app()->isLocal()) {
                 abort(403, 'Akses ditolak di production');
@@ -216,8 +206,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 });
 
 
-// --- 3. HEALTH CHECK ---
-// Cek status server (berguna untuk monitoring uptime).
+// Health Check
 Route::get('/health', function () {
     return response()->json([
         'status' => 'OK',
@@ -236,9 +225,7 @@ $maintenanceTokenIsValid = static function (Request $request): bool {
     return hash_equals($expectedToken, (string) $request->query('token', ''));
 };
 
-// --- 3c. CRON JOB TRIGGER (VIA URL) ---
-// Berguna untuk shared hosting (FTP Only) tanpa akses terminal/crontab.
-// Daftarkan URL ini ke layanan CronJob Gratis (misal: cron-job.org) setiap 15 menit.
+// Web Cron trigger (for shared hosting without CLI access)
 Route::get('/cron/run-schedules', function (Request $request) use ($maintenanceTokenIsValid) {
     if (! $maintenanceTokenIsValid($request)) {
         return response()->json(['status' => 'error', 'message' => 'Unauthorized token'], 403);
@@ -259,8 +246,7 @@ Route::get('/cron/run-schedules', function (Request $request) use ($maintenanceT
     }
 });
 
-// --- 3d. MIGRATE DATABASE (VIA URL) ---
-// Hanya untuk sekali pakai saat upload ke hosting FTP.
+// Database migration via URL (non-production only)
 Route::get('/migrate/run-secret', function (Request $request) use ($maintenanceTokenIsValid) {
     if (app()->isProduction()) {
         return response()->json(['status' => 'error', 'message' => 'Endpoint disabled in production'], 403);
@@ -282,8 +268,7 @@ Route::get('/migrate/run-secret', function (Request $request) use ($maintenanceT
     }
 });
 
-// --- 3e. RUN ARTISAN COMMANDS (VIA URL) ---
-// Sangat berguna untuk shared hosting (FTP) tanpa akses terminal.
+// Artisan commands via URL (non-production only)
 Route::get('/artisan/run-secret', function (Request $request) use ($maintenanceTokenIsValid) {
     if (app()->isProduction()) {
         return response()->json(['status' => 'error', 'message' => 'Endpoint disabled in production'], 403);
@@ -295,7 +280,7 @@ Route::get('/artisan/run-secret', function (Request $request) use ($maintenanceT
 
     $command = $request->query('command');
     
-    // Daftar command yang diizinkan untuk alasan keamanan
+    // Whitelisted commands only
     $allowedCommands = [
         'storage:link',
         'qrcode:generate-missing',
@@ -320,12 +305,10 @@ Route::get('/artisan/run-secret', function (Request $request) use ($maintenanceT
         return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
 });
-// --- 4. FALLBACK ROUTE (PENTING UNTUK FLUTTER) ---
-// Jika Flutter menembak URL yang salah (typo), server akan membalas JSON error, BUKAN HTML.
-// Ini mencegah aplikasi Flutter crash "FormatException".
+// Fallback: Always return JSON, never HTML (prevents Flutter FormatException)
 Route::fallback(function () {
     return response()->json([
         'status' => 'error',
-        'message' => 'Endpoint API tidak ditemukan (404). Periksa URL request.'
+        'message' => 'API endpoint not found (404).'
     ], 404);
 });

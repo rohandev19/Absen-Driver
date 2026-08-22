@@ -5,40 +5,33 @@
     <meta charset="UTF-8">
     <title>Rekap Absensi</title>
     <style>
-        /* 1. SETTING HALAMAN AGAR MUAT */
         @page {
             size: A4 landscape;
             margin: 5mm;
-            /* Margin diperkecil jadi 5mm agar area isi lebih luas */
         }
 
         body {
             font-family: 'Calibri', Arial, sans-serif;
             font-size: 9px;
-            /* FONT DIPERKECIL dari 11px ke 9px */
         }
 
         table {
             border-collapse: collapse;
             width: 100%;
             table-layout: fixed;
-            /* Memaksa tabel mengikuti lebar yg ditentukan */
         }
 
         th,
         td {
             border: 1px solid #000000;
             padding: 2px;
-            /* PADDING DITIPISKAN dari 5px ke 2px */
             text-align: center;
             vertical-align: middle;
             overflow: hidden;
-            /* Mencegah teks meluber */
             white-space: nowrap;
-            /* Mencegah teks turun baris (wrapping) */
         }
 
-        /* STYLE WARNA HEADER */
+
         .header-blue {
             background-color: #4472C4;
             color: #ffffff;
@@ -65,7 +58,7 @@
             border: 1px solid #000000;
         }
 
-        /* SIMBOL */
+
         .symbol-check {
             color: #008000;
             font-weight: bold;
@@ -80,7 +73,7 @@
             font-size: 10px;
         }
 
-        /* FORMAT TEKS KHUSUS */
+
         .text-left {
             text-align: left !important;
             padding-left: 4px;
@@ -90,9 +83,7 @@
             mso-number-format: '\@';
         }
 
-        /* Format Text untuk Excel */
 
-        /* STYLE TANDA TANGAN */
         .ttd-box-title {
             border: 1px solid #000;
             font-weight: bold;
@@ -104,7 +95,7 @@
             border-left: 1px solid #000;
             border-right: 1px solid #000;
             height: 60px;
-            /* Tinggi dikurangi */
+
             background-color: #fff;
         }
 
@@ -128,15 +119,11 @@
 
     @php
         $totalDays = $periode->count();
-        // Total Kolom: No(1) + NIK(1) + Nama(1) + ID(1) + Pol(1) + Type(1) + Total(1) = 7 + Tanggal
         $totalCols = 7 + $totalDays;
 
-        // --- SETUP TANDA TANGAN ---
         $ttdWidth = 4;
         $totalTtdArea = $ttdWidth * 3;
-        $leftSpacer = $totalCols - $totalTtdArea;
-        if ($leftSpacer < 0)
-            $leftSpacer = 0;
+        $leftSpacer = max(0, $totalCols - $totalTtdArea);
     @endphp
 
     {{-- JUDUL LAPORAN --}}
@@ -162,7 +149,7 @@
     <table>
         <thead>
             <tr>
-                {{-- Lebar kolom diset manual dengan width (px/%) agar Excel tidak menebak-nebak --}}
+
                 <th rowspan="2" width="25" class="header-blue">NO</th>
                 <th rowspan="2" width="80" class="header-blue">NIK</th>
                 <th rowspan="2" width="120" class="header-blue">NAMA DRIVER</th>
@@ -176,7 +163,7 @@
             </tr>
             <tr>
                 @foreach($periode as $date)
-                    {{-- Kolom tanggal dibuat sekecil mungkin --}}
+
                     <th width="20" class="header-sub">{{ $date->day }}</th>
                 @endforeach
             </tr>
@@ -186,7 +173,7 @@
                 <tr class="{{ $index % 2 == 0 ? 'row-even' : 'row-odd' }}">
                     <td>{{ $index + 1 }}</td>
 
-                    {{-- NIK FORMAT TEXT --}}
+
                     <td class="text-id">{{ $row['nik_ktp'] }}</td>
 
                     <td class="text-left">{{ $row['nama'] }}</td>
